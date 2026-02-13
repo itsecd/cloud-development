@@ -32,7 +32,7 @@
 cloud-development/
 ├── CreditApplication.Generator/ # Сервис генерации заявок на кредит
 │ ├── Services/
-│ │ ├── CreditApplicationGenerator.cs # Генератор на основе некорректных данных
+│ │ ├── CreditApplicationGenerator.cs # Генератор на основе Bogus
 │ │ └── CreditApplicationService.cs # Сервис с кэшированием
 │ └── Models/
 │   └── CreditApplicationModel.cs # Модель данных кредитной заявки
