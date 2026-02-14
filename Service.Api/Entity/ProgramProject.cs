@@ -1,8 +1,8 @@
 ﻿namespace Service.Api.Entity;
 
-public class ProgramProject
+public record ProgramProject
 {
-    public int Id { get; set; }
+    public int Id { get; init;  }
     public string Name { get; set; }
     public string Customer { get; set; }
     public string Manager { get; set; }

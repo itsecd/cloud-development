@@ -10,7 +10,7 @@ public class ProgramProjectGeneratorService(Faker<ProgramProject> faker)
     public ProgramProject GetProgramProjectInstance(int id)
     {
         ProgramProject programProject = _faker.Generate();
-        programProject.Id = id;
-        return programProject;
+        return programProject with { Id = id };
+
     }
 }
