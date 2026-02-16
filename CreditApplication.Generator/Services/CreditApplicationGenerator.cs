@@ -29,8 +29,6 @@ public class CreditApplicationGenerator(ILogger<CreditApplicationGenerator> logg
 
     private static readonly string[] _terminalStatuses = ["Одобрена", "Отклонена"];
 
-    private readonly ILogger<CreditApplicationGenerator> _logger = logger;
-
     /// <summary>
     /// Генерирует кредитную заявку по указанному идентификатору
     /// </summary>
@@ -38,7 +36,7 @@ public class CreditApplicationGenerator(ILogger<CreditApplicationGenerator> logg
     /// <returns>Сгенерированная кредитная заявка</returns>
     public CreditApplicationModel Generate(int id)
     {
-        _logger.LogInformation("Generating credit application with ID: {Id}", id);
+        logger.LogInformation("Generating credit application with ID: {Id}", id);
 
         var faker = new Faker<CreditApplicationModel>("ru")
             .UseSeed(id)
@@ -47,17 +45,14 @@ public class CreditApplicationGenerator(ILogger<CreditApplicationGenerator> logg
             .RuleFor(x => x.RequestedAmount, f => Math.Round(f.Random.Decimal(50_000m, 10_000_000m), 2))
             .RuleFor(x => x.TermInMonths, f => f.Random.Int(6, 360))
             .RuleFor(x => x.InterestRate, f => Math.Round(f.Random.Double(MinInterestRate, 35.0), 2))
-            .RuleFor(x => x.ApplicationDate, f => GenerateApplicationDate(f))
+            .RuleFor(x => x.ApplicationDate, f => f.Date.PastDateOnly(2))
             .RuleFor(x => x.InsuranceRequired, f => f.Random.Bool())
             .RuleFor(x => x.Status, f => f.PickRandom(_statuses))
-            .FinishWith((f, app) =>
-            {
-                SetStatusDependentFields(f, app);
-            });
+            .FinishWith(SetStatusDependentFields);
 
         var application = faker.Generate();
-
-        _logger.LogInformation(
+        
+        logger.LogInformation(
             "Credit application generated: ID={Id}, Type={CreditType}, Status={Status}, Amount={Amount}",
             application.Id,
             application.CreditType,
@@ -67,23 +62,13 @@ public class CreditApplicationGenerator(ILogger<CreditApplicationGenerator> logg
         return application;
     }
 
-    private static DateOnly GenerateApplicationDate(Faker faker)
-    {
-        var minDate = DateTime.Today.AddYears(-2);
-        var maxDate = DateTime.Today;
-        var randomDate = faker.Date.Between(minDate, maxDate);
-        return DateOnly.FromDateTime(randomDate);
-    }
-
     private static void SetStatusDependentFields(Faker faker, CreditApplicationModel app)
     {
         var isTerminal = _terminalStatuses.Contains(app.Status);
 
         if (isTerminal)
         {
-            var applicationDateTime = app.ApplicationDate.ToDateTime(TimeOnly.MinValue);
-            var decisionDateTime = faker.Date.Between(applicationDateTime, DateTime.Today);
-            app.DecisionDate = DateOnly.FromDateTime(decisionDateTime);
+            app.DecisionDate = faker.Date.BetweenDateOnly(app.ApplicationDate, DateOnly.FromDateTime(DateTime.Today));
 
             if (app.Status == "Одобрена")
             {

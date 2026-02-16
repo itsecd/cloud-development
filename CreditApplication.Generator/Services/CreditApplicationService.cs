@@ -10,13 +10,15 @@ namespace CreditApplication.Generator.Services;
 public class CreditApplicationService(
     CreditApplicationGenerator generator,
     IDistributedCache cache,
+    IConfiguration configuration,
     ILogger<CreditApplicationService> logger)
 {
     private readonly CreditApplicationGenerator _generator = generator;
     private readonly IDistributedCache _cache = cache;
     private readonly ILogger<CreditApplicationService> _logger = logger;
-
-    private static readonly TimeSpan _cacheExpiration = TimeSpan.FromMinutes(5);
+    
+    private readonly TimeSpan _cacheExpiration = TimeSpan.FromMinutes(
+        configuration.GetValue<int>("CacheSettings:ExpirationMinutes", 5));
     private const string CacheKeyPrefix = "credit-application:";
 
     /// <summary>
@@ -35,7 +37,13 @@ public class CreditApplicationService(
         {
             _logger.LogInformation("Credit application {Id} found in cache", id);
             var cachedApplication = JsonSerializer.Deserialize<CreditApplicationModel>(cachedData);
-            return cachedApplication!;
+            
+            if (cachedApplication is not null)
+            {
+                return cachedApplication;
+            }
+            
+            _logger.LogWarning("Cached data for credit application {Id} deserialized to null, regenerating", id);
         }
 
         _logger.LogInformation("Credit application {Id} not found in cache, generating new one", id);
