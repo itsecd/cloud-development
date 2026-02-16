@@ -68,6 +68,7 @@
     private async Task RequestNewData()
     {
         var baseAddress = Configuration["BaseAddress"] ?? throw new KeyNotFoundException("Конфигурация клиента не содержит параметра BaseAddress");
+        Console.WriteLine($"{baseAddress}?id={Id}");
         Value = await Client.GetFromJsonAsync<JsonObject>($"{baseAddress}?id={Id}", new JsonSerializerOptions { });
         StateHasChanged();
     }
