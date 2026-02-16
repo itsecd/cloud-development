@@ -15,7 +15,6 @@ public class CreditApplicationService(
 {
     private readonly CreditApplicationGenerator _generator = generator;
     private readonly IDistributedCache _cache = cache;
-    private readonly ILogger<CreditApplicationService> _logger = logger;
     
     private readonly TimeSpan _cacheExpiration = TimeSpan.FromMinutes(
         configuration.GetValue<int>("CacheSettings:ExpirationMinutes", 5));
@@ -29,13 +28,13 @@ public class CreditApplicationService(
     {
         var cacheKey = $"{CacheKeyPrefix}{id}";
 
-        _logger.LogInformation("Request for credit application with ID: {Id}", id);
+        logger.LogInformation("Request for credit application with ID: {Id}", id);
 
         var cachedData = await _cache.GetStringAsync(cacheKey, cancellationToken);
 
         if (!string.IsNullOrEmpty(cachedData))
         {
-            _logger.LogInformation("Credit application {Id} found in cache", id);
+            logger.LogInformation("Credit application {Id} found in cache", id);
             var cachedApplication = JsonSerializer.Deserialize<CreditApplicationModel>(cachedData);
             
             if (cachedApplication is not null)
@@ -43,10 +42,10 @@ public class CreditApplicationService(
                 return cachedApplication;
             }
             
-            _logger.LogWarning("Cached data for credit application {Id} deserialized to null, regenerating", id);
+            logger.LogWarning("Cached data for credit application {Id} deserialized to null, regenerating", id);
         }
 
-        _logger.LogInformation("Credit application {Id} not found in cache, generating new one", id);
+        logger.LogInformation("Credit application {Id} not found in cache, generating new one", id);
 
         var application = _generator.Generate(id);
 
@@ -58,7 +57,7 @@ public class CreditApplicationService(
 
         await _cache.SetStringAsync(cacheKey, serializedData, cacheOptions, cancellationToken);
 
-        _logger.LogInformation(
+        logger.LogInformation(
             "Credit application {Id} saved to cache with TTL {CacheExpiration} minutes",
             id,
             _cacheExpiration.TotalMinutes);
