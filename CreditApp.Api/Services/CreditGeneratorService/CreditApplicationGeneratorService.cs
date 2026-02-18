@@ -5,7 +5,7 @@ using System.Text.Json;
 
 namespace CreditApp.Api.Services.CreditGeneratorService;
 
-public class CreditApplicationGeneratorService(IDistributedCache _cache, ILogger<CreditApplicationGeneratorService> _logger) : ICreditApplicationGeneratorService
+public class CreditApplicationGeneratorService(IDistributedCache _cache, IConfiguration _configuration, ILogger<CreditApplicationGeneratorService> _logger)
 {
     private static readonly string[] _creditTypes = 
     [
@@ -34,17 +34,27 @@ public class CreditApplicationGeneratorService(IDistributedCache _cache, ILogger
 
         var cachedData = await _cache.GetStringAsync(cacheKey, cancellationToken);
         
-        if (cachedData != null)
+        if (!string.IsNullOrEmpty(cachedData))
         {
-            _logger.LogInformation("Заявка {Id} найдена в кэше", id);
-            return JsonSerializer.Deserialize<CreditApplication>(cachedData)!;
+            var deserializedApplication = JsonSerializer.Deserialize<CreditApplication>(cachedData);
+            
+            if (deserializedApplication != null)
+            {
+                _logger.LogInformation("Заявка {Id} найдена в кэше", id);
+                return deserializedApplication;
+            }
+            
+            _logger.LogWarning("Заявка {Id} найдена в кэше, но не удалось десериализовать. Генерируем новую", id);
         }
 
         _logger.LogInformation("Заявка {Id} не найдена в кэше, генерируем новую", id);
+        
         var application = GenerateApplication(id);
+        
+        var expirationMinutes = _configuration.GetValue("CacheSettings:ExpirationMinutes", 10);
         var cacheOptions = new DistributedCacheEntryOptions
         {
-            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(expirationMinutes)
         };
         
         await _cache.SetStringAsync(
@@ -74,38 +84,34 @@ public class CreditApplicationGeneratorService(IDistributedCache _cache, ILogger
             .RuleFor(c => c.Amount, f => Math.Round(f.Finance.Amount(10000, 10000000), 2))
             .RuleFor(c => c.Term, f => f.Random.Int(6, 360))
             .RuleFor(c => c.InterestRate, f => Math.Round(f.Random.Double(16.0, 25.0), 2))
-            .RuleFor(c => c.SubmissionDate, f => DateOnly.FromDateTime(
-                f.Date.Between(DateTime.Now.AddYears(-2), DateTime.Now)))
+            .RuleFor(c => c.SubmissionDate, f => f.Date.PastDateOnly(2))
             .RuleFor(c => c.RequiresInsurance, f => f.Random.Bool())
-            .RuleFor(c => c.Status, f => f.PickRandom(_statuses));
-
-        var application = faker.Generate();
-
-        if (_terminalStatuses.Contains(application.Status))
-        {
-            var submissionDate = application.SubmissionDate.ToDateTime(TimeOnly.MinValue);
-            var approvalDate = submissionDate.AddDays(new Random().Next(1, 60));
-            
-            if (approvalDate > DateTime.Now)
+            .RuleFor(c => c.Status, f => f.PickRandom(_statuses))
+            .RuleFor(c => c.ApprovalDate, (f, c) =>
             {
-                approvalDate = DateTime.Now;
-            }
-            
-            application.ApprovalDate = DateOnly.FromDateTime(approvalDate);
-        }
-
-        if (application.Status == "Одобрена")
-        {
-            var percentage = 0.8m + (decimal)new Random().NextDouble() * 0.3m;
-            var approvedAmount = application.Amount * percentage;
-            application.ApprovedAmount = Math.Round(approvedAmount, 2);
-            
-            if (application.ApprovedAmount > application.Amount)
+                if (!_terminalStatuses.Contains(c.Status))
+                    return null;
+                
+                var submissionDateTime = c.SubmissionDate.ToDateTime(TimeOnly.MinValue);
+                var daysAfterSubmission = f.Random.Int(1, 60);
+                var approvalDateTime = submissionDateTime.AddDays(daysAfterSubmission);
+                
+                if (approvalDateTime > DateTime.Now)
+                    approvalDateTime = DateTime.Now;
+                
+                return DateOnly.FromDateTime(approvalDateTime);
+            })
+            .RuleFor(c => c.ApprovedAmount, (f, c) =>
             {
-                application.ApprovedAmount = application.Amount;
-            }
-        }
+                if (c.Status != "Одобрена")
+                    return null;
+                
+                var percentage = f.Random.Decimal(0.7m, 1.0m);
+                var approvedAmount = c.Amount * percentage;
+                
+                return Math.Round(approvedAmount, 2);
+            });
 
-        return application;
+        return faker.Generate();
     }
 }

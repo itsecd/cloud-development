@@ -22,16 +22,33 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.Services.AddScoped<ICreditApplicationGeneratorService, CreditApplicationGeneratorService>();
+builder.Services.AddScoped<CreditApplicationGeneratorService>();
 
-// Add controllers
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "CreditApp API"
+    });
+    
+    var xmlFilename = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFilename);
+    if (File.Exists(xmlPath))
+    {
+        options.IncludeXmlComments(xmlPath);
+    }
+    
+    var domainXmlPath = Path.Combine(AppContext.BaseDirectory, "CreditApp.Domain.xml");
+    if (File.Exists(domainXmlPath))
+    {
+        options.IncludeXmlComments(domainXmlPath);
+    }
+});
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
