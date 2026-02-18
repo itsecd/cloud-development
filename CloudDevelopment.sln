@@ -1,9 +1,21 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.14.36811.4
+# Visual Studio Version 18
+VisualStudioVersion = 18.3.11505.172 d18.3
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client.Wasm", "Client.Wasm\Client.Wasm.csproj", "{AE7EEA74-2FE0-136F-D797-854FD87E022A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CreditApp.AppHost", "CreditApp\CreditApp.AppHost\CreditApp.AppHost.csproj", "{595C6305-ACA3-4E87-8CBF-27A4C92BAE97}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CreditApp.ServiceDefaults", "CreditApp\CreditApp.ServiceDefaults\CreditApp.ServiceDefaults.csproj", "{A7B14B5D-B738-B77E-404F-CF5182E30A41}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CreditApp.Api", "CreditApp.Api\CreditApp.Api.csproj", "{E7D4CA8B-53EA-9676-D96D-BE2F0CB11054}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CreditApp.Domain", "CreditApp.Domain\CreditApp.Domain.csproj", "{2B736CD0-1260-4F6F-854F-5F35E0CBC260}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CreditApp.Application", "CreditApp.Application\CreditApp.Application.csproj", "{69FCFAEE-907C-4365-897A-EF120A644131}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CreditApp.Infrastructure", "CreditApp.Infrastructure\CreditApp.Infrastructure.csproj", "{C5A26B57-58ED-45E9-9371-AAF64F30C3A8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +27,30 @@ Global
 		{AE7EEA74-2FE0-136F-D797-854FD87E022A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AE7EEA74-2FE0-136F-D797-854FD87E022A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AE7EEA74-2FE0-136F-D797-854FD87E022A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{595C6305-ACA3-4E87-8CBF-27A4C92BAE97}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{595C6305-ACA3-4E87-8CBF-27A4C92BAE97}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{595C6305-ACA3-4E87-8CBF-27A4C92BAE97}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{595C6305-ACA3-4E87-8CBF-27A4C92BAE97}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A7B14B5D-B738-B77E-404F-CF5182E30A41}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A7B14B5D-B738-B77E-404F-CF5182E30A41}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A7B14B5D-B738-B77E-404F-CF5182E30A41}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A7B14B5D-B738-B77E-404F-CF5182E30A41}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E7D4CA8B-53EA-9676-D96D-BE2F0CB11054}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E7D4CA8B-53EA-9676-D96D-BE2F0CB11054}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E7D4CA8B-53EA-9676-D96D-BE2F0CB11054}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E7D4CA8B-53EA-9676-D96D-BE2F0CB11054}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2B736CD0-1260-4F6F-854F-5F35E0CBC260}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2B736CD0-1260-4F6F-854F-5F35E0CBC260}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2B736CD0-1260-4F6F-854F-5F35E0CBC260}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2B736CD0-1260-4F6F-854F-5F35E0CBC260}.Release|Any CPU.Build.0 = Release|Any CPU
+		{69FCFAEE-907C-4365-897A-EF120A644131}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{69FCFAEE-907C-4365-897A-EF120A644131}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{69FCFAEE-907C-4365-897A-EF120A644131}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{69FCFAEE-907C-4365-897A-EF120A644131}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C5A26B57-58ED-45E9-9371-AAF64F30C3A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C5A26B57-58ED-45E9-9371-AAF64F30C3A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C5A26B57-58ED-45E9-9371-AAF64F30C3A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C5A26B57-58ED-45E9-9371-AAF64F30C3A8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
