@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <!-- Централизованная версия пакетов Aspire -->
+    <AspireVersion>9.5.2</AspireVersion>
+  </PropertyGroup>
+</Project>
