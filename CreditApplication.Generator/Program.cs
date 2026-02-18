@@ -11,25 +11,6 @@ builder.AddRedisDistributedCache("redis");
 builder.Services.AddSingleton<CreditApplicationGenerator>();
 builder.Services.AddScoped<CreditApplicationService>();
 
-builder.Services.AddCors(options =>
-{
-    options.AddDefaultPolicy(policy =>
-    {
-        if (builder.Environment.IsDevelopment())
-        {
-            policy.AllowAnyOrigin()
-                  .AllowAnyMethod()
-                  .AllowAnyHeader();
-        }
-        else
-        {
-            policy.WithOrigins("https://your-production-frontend.example")
-                  .WithMethods("GET")
-                  .WithHeaders("Content-Type", "Authorization");
-        }
-    });
-});
-
 var app = builder.Build();
 
 app.UseCors();
