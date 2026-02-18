@@ -42,3 +42,12 @@
 -   .NET Aspire
 -   Docker
 
+## Скриншоты
+
+### Aspire Dashboard
+
+![Aspire Dashboard](images/1.png)
+
+### Web
+
+![Web](images/2.png)
