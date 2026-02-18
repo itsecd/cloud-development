@@ -75,4 +75,7 @@ cloud-development/
 └── README.md                       # Этот файл
 ```
 
+![aspire](https://github.com/user-attachments/assets/8eae0229-1476-43ce-92e9-7d00023edfa4)
+![client](https://github.com/user-attachments/assets/78d9db61-05f4-4896-8e77-1e9cb79dcf67)
+![logs](https://github.com/user-attachments/assets/eb133b16-da58-47b5-8f11-e74f656977dd)
 
