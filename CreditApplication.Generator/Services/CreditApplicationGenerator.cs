@@ -27,7 +27,7 @@ public class CreditApplicationGenerator(ILogger<CreditApplicationGenerator> logg
         "Отклонена"
     ];
 
-    private static readonly string[] _terminalStatuses = ["Одобрена", "Отклонена"];
+    private static readonly HashSet<string> _terminalStatuses = ["Одобрена", "Отклонена"];
 
     /// <summary>
     /// Генерирует кредитную заявку по указанному идентификатору
@@ -51,7 +51,7 @@ public class CreditApplicationGenerator(ILogger<CreditApplicationGenerator> logg
             .FinishWith(SetStatusDependentFields);
 
         var application = faker.Generate();
-        
+
         logger.LogInformation(
             "Credit application generated: ID={Id}, Type={CreditType}, Status={Status}, Amount={Amount}",
             application.Id,

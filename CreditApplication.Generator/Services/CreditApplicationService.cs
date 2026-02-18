@@ -13,11 +13,8 @@ public class CreditApplicationService(
     IConfiguration configuration,
     ILogger<CreditApplicationService> logger)
 {
-    private readonly CreditApplicationGenerator _generator = generator;
-    private readonly IDistributedCache _cache = cache;
-    
     private readonly TimeSpan _cacheExpiration = TimeSpan.FromMinutes(
-        configuration.GetValue<int>("CacheSettings:ExpirationMinutes", 5));
+        configuration.GetValue("CacheSettings:ExpirationMinutes", 5));
     private const string CacheKeyPrefix = "credit-application:";
 
     /// <summary>
@@ -30,24 +27,31 @@ public class CreditApplicationService(
 
         logger.LogInformation("Request for credit application with ID: {Id}", id);
 
-        var cachedData = await _cache.GetStringAsync(cacheKey, cancellationToken);
+        var cachedData = await cache.GetStringAsync(cacheKey, cancellationToken);
 
         if (!string.IsNullOrEmpty(cachedData))
         {
             logger.LogInformation("Credit application {Id} found in cache", id);
-            var cachedApplication = JsonSerializer.Deserialize<CreditApplicationModel>(cachedData);
-            
-            if (cachedApplication is not null)
+
+            CreditApplicationModel? cachedApplication = null;
+            try
             {
-                return cachedApplication;
+                cachedApplication = JsonSerializer.Deserialize<CreditApplicationModel>(cachedData);
             }
-            
+            catch (JsonException ex)
+            {
+                logger.LogWarning(ex, "Failed to deserialize cached credit application {Id}, regenerating", id);
+            }
+
+            if (cachedApplication is not null)
+                return cachedApplication;
+
             logger.LogWarning("Cached data for credit application {Id} deserialized to null, regenerating", id);
         }
 
         logger.LogInformation("Credit application {Id} not found in cache, generating new one", id);
 
-        var application = _generator.Generate(id);
+        var application = generator.Generate(id);
 
         var serializedData = JsonSerializer.Serialize(application);
         var cacheOptions = new DistributedCacheEntryOptions
@@ -55,7 +59,7 @@ public class CreditApplicationService(
             AbsoluteExpirationRelativeToNow = _cacheExpiration
         };
 
-        await _cache.SetStringAsync(cacheKey, serializedData, cacheOptions, cancellationToken);
+        await cache.SetStringAsync(cacheKey, serializedData, cacheOptions, cancellationToken);
 
         logger.LogInformation(
             "Credit application {Id} saved to cache with TTL {CacheExpiration} minutes",
