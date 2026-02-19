@@ -7,67 +7,68 @@ namespace CreditApp.Api.Services.CreditGeneratorService;
 
 public class CreditApplicationGeneratorService(IDistributedCache _cache, IConfiguration _configuration, ILogger<CreditApplicationGeneratorService> _logger)
 {
-    private static readonly string[] _creditTypes = 
+    private static readonly string[] _creditTypes =
     [
-        "Потребительский", 
-        "Ипотека", 
-        "Автокредит", 
+        "Потребительский",
+        "Ипотека",
+        "Автокредит",
         "Бизнес-кредит",
         "Образовательный"
     ];
 
-    private static readonly string[] _statuses = 
+    private static readonly string[] _statuses =
     [
-        "Новая", 
-        "В обработке", 
-        "Одобрена", 
+        "Новая",
+        "В обработке",
+        "Одобрена",
         "Отклонена"
     ];
 
     private static readonly string[] _terminalStatuses = ["Одобрена", "Отклонена"];
 
+    private readonly int _expirationMinutes = _configuration.GetValue("CacheSettings:ExpirationMinutes", 10);
+
     public async Task<CreditApplication> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         var cacheKey = $"credit-application-{id}";
-        
+
         _logger.LogInformation("Попытка получить заявку {Id} из кэша", id);
 
         var cachedData = await _cache.GetStringAsync(cacheKey, cancellationToken);
-        
+
         if (!string.IsNullOrEmpty(cachedData))
         {
             var deserializedApplication = JsonSerializer.Deserialize<CreditApplication>(cachedData);
-            
+
             if (deserializedApplication != null)
             {
                 _logger.LogInformation("Заявка {Id} найдена в кэше", id);
                 return deserializedApplication;
             }
-            
+
             _logger.LogWarning("Заявка {Id} найдена в кэше, но не удалось десериализовать. Генерируем новую", id);
         }
 
         _logger.LogInformation("Заявка {Id} не найдена в кэше, генерируем новую", id);
-        
+
         var application = GenerateApplication(id);
-        
-        var expirationMinutes = _configuration.GetValue("CacheSettings:ExpirationMinutes", 10);
+
         var cacheOptions = new DistributedCacheEntryOptions
         {
-            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(expirationMinutes)
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(_expirationMinutes)
         };
-        
+
         await _cache.SetStringAsync(
-            cacheKey, 
-            JsonSerializer.Serialize(application), 
+            cacheKey,
+            JsonSerializer.Serialize(application),
             cacheOptions,
             cancellationToken);
 
         _logger.LogInformation(
-            "Кредитная заявка сгенерирована и закэширована: Id={Id}, Тип={Type}, Сумма={Amount}, Статус={Status}", 
-            application.Id, 
-            application.Type, 
-            application.Amount, 
+            "Кредитная заявка сгенерирована и закэширована: Id={Id}, Тип={Type}, Сумма={Amount}, Статус={Status}",
+            application.Id,
+            application.Type,
+            application.Amount,
             application.Status);
 
         return application;
@@ -91,25 +92,15 @@ public class CreditApplicationGeneratorService(IDistributedCache _cache, IConfig
             {
                 if (!_terminalStatuses.Contains(c.Status))
                     return null;
-                
-                var submissionDateTime = c.SubmissionDate.ToDateTime(TimeOnly.MinValue);
-                var daysAfterSubmission = f.Random.Int(1, 60);
-                var approvalDateTime = submissionDateTime.AddDays(daysAfterSubmission);
-                
-                if (approvalDateTime > DateTime.Now)
-                    approvalDateTime = DateTime.Now;
-                
-                return DateOnly.FromDateTime(approvalDateTime);
+
+                return f.Date.BetweenDateOnly(c.SubmissionDate, DateOnly.FromDateTime(DateTime.Today));
             })
             .RuleFor(c => c.ApprovedAmount, (f, c) =>
             {
                 if (c.Status != "Одобрена")
                     return null;
-                
-                var percentage = f.Random.Decimal(0.7m, 1.0m);
-                var approvedAmount = c.Amount * percentage;
-                
-                return Math.Round(approvedAmount, 2);
+
+                return Math.Round(c.Amount * f.Random.Decimal(0.7m, 1.0m), 2);
             });
 
         return faker.Generate();

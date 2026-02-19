@@ -5,12 +5,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
-builder.AddRedisClient("cache");
-builder.Services.AddStackExchangeRedisCache(options =>
-{
-    var connectionString = builder.Configuration.GetConnectionString("cache");
-    options.Configuration = connectionString;
-});
+builder.AddRedisDistributedCache("cache");
 
 builder.Services.AddCors(options =>
 {
@@ -32,14 +27,14 @@ builder.Services.AddSwaggerGen(options =>
     {
         Title = "CreditApp API"
     });
-    
+
     var xmlFilename = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFilename);
     if (File.Exists(xmlPath))
     {
         options.IncludeXmlComments(xmlPath);
     }
-    
+
     var domainXmlPath = Path.Combine(AppContext.BaseDirectory, "CreditApp.Domain.xml");
     if (File.Exists(domainXmlPath))
     {

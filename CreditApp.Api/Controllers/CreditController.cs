@@ -18,9 +18,9 @@ public class CreditController(CreditApplicationGeneratorService _generatorServic
     public async Task<ActionResult<CreditApplication>> GetById([FromQuery] int id, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Получен запрос на получение/генерацию заявки {Id}", id);
-        
+
         var application = await _generatorService.GetByIdAsync(id, cancellationToken);
-        
+
         return Ok(application);
     }
 }

@@ -1,8 +1,7 @@
-using Aspire.Hosting;
-
 var builder = DistributedApplication.CreateBuilder(args);
 
-var redis = builder.AddRedis("cache");
+var redis = builder.AddRedis("cache")
+    .WithRedisCommander();
 
 var api = builder.AddProject<Projects.CreditApp_Api>("creditapp-api")
     .WithReference(redis)

@@ -1,4 +1,4 @@
-﻿namespace CreditApp.Domain.Entities;
+namespace CreditApp.Domain.Entities;
 
 /// <summary>
 /// Кредитная заявка
@@ -8,11 +8,11 @@ public class CreditApplication
     /// <summary>
     /// Идентификатор в системе
     /// </summary>
-    public int Id { get; set; }
+    public required int Id { get; set; }
     /// <summary>
     /// Тип кредита
     /// </summary>
-    public string Type { get; set; } = String.Empty;
+    public required string Type { get; set; }
     /// <summary>
     /// Запрашиваемая сумма
     /// </summary>
@@ -36,7 +36,7 @@ public class CreditApplication
     /// <summary>
     /// Статус заявки
     /// </summary>
-    public string Status { get; set; } = String.Empty;
+    public required string Status { get; set; }
     /// <summary>
     /// Дата решения
     /// </summary>
