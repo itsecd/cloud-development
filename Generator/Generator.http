@@ -1,6 +1,0 @@
-@Generator_HostAddress = http://localhost:5291
-
-GET {{Generator_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

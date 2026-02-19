@@ -4,29 +4,34 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Generator.Controllers;
 
-
+/// <summary>
+/// HTTP API для получения кредитной заявки по идентификатору.
+/// Использует <see cref="Services.CreditOrderService"/> для получения данных (кэш + генерация).
+/// </summary>
 [ApiController]
 [Route("credit-orders")]
-public sealed class CreditOrderController : ControllerBase
+public class CreditOrderController (
+    CreditOrderService service,
+    ILogger<CreditOrderController> logger
+    ) : ControllerBase
 {
-    private readonly ILogger<CreditOrderController> _logger;
-    private readonly CreditOrderService _service;
 
-    public CreditOrderController(CreditOrderService service, ILogger<CreditOrderController> logger)
-    {
-        _service = service;
-        _logger = logger;
-    }
-
+    /// <summary>
+    /// Возвращает кредитную заявку по <paramref name="id"/> из query string.
+    /// </summary>
+    /// <param name="id">Идентификатор заявки (должен быть больше 0).</param>
+    /// <param name="ct">Токен отмены запроса.</param>
+    /// <returns>DTO кредитной заявки.</returns>
+    /// <response code="200">Заявка успешно получена.</response>
+    /// <response code="400">Некорректный идентификатор (id &lt;= 0).</response>
     [HttpGet]
     public async Task<ActionResult<CreditOrderDto>> Get([FromQuery] int id, CancellationToken ct)
     {
-        _logger.LogInformation("HTTP GET /credit-orders requested: {OrderId}", id);
-
-        var order = await _service.GetByIdAsync(id, ct);
-
-        _logger.LogInformation("HTTP GET /credit-orders completed: {OrderId} {Status}", order.Id, order.OrderStatus);
-
+        logger.LogInformation("HTTP GET /credit-orders requested: {OrderId}", id);
+        if (id <= 0)
+            return BadRequest("id must be greater than 0");
+        var order = await service.GetByIdAsync(id, ct);
+        logger.LogInformation("HTTP GET /credit-orders completed: {OrderId} {Status}", order.Id, order.OrderStatus);
         return Ok(order);
     }
 }

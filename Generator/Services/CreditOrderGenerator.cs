@@ -1,14 +1,22 @@
-﻿namespace Generator.Services;
-
-using Bogus;
+﻿using Bogus;
 using Generator.Dto;
 
+namespace Generator.Services;
+
+/// <summary>
+/// Генератор псевдослучайных кредитных заявок для демо/тестирования.
+/// Включает простые зависимости между статусом и полями решения.
+/// </summary>
 public class CreditOrderGenerator
 {
-
     private static readonly string[] _сreditTypes = { "Потребительский", "Ипотека", "Автокредит", "Микрозайм" };
-
     private static readonly string[] _statuses = { "Новая", "В обработке", "Одобрена", "Отклонена" };
+
+    /// <summary>
+    /// Генерирует кредитную заявку для заданного <paramref name="id"/> с реалистичными полями.
+    /// </summary>
+    /// <param name="id">Идентификатор заявки.</param>
+    /// <returns>Сгенерированная заявка.</returns>
     public CreditOrderDto Generate(int id)
     {        
         var faker = new Faker<CreditOrderDto>("ru")
@@ -21,36 +29,21 @@ public class CreditOrderGenerator
             .RuleFor(x => x.IsInsuranceNeeded, f => f.Random.Bool())
             .RuleFor(x => x.OrderStatus, f => f.PickRandom(_statuses))
             .RuleFor(x => x.DecisionDate, _ => null)
-            .RuleFor(x => x.ApprovedSum, _ => null); 
-        
-        var order = faker.Generate();
-
-        ApplyDependencies(order);
-
-        return order;
-    }
-
-    private static void ApplyDependencies(CreditOrderDto order)
-    {
-
-            if(order.OrderStatus is "Одобрена")
+            .RuleFor(x => x.ApprovedSum, _ => null)
+            .RuleFor(x => x.DecisionDate, (f, o) =>
+                o.OrderStatus is "Одобрена" or "Отклонена"
+                    ? o.FilingDate.AddDays(f.Random.Int(0, 31))
+                    : null)
+            .RuleFor(x => x.ApprovedSum, (f, o) =>
             {
-                order.DecisionDate = order.FilingDate.AddDays(Random.Shared.Next(0, 31));
+                if (o.OrderStatus is not "Одобрена")
+                    return null;
 
-                var k = Random.Shared.NextDouble() * 0.4 + 0.6;
-                var approved = order.RequestedSum * (decimal)k;
-                order.ApprovedSum = Math.Round(approved, 2);
-            }
-            else if (order.OrderStatus is "Отклонена")
-            {
-                order.DecisionDate = order.FilingDate.AddDays(Random.Shared.Next(0, 31));
-                order.ApprovedSum = null;
-            }
-            else
-            {
-                order.DecisionDate = null;
-                order.ApprovedSum = null;
-            }
-        
+                var k = f.Random.Double(0.6, 1.0);
+                var approved = o.RequestedSum * (decimal)k;
+                return Math.Round(approved, 2);
+            });
+
+        return faker.Generate();
     }
 }

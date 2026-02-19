@@ -5,35 +5,40 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
-// Add services to the container.
-
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddCors(o =>
+builder.Services.AddCors(options =>
 {
-    o.AddPolicy("wasm", p => p
-        .AllowAnyOrigin()
-        .AllowAnyHeader()
-        .AllowAnyMethod());
+    options.AddDefaultPolicy(policy =>
+        policy.SetIsOriginAllowed(origin =>
+        {
+            try
+            {
+                var uri = new Uri(origin);
+                return uri.Host == "localhost";
+            }
+            catch
+            {
+                return false;
+            }
+        })
+        .WithMethods("GET")
+        .AllowAnyHeader());
 });
 
-builder.Services.AddStackExchangeRedisCache(options =>
-{
-    options.Configuration = builder.Configuration.GetConnectionString("redis");
-    options.InstanceName = "generator:";
-});
+builder.AddRedisDistributedCache(connectionName: "RedisCache");
 
 builder.Services.AddScoped<CreditOrderGenerator>();
 builder.Services.AddScoped<CreditOrderService>();
 
 var app = builder.Build();
 
+app.UseCors();
+
 app.MapDefaultEndpoints();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
