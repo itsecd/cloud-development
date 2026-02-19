@@ -30,48 +30,56 @@ public class CreditApplicationGeneratorService(IDistributedCache _cache, IConfig
 
     public async Task<CreditApplication> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        var cacheKey = $"credit-application-{id}";
-
-        _logger.LogInformation("Попытка получить заявку {Id} из кэша", id);
-
-        var cachedData = await _cache.GetStringAsync(cacheKey, cancellationToken);
-
-        if (!string.IsNullOrEmpty(cachedData))
+        try
         {
-            var deserializedApplication = JsonSerializer.Deserialize<CreditApplication>(cachedData);
+            var cacheKey = $"credit-application-{id}";
 
-            if (deserializedApplication != null)
+            _logger.LogInformation("Попытка получить заявку {Id} из кэша", id);
+
+            var cachedData = await _cache.GetStringAsync(cacheKey, cancellationToken);
+
+            if (!string.IsNullOrEmpty(cachedData))
             {
-                _logger.LogInformation("Заявка {Id} найдена в кэше", id);
-                return deserializedApplication;
+                var deserializedApplication = JsonSerializer.Deserialize<CreditApplication>(cachedData);
+
+                if (deserializedApplication != null)
+                {
+                    _logger.LogInformation("Заявка {Id} найдена в кэше", id);
+                    return deserializedApplication;
+                }
+
+                _logger.LogWarning("Заявка {Id} найдена в кэше, но не удалось десериализовать. Генерируем новую", id);
             }
 
-            _logger.LogWarning("Заявка {Id} найдена в кэше, но не удалось десериализовать. Генерируем новую", id);
+            _logger.LogInformation("Заявка {Id} не найдена в кэше, генерируем новую", id);
+
+            var application = GenerateApplication(id);
+
+            var cacheOptions = new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(_expirationMinutes)
+            };
+
+            await _cache.SetStringAsync(
+                cacheKey,
+                JsonSerializer.Serialize(application),
+                cacheOptions,
+                cancellationToken);
+
+            _logger.LogInformation(
+                "Кредитная заявка сгенерирована и закэширована: Id={Id}, Тип={Type}, Сумма={Amount}, Статус={Status}",
+                application.Id,
+                application.Type,
+                application.Amount,
+                application.Status);
+
+            return application;
         }
-
-        _logger.LogInformation("Заявка {Id} не найдена в кэше, генерируем новую", id);
-
-        var application = GenerateApplication(id);
-
-        var cacheOptions = new DistributedCacheEntryOptions
+        catch (Exception ex)
         {
-            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(_expirationMinutes)
-        };
-
-        await _cache.SetStringAsync(
-            cacheKey,
-            JsonSerializer.Serialize(application),
-            cacheOptions,
-            cancellationToken);
-
-        _logger.LogInformation(
-            "Кредитная заявка сгенерирована и закэширована: Id={Id}, Тип={Type}, Сумма={Amount}, Статус={Status}",
-            application.Id,
-            application.Type,
-            application.Amount,
-            application.Status);
-
-        return application;
+            _logger.LogError(ex, "Ошибка при получении/генерации заявки {Id}", id);
+            throw;
+        }
     }
 
     /// <summary>
