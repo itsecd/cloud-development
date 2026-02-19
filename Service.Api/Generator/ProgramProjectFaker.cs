@@ -2,9 +2,16 @@
 using Service.Api.Entity;
 
 namespace Service.Api.Generator;
-
+/// <summary>
+/// Generator of test data of Program Project using Bogus.
+/// </summary>
 public class ProgramProjectFaker : Faker<ProgramProject>
 {
+    /// <summary>
+    /// Initializes the ProgramProject field generation rules
+    /// with the "ru" locale and established dependencies between dates,
+    /// budget, completion percentage, and actual costs.
+    /// </summary>
     public ProgramProjectFaker() : base("ru")
     {
         RuleFor(o => o.Name, f => f.Commerce.ProductName());
@@ -18,7 +25,7 @@ public class ProgramProjectFaker : Faker<ProgramProject>
             return end > DateTime.Now ? null : DateOnly.FromDateTime(end);
         });
         RuleFor(o => o.Budget, f => Math.Round(f.Finance.Amount(100_000, 1_000_000), 2));
-        RuleFor(o => o.FinishedPerCent, (f, o) => o.EndDateReal != null ? 100 : f.Random.Number(1, 100));
+        RuleFor(o => o.FinishedPerCent, (f, o) => o.EndDateReal != null ? 100 : f.Random.Number(1, 99));
         RuleFor(o => o.SpentMoney, (f, o) =>
         {
             var spread = Convert.ToInt32(o.Budget) / 15;

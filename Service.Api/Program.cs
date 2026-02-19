@@ -2,20 +2,16 @@ using Bogus;
 using Service.Api.Entity;
 using Service.Api.Generator;
 using Service.Api.Redis;
+using Service.Api.Services;
 using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
 
 builder.Services.AddSingleton<Faker<ProgramProject>, ProgramProjectFaker>();
-builder.Services.AddSingleton<ProgramProjectGeneratorService>();
 
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
 {
@@ -25,13 +21,25 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
 });
 
 builder.Services.AddScoped<RedisCacheService>();
+builder.Services.AddScoped<ProgramProjectCacheService>();
 
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
-        policy.AllowAnyOrigin()
-              .AllowAnyHeader()
-              .AllowAnyMethod());
+        policy.SetIsOriginAllowed(origin =>
+                {
+                    try
+                    {
+                        var uri = new Uri(origin);
+                        return uri.Host == "localhost";
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+                })
+              .WithMethods("GET")
+              .AllowAnyHeader());
 });
 
 var app = builder.Build();
@@ -40,25 +48,12 @@ app.UseCors();
 
 app.MapDefaultEndpoints();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
 app.UseHttpsRedirection();
 
-app.MapGet("/program-proj", async (int id, ProgramProjectGeneratorService generatorService, RedisCacheService cs) =>
+app.MapGet("/program-proj", async (int id, ProgramProjectCacheService cacheService) =>
 {
-    var key = $"project:{id}";
-    var programProject = await cs.GetAsync<ProgramProject>(key);
-    if(programProject != null) return Results.Ok(programProject);
-    var newProject = generatorService.GetProgramProjectInstance(id);
-    await cs.SetAsync(key, newProject, TimeSpan.FromHours(12));
-    return Results.Ok(newProject);
+    return Results.Ok(await cacheService.GetOrGenerateAsync(id));
 })
-.WithName("GetProgramProject")
-.WithOpenApi();
+.WithName("GetProgramProject");
 
 app.Run();
