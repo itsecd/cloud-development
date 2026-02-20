@@ -15,12 +15,12 @@ builder.Services.AddCors(options =>
     options.AddPolicy("wasm", policy =>
     {
         policy.AllowAnyOrigin()
-        .WithMethods("GET", "POST")
+        .WithMethods("GET")
         .WithHeaders("Content-Type");
     });
 });
 
-builder.Services.AddScoped<CourseGenerator>();
+builder.Services.AddSingleton<CourseGenerator>();
 builder.Services.AddScoped<CourseService>();
 
 var app = builder.Build();

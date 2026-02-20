@@ -4,9 +4,15 @@ using Microsoft.Extensions.Caching.Distributed;
 
 namespace CourseApp.Api.Services;
 
+/// <summary>
+/// Сервис для получения информации о курсе
+/// </summary>
 public class CourseService(IDistributedCache _cache, IConfiguration _configuration,
                 ILogger<CourseService> _logger, CourseGenerator _generator)
 {
+    /// <summary>
+    /// Получает курс по идентификатору из кэша или с помощью генератора
+    /// </summary>
     public async Task<Course> GetCourseAsync(int id)
     {
 
@@ -36,16 +42,23 @@ public class CourseService(IDistributedCache _cache, IConfiguration _configurati
         _logger.LogInformation("Курс {CourseId} отсутствует в кэше. Начинаем генерацию", id);
 
         var course = _generator.Generate(id);
-        var expirationMinutes = _configuration.GetValue("CacheSettings:ExpirationMinutes", 5);
 
-        var cacheOptions = new DistributedCacheEntryOptions
+        try
         {
-            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(expirationMinutes)
-        };
+            var expirationMinutes = _configuration.GetValue("CacheSettings:ExpirationMinutes", 5);
 
-        await _cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(course), cacheOptions);
-        _logger.LogInformation("Курс {CourseId} сгенерирован и сохранён в кэш", id);
+            var cacheOptions = new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(expirationMinutes)
+            };
 
+            await _cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(course), cacheOptions);
+            _logger.LogInformation("Курс {CourseId} сгенерирован и сохранён в кэш", id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Не удалось сохранить курс {CourseId} в кэш. Работа продолжается без кэширования.", id);
+        }
         return course;
     }
 }
