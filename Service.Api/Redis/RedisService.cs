@@ -6,7 +6,7 @@ namespace Service.Api.Redis;
 /// <summary>
 /// Provides Redis caching for storing and retrieving objects.
 /// </summary>
-public class RedisCacheService(IConnectionMultiplexer redis)
+public class RedisService(IConnectionMultiplexer redis)
 {
     private readonly IDatabase _db = redis.GetDatabase();
     /// <summary>

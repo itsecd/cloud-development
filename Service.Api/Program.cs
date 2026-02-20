@@ -20,7 +20,7 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
     else throw new InvalidOperationException("u should fix the redis connection");
 });
 
-builder.Services.AddScoped<RedisCacheService>();
+builder.Services.AddScoped<RedisService>();
 builder.Services.AddScoped<ProgramProjectCacheService>();
 
 builder.Services.AddCors(options =>
