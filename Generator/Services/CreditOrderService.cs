@@ -31,9 +31,6 @@ public class CreditOrderService(
     /// <exception cref="OperationCanceledException">Если запрос был отменён.</exception>
     public async Task<CreditOrderDto> GetByIdAsync(int id, CancellationToken ct)
     {
-        if (id <= 0)
-            throw new ArgumentOutOfRangeException(nameof(id), "invalid id");
-
         var ttlSeconds = cfg.GetValue("CreditOrderCache:TtlSeconds", 300);
         if (ttlSeconds <= 0) ttlSeconds = 300;
 
