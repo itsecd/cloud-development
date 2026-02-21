@@ -5,15 +5,21 @@ var builder = WebApplication.CreateBuilder(args);
 // Add service defaults & Aspire client integrations.
 builder.AddServiceDefaults();
 
+// Redis
+builder.AddRedisDistributedCache("course-cache");
+
 // Add services to the container.
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
+
+// Controllers
+builder.Services.AddControllers();
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowClient", policy =>
     {
-        policy.WithOrigins("https://localhost:7282")
+        policy.AllowAnyOrigin()
               .AllowAnyMethod()
               .AllowAnyHeader();
     });
@@ -33,23 +39,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-// API Endpoint
-app.MapGet("/land-plot", (int? id, CourseGenerator generator, ILogger<Program> logger) =>
-{
-    try
-    {
-        logger.LogInformation("Request received with id: {Id}", id);
-        var course = generator.GenerateOne(id);
-
-        logger.LogInformation("The course was successfully generated: {Title}", course.Title);
-        return Results.Ok(course);
-    }
-    catch (Exception ex)
-    {
-        logger.LogError(ex, "Error during course generation");
-        return Results.Problem("Internal server error", statusCode: 500);
-    }
-});
+app.MapControllers();
 
 app.MapDefaultEndpoints();
 

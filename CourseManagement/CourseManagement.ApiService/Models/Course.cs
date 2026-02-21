@@ -52,6 +52,11 @@ public class Course
     public string Department { get; set; } = string.Empty;
 
     /// <summary>
+    /// Факультет
+    /// </summary>
+    public string Faculty { get; set; } = string.Empty;
+
+    /// <summary>
     /// Дата начала курса
     /// </summary>
     public DateTime StartDate { get; set; }
