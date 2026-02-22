@@ -4,6 +4,9 @@ using Microsoft.Extensions.Caching.Distributed;
 
 namespace CompanyEmployee.Generator.Service;
 
+/// <summary>
+/// Сервис получения сотрудника компании
+/// </summary>
 public class CompanyEmployeeService(
     CompanyEmployeeGenerator generator,
     IDistributedCache cache,
@@ -15,6 +18,13 @@ public class CompanyEmployeeService(
     
     private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web);
     
+    /// <summary>
+    /// Метод получения сотрудника компании по идентификатору
+    /// Сначала пытается найти сотрудника в кэше, если не находит, то генерирует нового и записывает его в кэш
+    /// </summary>
+    /// <param name="id">Идентификатор сотрудника</param>
+    /// <param name="token">Токен отмены запроса</param>
+    /// <returns>DTO сотрудника компании</returns>
     public async Task<CompanyEmployeeDto> GetByIdAsync(int id, CancellationToken token)
     {
         var cacheKey = _companyEmployeeCachePrefix + id;

@@ -4,6 +4,9 @@ using CompanyEmployee.Generator.Dto;
 
 namespace CompanyEmployee.Generator.Service;
 
+/// <summary>
+/// Генератор сотрудника по идентификатору
+/// </summary>
 public class CompanyEmployeeGenerator(
     ILogger<CompanyEmployeeGenerator> logger
     )
@@ -24,6 +27,11 @@ public class CompanyEmployeeGenerator(
         "Андреевна", "Михайловна", "Николаевна", "Павловна", "Викторовна"
     ];
 
+    /// <summary>
+    /// Метод для генерации сотрудника по идентификатору
+    /// </summary>
+    /// <param name="id">Идентификатор сотрудника</param>
+    /// <returns>DTO сотрудника компании</returns>
     public CompanyEmployeeDto Generate(int id)
     {
         var faker = new Faker<CompanyEmployeeDto>("ru")
