@@ -30,7 +30,8 @@ public class ProgramProjectCacheService(RedisService cacheService, Faker<Program
         {
             Console.WriteLine(ex.Message);
         }
-        var newProject = faker.Generate() with { Id = id };
+        var newProject = faker.Generate();
+        newProject.Id = id;
         try
         {
             await cacheService.SetAsync(key, newProject, TimeSpan.FromHours(12));

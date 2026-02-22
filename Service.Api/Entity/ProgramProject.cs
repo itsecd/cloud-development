@@ -3,12 +3,12 @@
 /// This class describes program project with customer, manager,
 /// dates of start n end, budged and spent money.
 /// </summary>
-public record ProgramProject
+public class ProgramProject
 {
     /// <summary>
     /// The project's ID
     /// </summary>
-    public int Id { get; init;  }
+    public int Id { get; set;  }
     /// <summary>
     /// The project's name
     /// </summary>
