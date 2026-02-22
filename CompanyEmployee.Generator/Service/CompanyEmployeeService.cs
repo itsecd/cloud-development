@@ -51,7 +51,7 @@ public class CompanyEmployeeService(
 
         companyEmployee = generator.Generate(id);
         
-        var ttlSeconds = configuration.GetValue("CreditOrderCache:TtlSeconds", 600);
+        var ttlSeconds = configuration.GetValue("CompanyEmployeeCache:TtlSeconds", 600);
         var cacheOpts = new DistributedCacheEntryOptions
         {
             AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(ttlSeconds)
