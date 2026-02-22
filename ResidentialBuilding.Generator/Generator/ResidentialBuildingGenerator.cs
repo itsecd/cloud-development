@@ -34,6 +34,39 @@ public class ResidentialBuildingGenerator(ILogger<ResidentialBuildingGenerator> 
         "Офис"
     ];
 
+    private static readonly Faker<ResidentialBuildingDto>? _faker = new Faker<ResidentialBuildingDto>("ru")
+        .RuleFor(x => x.Address, f => f.Address.FullAddress())
+        .RuleFor(x => x.PropertyType, f => f.PickRandom(_propertyTypes))
+        .RuleFor(x => x.BuildYear, f => f.Random.Int(MinBuildYear, DateTime.Today.Year))
+        .RuleFor(x => x.TotalArea, f => Math.Round(f.Random.Double(MinTotalArea, MaxTotalArea), 2))
+        .RuleFor(x => x.LivingArea, (f, dto) =>
+        {
+            var livingAreaPartOfTotalArea =
+                f.Random.Double(MinLivingAreaPartOfTotalArea, MaxLivingAreaPartOfTotalArea);
+            return Math.Round(livingAreaPartOfTotalArea * dto.TotalArea, 2);
+        })
+        .RuleFor(x => x.TotalFloors, f => f.Random.Int(MinTotalFloors, MaxTotalFloors))
+        .RuleFor(x => x.Floor, (f, dto) =>
+        {
+            if (dto.PropertyType is "ИЖС")
+            {
+                return null;
+            }
+
+            return f.Random.Int(1, dto.TotalFloors);
+        })
+        .RuleFor(x => x.CadastralNumber, f =>
+            $"{f.Random.Int(1, 99):D2}:" +
+            $"{f.Random.Int(1, 99):D2}:" +
+            $"{f.Random.Int(1, 9999999):D7}:" +
+            $"{f.Random.Int(1, 9999):D4}")
+        .RuleFor(x => x.CadastralValue, (f, dto) =>
+        {
+            var pricePerM2 = f.Random.Double(MinPricePerM2, MaxPricePerM2);
+            var price = dto.TotalArea * pricePerM2;
+            return (decimal)Math.Round(price, 2);
+        });
+    
     /// <summary>
     ///     Генерирует объект жилого строительства для заданного идентификатора.
     /// </summary>
@@ -43,41 +76,8 @@ public class ResidentialBuildingGenerator(ILogger<ResidentialBuildingGenerator> 
     {
         logger.LogInformation("Generating Residential Building for Id={id}", id);
 
-        Faker<ResidentialBuildingDto>? faker = new Faker<ResidentialBuildingDto>("ru")
-            .RuleFor(x => x.Id, _ => id)
-            .RuleFor(x => x.Address, f => f.Address.FullAddress())
-            .RuleFor(x => x.PropertyType, f => f.PickRandom(_propertyTypes))
-            .RuleFor(x => x.BuildYear, f => f.Random.Int(MinBuildYear, DateTime.Today.Year))
-            .RuleFor(x => x.TotalArea, f => Math.Round(f.Random.Double(MinTotalArea, MaxTotalArea), 2))
-            .RuleFor(x => x.LivingArea, (f, dto) =>
-            {
-                var livingAreaPartOfTotalArea =
-                    f.Random.Double(MinLivingAreaPartOfTotalArea, MaxLivingAreaPartOfTotalArea);
-                return Math.Round(livingAreaPartOfTotalArea * dto.TotalArea, 2);
-            })
-            .RuleFor(x => x.TotalFloors, f => f.Random.Int(MinTotalFloors, MaxTotalFloors))
-            .RuleFor(x => x.Floor, (f, dto) =>
-            {
-                if (dto.PropertyType is "ИЖС")
-                {
-                    return null;
-                }
-
-                return f.Random.Int(1, dto.TotalFloors);
-            })
-            .RuleFor(x => x.CadastralNumber, f =>
-                $"{f.Random.Int(1, 99):D2}:" +
-                $"{f.Random.Int(1, 99):D2}:" +
-                $"{f.Random.Int(1, 9999999):D7}:" +
-                $"{f.Random.Int(1, 9999):D4}")
-            .RuleFor(x => x.CadastralValue, (f, dto) =>
-            {
-                var pricePerM2 = f.Random.Double(MinPricePerM2, MaxPricePerM2);
-                var price = dto.TotalArea * pricePerM2;
-                return (decimal)Math.Round(price, 2);
-            });
-
-        ResidentialBuildingDto? generatedObject = faker.Generate();
+        ResidentialBuildingDto? generatedObject = _faker!.Generate();
+        generatedObject.Id = id;
 
         logger.LogInformation(
             "Residential building generated: Id={Id}, Address='{Address}', PropertyType='{PropertyType}', " +
