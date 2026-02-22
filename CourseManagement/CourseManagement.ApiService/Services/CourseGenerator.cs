@@ -14,88 +14,44 @@ public class CourseGenerator
     private readonly Faker<CourseDto> _courseFaker;
 
     /// <summary>
-    /// Шаблоны курсов
+    /// Список названий курсов
     /// </summary>
-    private readonly CourseTemplate[] _courseTemplates =
-    {
-        new() {
-            Title = "разработка корпоративных приложений",
-            Description = "Изучение основ C# и платформы .NET, реализация сервисно-ориентированного приложения, работа с REST API, Entity Framework Core.",
-            Department = "Кафедра геоинформатики и информационной безопасности",
-            Faculty = "Факультет информатики и кибернетики"
-        },
-        new() {
-            Title = "Алгоритмы и структуры данных",
-            Description = "Базовые алгоритмы сортировки, поиска, структуры данных: стеки, очереди, деревья, графы. Анализ сложности алгоритмов.",
-            Department = "Кафедра геоинформатики и информационной безопасности",
-            Faculty = "Факультет информатики и кибернетики"
-        },
-        new() {
-            Title = "Базы данных",
-            Description = "Проектирование БД, нормализация, SQL запросы, транзакции, индексы. Работа с MySQL, PostgreSQL и MongoDB.",
-            Department = "Кафедра геоинформатики и информационной безопасности",
-            Faculty = "Факультет информатики и кибернетики"
-        },
-        new() {
-            Title = "Веб-разработка",
-            Description = "Изучение основ построения веб-приложений, знакомство с React, Bootstrap, JS.",
-            Department = "Кафедра геоинформатики и информационной безопасности",
-            Faculty = "Факультет информатики и кибернетики"
-        },
-        new() {
-            Title = "Машинное обучение",
-            Description = "Основы ML: оптимальные классификаторы, линейные классификаторы, деревья решений, кластеризация.",
-            Department = "Кафедра геоинформатики и информационной безопасности",
-            Faculty = "Факультет информатики и кибернетики"
-        },
-        new() {
-            Title = "Основы информационной безопасности",
-            Description = "Кртакий экскурс в криптографию, сетевые атаки, защиту веб-приложений, принципы безопасной разработки, анализ уязвимостей.",
-            Department = "Кафедра геоинформатики и информационной безопасности",
-            Faculty = "Факультет информатики и кибернетики"
-        },
-        new() {
-            Title = "Математический анализ",
-            Description = "Основы математического анализа.",
-            Department = "Кафедра прикланой математики и информатики",
-            Faculty = "Факультет информатики и кибернетики"
-        },
-        new() {
-            Title = "Линейная алгебра и геометрия",
-            Description = "Основы линейной алгебры и геометрии, векторы, матрицы, линейные пространства, операторы, функционалы.",
-            Department = "Кафедра прикланой математики и информатики",
-            Faculty = "Факультет информатики и кибернетики"
-        },
-        new() {
-            Title = "Математическая статистика",
-            Description = "Основы математической статистики, реализации случайных величин, точечные и интервальные оценки.",
-            Department = "Кафедра прикланой математики и информатики",
-            Faculty = "Факультет информатики и кибернетики"
-        },
-        new() {
-            Title = "Теория вероятностей",
-            Description = "Основы теории вероятностей, вероятности, дискретные и непрерывные случайные величины, функция/плотность распределения моменты.",
-            Department = "Кафедра прикланой математики и информатики",
-            Faculty = "Факультет информатики и кибернетики"
-        },
-        new() {
-            Title = "Физика",
-            Description = "Электродинамика, электро-магнитное взаимодействие, уравнения Максвелла.",
-            Department = "Кафедра физики",
-            Faculty = "Факультет физики"
-        },
-        new() {
-            Title = "Микроэкономика",
-            Description = "Спрос и предложение, теория потребительского выбора, издержки производства, рыночные структуры.",
-            Department = "Кафедра экономической теории",
-            Faculty = "Факультет экономики"
-        },
-        new() {
-            Title = "Макроэкономика",
-            Description = "ВВП, инфляция, безработица, денежно-кредитная политика, экономический рост, международная торговля.",
-            Department = "Кафедра экономической теории",
-            Faculty = "Факультет экономики"
-        }
+    private readonly string[] _courseTitles = {
+        "Разработка корпоративных приложений",
+        "Алгоритмы и структуры данных",
+        "Базы данных",
+        "Веб-разработка",
+        "Машинное обучение",
+        "Основы информационной безопасности",
+        "Математический анализ",
+        "Линейная алгебра и геометрия",
+        "Математическая статистика",
+        "Теория вероятностей",
+        "Физика",
+        "Микроэкономика",
+        "Макроэкономика",
+        "Нейронные сети и глубокое обучение",
+        "Сети и системы передачи информации",
+        "Философия",
+        "История России",
+        "Дискретная математика",
+        "Прикладное программирование",
+        "Методы оптимизации",
+        "Теория графов",
+        "Технологии программирования",
+        "Основы веб-приложений",
+        "Безопасность вычислительных сетей",
+        "Низкоуровневое программирование",
+        "Системное программирование",
+        "Криптография",
+        "Криптопротоколы",
+        "Жизненный цикл",
+        "Цифровая обработка сигналов",
+        "Цифровая обработка изображений",
+        "Основы программиования",
+        "Объектно-ориентированное программирование",
+        "Форензика",
+        "Компьютерная алгебра",
     };
 
     /// <summary>
@@ -104,36 +60,15 @@ public class CourseGenerator
     public CourseGenerator()
     {
         _courseFaker = new Faker<CourseDto>("ru")
-            .CustomInstantiator(f =>
-            {
-                var template = f.PickRandom(_courseTemplates);
-
-                return new CourseDto
-                {
-                    Title = template.Title,
-                    Description = template.Description,
-                    Department = template.Department,
-                    Faculty = template.Faculty,
-                    Lector = f.Name.FullName(),
-
-                    LecturesCount = f.Random.Int(8, 24),
-                    PracticesCount = f.Random.Int(4, 20),
-                    LaboratoriesCount = f.Random.Int(0, 10),
-
-                    StartDate = f.Date.Future(1),
-                    EndDate = f.Date.Future(1, DateTime.Now.AddMonths(6)),
-
-                    MaxStudents = f.Random.Int(15, 80),
-                    EnrolledStudents = f.Random.Int(0, 50),
-
-                    Status = f.PickRandom("Планируется", "Идёт набор", "В процессе", "Завершён"),
-                    Level = f.PickRandom("Начальный", "Средний", "Продвинутый"),
-                    Price = f.Finance.Amount(15000, 120000),
-                    Format = f.PickRandom("Онлайн", "Офлайн", "Смешанный")
-                };
-            })
-            .RuleFor(c => c.TotalHours, (f, c) => c.LecturesCount * 1.5 + c.PracticesCount * 1.5 + c.LaboratoriesCount * 3.0)
-            .RuleFor(c => c.EnrolledStudents, (f, c) => f.Random.Int(0, c.MaxStudents));
+            .RuleFor(c => c.Title, f => f.PickRandom(_courseTitles))
+            .RuleFor(c => c.Lector, f => f.Name.FullName())
+            .RuleFor(c => c.StartDate, f => DateOnly.FromDateTime(f.Date.Future(1)))
+            .RuleFor(c => c.EndDate, (f, c) => c.StartDate.AddMonths(f.Random.Int(1, 6)))
+            .RuleFor(c => c.MaxStudents, f => f.Random.Int(10, 100))
+            .RuleFor(c => c.EnrolledStudents, (f, c) => f.Random.Int(0, c.MaxStudents))
+            .RuleFor(c => c.HasSertificate, f => f.Random.Bool())
+            .RuleFor(c => c.Price, f => f.Finance.Amount(5000, 100000, 2))
+            .RuleFor(c => c.Rating, f => f.Random.Int(1, 5));
     }
 
     /// <summary>
@@ -146,31 +81,5 @@ public class CourseGenerator
         var course = _courseFaker.Generate();
         course.Id = id ?? new Randomizer().Int(1, 100000);
         return course;
-    }
-
-    /// <summary>
-    /// Класс для сущности типа Шаблон курса 
-    /// </summary>
-    private class CourseTemplate
-    {
-        /// <summary>
-        /// Название курса
-        /// </summary>
-        public string Title { get; set; } = string.Empty;
-
-        /// <summary>
-        /// Описание курса
-        /// </summary>
-        public string Description { get; set; } = string.Empty;
-
-        /// <summary>
-        /// Кафедра
-        /// </summary>
-        public string Department { get; set; } = string.Empty;
-
-        /// <summary>
-        /// Факультет
-        /// </summary>
-        public string Faculty { get; set; } = string.Empty;
     }
 }

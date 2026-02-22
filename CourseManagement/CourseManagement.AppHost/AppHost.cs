@@ -6,12 +6,12 @@ var redis = builder.AddRedis("course-cache")
     .WithDataVolume();
 
 // API service
-var apiService = builder.AddProject<Projects.CourseManagement_ApiService>("course-service")
+var apiService = builder.AddProject<Projects.CourseManagement_ApiService>("course-insight")
     .WithReference(redis)
     .WithHttpHealthCheck("/health");
 
 // Client
-builder.AddProject<Projects.Client_Wasm>("course-management")
+builder.AddProject<Projects.Client_Wasm>("course-wasm")
     .WithExternalHttpEndpoints()
     .WithHttpHealthCheck("/health")
     .WithReference(apiService)

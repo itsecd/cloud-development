@@ -17,54 +17,19 @@ public class CourseDto
     public string Title { get; set; } = string.Empty;
 
     /// <summary>
-    /// Краткое описание курса
-    /// </summary>
-    public string Description { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Количество академических часов
-    /// </summary>
-    public double TotalHours { get; set; }
-
-    /// <summary>
-    /// Количество лекций
-    /// </summary>
-    public int LecturesCount { get; set; }
-
-    /// <summary>
-    /// Количество практик
-    /// </summary>
-    public int PracticesCount { get; set; }
-
-    /// <summary>
-    /// Количество лабораторных
-    /// </summary>
-    public int LaboratoriesCount { get; set; }
-
-    /// <summary>
     /// Лектор
     /// </summary>
     public string Lector { get; set; } = string.Empty;
 
     /// <summary>
-    /// Кафедра
-    /// </summary>
-    public string Department { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Факультет
-    /// </summary>
-    public string Faculty { get; set; } = string.Empty;
-
-    /// <summary>
     /// Дата начала курса
     /// </summary>
-    public DateTime StartDate { get; set; }
+    public DateOnly StartDate { get; set; }
     
     /// <summary>
     /// Дата окончания курса
     /// </summary>
-    public DateTime EndDate { get; set; }
+    public DateOnly EndDate { get; set; }
 
     /// <summary>
     /// Максимальное число студентов для курса
@@ -77,14 +42,9 @@ public class CourseDto
     public int EnrolledStudents { get; set; }
 
     /// <summary>
-    /// Статус курса (пройден, идёт)
+    /// Выдача сертификата
     /// </summary>
-    public string Status { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Сложность курса
-    /// </summary>
-    public string Level { get; set; } = string.Empty;
+    public bool HasSertificate { get; set; }
 
     /// <summary>
     /// Стоимость курса
@@ -92,7 +52,7 @@ public class CourseDto
     public decimal Price { get; set; }
 
     /// <summary>
-    /// Формат (онлайн/офлайн/смешанный)
+    /// Рейтинг
     /// </summary>
-    public string Format { get; set; } = string.Empty;
+    public int Rating { get; set; }
 }
