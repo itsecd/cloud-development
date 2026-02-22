@@ -1,4 +1,4 @@
-﻿namespace CourseManagement.ApiService.DTO;
+﻿namespace CourseManagement.ApiService.Dto;
 
 
 /// <summary>

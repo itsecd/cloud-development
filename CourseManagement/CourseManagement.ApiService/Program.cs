@@ -1,3 +1,4 @@
+using CourseManagement.ApiService.Dto;
 using CourseManagement.ApiService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,8 +12,9 @@ builder.AddRedisDistributedCache("course-cache");
 // Add services to the container
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
+
+// Контроллеры
 builder.Services.AddControllers();
-builder.Services.AddSingleton<CourseGenerator>();
 
 // CORS
 builder.Services.AddCors(options =>
@@ -24,6 +26,15 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader();
     });
 });
+
+// Генератор курсов
+builder.Services.AddSingleton<CourseGenerator>();
+
+// Сервис для взаимодействия с кэшем
+builder.Services.AddSingleton<CacheService<CourseDto>>();
+
+// Сервис для сущности типа Курс
+builder.Services.AddSingleton<CourseService>();
 
 var app = builder.Build();
 

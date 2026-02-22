@@ -1,5 +1,5 @@
 ﻿using Bogus;
-using CourseManagement.ApiService.DTO;
+using CourseManagement.ApiService.Dto;
 
 namespace CourseManagement.ApiService.Services;
 
