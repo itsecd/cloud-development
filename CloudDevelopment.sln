@@ -5,11 +5,11 @@ VisualStudioVersion = 17.14.36811.4
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client.Wasm", "Client.Wasm\Client.Wasm.csproj", "{AE7EEA74-2FE0-136F-D797-854FD87E022A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SoftwareProject.AppHost", "SoftwareProject.AppHost\SoftwareProject.AppHost.csproj", "{7FA94C9A-CD2C-4D76-A42C-5C0EEDC6D68D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProgramProject.AppHost", "ProgramProject.AppHost\ProgramProject.AppHost.csproj", "{7FA94C9A-CD2C-4D76-A42C-5C0EEDC6D68D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SoftwareProject.ServiceDefaults", "SoftwareProject.ServiceDefaults\SoftwareProject.ServiceDefaults.csproj", "{213F5ADB-6769-02BA-8BFA-17C924D27341}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProgramProject.ServiceDefaults", "ProgramProject.ServiceDefaults\ProgramProject.ServiceDefaults.csproj", "{213F5ADB-6769-02BA-8BFA-17C924D27341}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SoftwareProject.GenerationService", "SoftwareProject.GenerationService\SoftwareProject.GenerationService.csproj", "{66DBD8A2-6672-889D-9A17-D156226DCB66}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProgramProject.GenerationService", "ProgramProject.GenerationService\ProgramProject.GenerationService.csproj", "{66DBD8A2-6672-889D-9A17-D156226DCB66}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
