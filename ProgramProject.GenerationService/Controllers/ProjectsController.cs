@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
 using ProgramProject.GenerationService.Generator;
 using ProgramProject.GenerationService.Models;
@@ -25,7 +24,6 @@ public class ProjectsController : ControllerBase
         _logger = logger;
     }
 
-    // GET: api/projects/5
     [HttpGet("{id}")]
     public async Task<ActionResult<ProgramProjectModel>> GetProject(int id)
     {
@@ -33,23 +31,21 @@ public class ProjectsController : ControllerBase
 
         _logger.LogInformation("Запрос проекта с ID {ProjectId}. Проверка кэша...", id);
 
-        // 1. Пытаемся получить из кэша
+
         var cachedBytes = await _cache.GetAsync(cacheKey);
 
         if (cachedBytes != null)
         {
             var cachedProject = JsonSerializer.Deserialize<ProgramProjectModel>(cachedBytes);
-            _logger.LogInformation("Проект с ID {ProjectId} найден в кэше (Cache Hit)", id);
+            _logger.LogInformation("Проект с ID {ProjectId} найден в кэше", id);
             return Ok(cachedProject);
         }
 
-        _logger.LogInformation("Проект с ID {ProjectId} не найден в кэше. Генерируем новый (Cache Miss)", id);
+        _logger.LogInformation("Проект с ID {ProjectId} не найден в кэше. Генерируем новый", id);
 
-        // 2. Генерируем новый проект
         var newProject = _faker.Generate();
-        newProject.Id = id; // Устанавливаем ID из запроса
+        newProject.Id = id;
 
-        // 3. Сохраняем в кэш на 5 минут
         var options = new DistributedCacheEntryOptions()
             .SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
 
@@ -69,7 +65,6 @@ public class ProjectsController : ControllerBase
             return BadRequest("Количество проектов должно быть от 1 до 20");
         }
 
-        // Для списка не кэшируем, просто генерируем
         var projects = _faker.Generate(count);
         return Ok(projects);
     }

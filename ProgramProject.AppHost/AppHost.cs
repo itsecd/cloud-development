@@ -7,6 +7,4 @@ var generationService = builder.AddProject<Projects.ProgramProject_GenerationSer
     .WithReference(cache)
     .WaitFor(cache);
 
-builder.AddProject<Projects.ProgramProject_GenerationService>("programproject-generationservice");
-
 builder.Build().Run();
