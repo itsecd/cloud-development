@@ -8,23 +8,16 @@ namespace CompanyEmployee.Generator.Service;
 /// Сервис получения сотрудника компании
 /// </summary>
 public class CompanyEmployeeService(
-    CompanyEmployeeGenerator generator,
+    ICompanyEmployeeGenerator generator,
     IDistributedCache cache,
     IConfiguration configuration,
     ILogger<CompanyEmployeeService> logger
-    )
+    ) : ICompanyEmployeeService
 {
     private static readonly string _companyEmployeeCachePrefix = "company-employee:"; 
     
     private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web);
     
-    /// <summary>
-    /// Метод получения сотрудника компании по идентификатору
-    /// Сначала пытается найти сотрудника в кэше, если не находит, то генерирует нового и записывает его в кэш
-    /// </summary>
-    /// <param name="id">Идентификатор сотрудника</param>
-    /// <param name="token">Токен отмены запроса</param>
-    /// <returns>DTO сотрудника компании</returns>
     public async Task<CompanyEmployeeDto> GetByIdAsync(int id, CancellationToken token)
     {
         var cacheKey = _companyEmployeeCachePrefix + id;

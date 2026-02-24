@@ -31,8 +31,8 @@ builder.Services.AddCors(options =>
 
 builder.AddRedisDistributedCache(connectionName: "cache");
 
-builder.Services.AddSingleton<CompanyEmployeeGenerator>();
-builder.Services.AddSingleton<CompanyEmployeeService>();
+builder.Services.AddSingleton<ICompanyEmployeeGenerator, CompanyEmployeeGenerator>();
+builder.Services.AddSingleton<ICompanyEmployeeService, CompanyEmployeeService>();
 
 var app = builder.Build();
 

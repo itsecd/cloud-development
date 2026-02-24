@@ -10,8 +10,8 @@ namespace CompanyEmployee.Generator.Controller;
 [ApiController]
 [Route("company-employee")]
 public class CompanyEmployeeController(
-    CompanyEmployeeService service,
-    Logger<CompanyEmployeeController> logger
+    ICompanyEmployeeService service,
+    ILogger<CompanyEmployeeController> logger
     ) : ControllerBase
 {
     /// <summary>
@@ -23,13 +23,15 @@ public class CompanyEmployeeController(
     /// <response code="200">Успешное получение сотрудника</response>
     /// <response code="400">Некорректный id</response>
     [HttpGet]
+    [ProducesResponseType(typeof(CompanyEmployeeDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<CompanyEmployeeDto>> GetById([FromQuery] int id, CancellationToken cancellationToken)
     {
-        if (id <= 0)
+        if (id < 0)
         {
             return BadRequest("Id must be greater or equal than 0");
         }
-        logger.LogInformation($"HTTP GET /company-employee, id: {id}", id);
+        logger.LogInformation("HTTP GET /company-employee, id: {id}", id);
         
         var employee = await service.GetByIdAsync(id, cancellationToken);
         return Ok(employee);

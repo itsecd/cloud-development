@@ -9,29 +9,12 @@ namespace CompanyEmployee.Generator.Service;
 /// </summary>
 public class CompanyEmployeeGenerator(
     ILogger<CompanyEmployeeGenerator> logger
-    )
+    ) : ICompanyEmployeeGenerator
 {
     private static readonly string[] _position = ["Developer", "Manager", "Analyst", "QA"];
     
     private static readonly string[] _grade = ["Junior", "Middle", "Senior"];
     
-    private static readonly string[] _malePatronymic = 
-    [
-        "Александрович", "Сергеевич", "Иванович", "Дмитриевич", "Владимирович",
-        "Андреевич", "Михайлович", "Николаевич", "Павлович", "Викторович"
-    ];
-
-    private static readonly string[] _femalePatronymic =
-    [
-        "Алексеевна", "Сергеевна", "Ивановна", "Дмитриевна", "Владимировна",
-        "Андреевна", "Михайловна", "Николаевна", "Павловна", "Викторовна"
-    ];
-
-    /// <summary>
-    /// Метод для генерации сотрудника по идентификатору
-    /// </summary>
-    /// <param name="id">Идентификатор сотрудника</param>
-    /// <returns>DTO сотрудника компании</returns>
     public CompanyEmployeeDto Generate(int id)
     {
         var faker = new Faker<CompanyEmployeeDto>("ru")
@@ -40,17 +23,8 @@ public class CompanyEmployeeGenerator(
             {
                 var gender = f.PickRandom(Enum.GetValues(typeof(Name.Gender)).Cast<Name.Gender>().ToArray());
 
-                string patronymic;
-                if (gender == Name.Gender.Male)
-                {
-                    patronymic = f.PickRandom(_malePatronymic);
-                }
-                else
-                {
-                    patronymic = f.PickRandom(_femalePatronymic);
-                }
-
-                return $"{f.Name.LastName(gender)} {f.Name.FirstName(gender)} {patronymic}";
+                return $"{f.Name.LastName(gender)} {f.Name.FirstName(gender)} " +
+                       $"{f.Name.FirstName(gender)}{(gender == Name.Gender.Male ? "еевич" : "еевна")}";
             })
             .RuleFor(e => e.Position, f => $"{f.PickRandom(_position)} {f.PickRandom(_grade)}")
             .RuleFor(e => e.Department, f => f.Commerce.Department())

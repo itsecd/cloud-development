@@ -8,50 +8,50 @@ public class CompanyEmployeeDto
     /// <summary>
     /// Идентификатор сотрудника в системе
     /// </summary>
-    public int Id { get; set; }
+    public required int Id { get; init; }
     
     /// <summary>
     /// ФИО
     /// </summary>
-    public string FullName { get; set; }
+    public required string FullName { get; init; }
     
     /// <summary>
     /// Должность
     /// </summary>
-    public string Position { get; set; }
+    public required string Position { get; init; }
     
     /// <summary>
     /// Отдел
     /// </summary>
-    public string Department { get; set; }
+    public required string Department { get; init; }
     
     /// <summary>
     /// Дата приема
     /// </summary>
-    public DateOnly EmploymentDate { get; set; }
+    public required DateOnly EmploymentDate { get; init; }
     
     /// <summary>
     /// Оклад
     /// </summary>
-    public decimal Salary { get; set; }
+    public required decimal Salary { get; init; }
     
     /// <summary>
     /// Электронная почта
     /// </summary>
-    public string Email { get; set; }
+    public required string Email { get; init; }
     
     /// <summary>
     /// Номер телефона
     /// </summary>
-    public string PhoneNumber { get; set; }
+    public required string PhoneNumber { get; init; }
     
     /// <summary>
     /// Индикатор увольнения
     /// </summary>
-    public bool DismissalFlag { get; set; }
+    public required bool DismissalFlag { get; init; }
     
     /// <summary>
     /// Дата увольнения
     /// </summary>
-    public DateOnly? DismissalDate { get; set; }
+    public DateOnly? DismissalDate { get; init; }
 }
