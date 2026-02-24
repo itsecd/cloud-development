@@ -46,9 +46,9 @@ public class CompanyEmployeeGenerator(
             })
             .RuleFor(e => e.Email, f => f.Internet.Email())
             .RuleFor(e => e.PhoneNumber, f => f.Phone.PhoneNumber("+7(###)###-##-##"))
-            .RuleFor(e => e.DismissalFlag, f => f.Finance.Random.Bool(0.5f))
-            .RuleFor(e => e.DismissalDate,
-                (f, e) => f.Date.BetweenDateOnly(e.EmploymentDate, DateOnly.FromDateTime(DateTime.UtcNow)));
+            .RuleFor(e => e.DismissalFlag, f => f.Random.Bool(0.5f))
+            .RuleFor(e => e.DismissalDate, (f, e) => !e.DismissalFlag ? null : 
+                    f.Date.BetweenDateOnly(e.EmploymentDate, DateOnly.FromDateTime(DateTime.UtcNow)));
         
         logger.LogInformation("Generated employee with id {}", id);
         return faker.Generate();

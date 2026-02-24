@@ -12,7 +12,7 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(policy =>
+    options.AddPolicy("wasm", policy =>
         policy.SetIsOriginAllowed(origin =>
             {
                 try
