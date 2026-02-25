@@ -13,6 +13,25 @@ public class Program
 
 
         builder.AddRedisDistributedCache("cache");
+
+        /// <summary>
+        /// Добавлен CORS
+        /// </summary>
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("AllowClient", policy =>
+            {
+                policy.SetIsOriginAllowed(origin =>
+                {
+                    var uri = new Uri(origin);
+                    return uri.Host == "localhost";
+                })
+                    .AllowAnyMethod()
+                    .AllowAnyHeader()
+                    .AllowCredentials();
+            });
+        });
+
         /// <summary>
         /// Добавлен генератор
         /// </summary>
@@ -28,6 +47,7 @@ public class Program
         var app = builder.Build();
 
         app.MapDefaultEndpoints();
+        app.UseCors("AllowClient");
 
         if (app.Environment.IsDevelopment())
         {

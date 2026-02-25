@@ -7,4 +7,9 @@ var generationService = builder.AddProject<Projects.ProgramProject_GenerationSer
     .WithReference(cache)
     .WaitFor(cache);
 
+// Добавил клиента
+var client = builder.AddProject<Projects.Client_Wasm>("client-wasm")
+    .WithExternalHttpEndpoints()
+    .WithReference(generationService);
+
 builder.Build().Run();
