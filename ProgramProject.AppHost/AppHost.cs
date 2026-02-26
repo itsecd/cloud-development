@@ -1,4 +1,4 @@
-var builder = DistributedApplication.CreateBuilder(args);
+ï»¿var builder = DistributedApplication.CreateBuilder(args);
 
 var cache = builder.AddRedis("cache").WithRedisCommander();
 
@@ -8,7 +8,7 @@ var generationService = builder.AddProject<Projects.ProgramProject_GenerationSer
     .WaitFor(cache);
 
 
-// Äîáàâèë êëèåíòà
+// Ð”Ð¾Ð±Ð°Ð²Ð¸Ð» ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð°
 var client = builder.AddProject<Projects.Client_Wasm>("client-wasm")
     .WithExternalHttpEndpoints()
     .WaitFor(generationService);

@@ -1,4 +1,4 @@
-using ProgramProject.GenerationService.Generator;
+п»їusing ProgramProject.GenerationService.Generator;
 using ProgramProject.GenerationService.Services;
 using ProgramProject.ServiceDefaults;
 
@@ -23,7 +23,7 @@ builder.Services.AddCors(options =>
                 return false;
             }
         })
-        .WithMethods("GET")  // Только GET запросы
+        .WithMethods("GET")  // РўРѕР»СЊРєРѕ GET Р·Р°РїСЂРѕСЃС‹
         .AllowAnyHeader()
         .AllowCredentials();
     });
