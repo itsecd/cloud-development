@@ -12,65 +12,47 @@ public class ProgramProjectFaker
         _faker = new Faker<ProgramProjectModel>("ru")
             .RuleFor(p => p.Id, f => f.IndexVariable++)
 
-            /// <summary>
-            /// Название проекта: комбинация из Commerce, Hacker, Finance, Lorem
-            /// </summary>
+            // Название проекта: комбинация из Commerce, Hacker, Finance, Lorem
             .RuleFor(p => p.Name, f =>
-                f.PickRandom(new[]
-                {
+                f.PickRandom(
                     f.Commerce.ProductName() + " " + f.Hacker.Abbreviation(),
                     "Project " + f.Hacker.Noun(),
                     f.Finance.AccountName() + " System",
                     f.Lorem.Word() + "-" + f.Lorem.Word()
-                }))
+                ))
 
-            /// <summary>
-            /// Заказчик — компания
-            /// </summary>
+            // Заказчик — компания
             .RuleFor(p => p.Customer, f => f.Company.CompanyName())
 
-            /// <summary>
-            /// Менеджер проекта — полное имя
-            /// </summary>
+            // Менеджер проекта — полное имя
             .RuleFor(p => p.Manager, f => f.Name.FullName())
 
-            /// <summary>
-            /// Дата начала
-            /// </summary>
+            // Дата начала
             .RuleFor(p => p.StartDate, f =>
             {
                 var start = f.Date.Past(5);
                 return DateOnly.FromDateTime(start);
             })
 
-            /// <summary>
-            /// Плановая дата завершения: позже даты начала
-            /// </summary>
+            // Плановая дата завершения: позже даты начала
             .RuleFor(p => p.PlannedEndDate, (f, p) =>
             {
                 var planned = f.Date.Soon(180, p.StartDate.ToDateTime(TimeOnly.MinValue));
                 return DateOnly.FromDateTime(planned);
             })
 
-            /// <summary>
-            /// Бюджет: от 10k до 1M
-            /// </summary>
+            // Бюджет: от 10k до 1M
             .RuleFor(p => p.Budget, f => f.Finance.Amount(10000, 1000000, 2))
 
-            /// <summary>
-            /// Процент выполнения: от 0 до 100
-            /// </summary>
+
+            // Процент выполнения: от 0 до 100
             .RuleFor(p => p.CompletionPercentage, f => f.Random.Int(0, 100))
 
-            /// <summary>
-            /// Фактические затраты: пропорциональны бюджету (50-120%)
-            /// </summary>
+            // Фактические затраты: пропорциональны бюджету (50-120%)
             .RuleFor(p => p.ActualCost, (f, p) =>
                 f.Finance.Amount(p.Budget * 0.5m, p.Budget * 1.2m, 2))
 
-            /// <summary>
-            /// Фактическая дата завершения: заполняется только если процент = 100
-            /// </summary>
+            // Фактическая дата завершения: заполняется только если процент = 100
             .RuleFor(p => p.ActualEndDate, (f, p) =>
             {
                 if (p.CompletionPercentage == 100)
@@ -79,27 +61,11 @@ public class ProgramProjectFaker
                     return DateOnly.FromDateTime(actual);
                 }
                 return null;
-            })
-
-            /// <summary>
-            /// Финальная корректировка: если есть ActualEndDate, процент должен быть 100
-            /// </summary>
-            .FinishWith((f, p) =>
-            {
-                if (p.ActualEndDate.HasValue)
-                {
-                    p.CompletionPercentage = 100;
-                }
             });
     }
 
     public ProgramProjectModel Generate()
     {
         return _faker.Generate();
-    }
-
-    public List<ProgramProjectModel> Generate(int count)
-    {
-        return _faker.Generate(count);
     }
 }

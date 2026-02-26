@@ -1,67 +1,54 @@
-
 using ProgramProject.GenerationService.Generator;
+using ProgramProject.GenerationService.Services;
 using ProgramProject.ServiceDefaults;
 
-namespace ProgramProject.GenerationService;
+var builder = WebApplication.CreateBuilder(args);
+builder.AddServiceDefaults();
 
-public class Program
+builder.AddRedisDistributedCache("cache");
+
+builder.Services.AddCors(options =>
 {
-    public static void Main(string[] args)
+    options.AddPolicy("AllowClient", policy =>
     {
-        var builder = WebApplication.CreateBuilder(args);
-        builder.AddServiceDefaults();
-
-
-        builder.AddRedisDistributedCache("cache");
-
-        /// <summary>
-        /// Добавлен CORS
-        /// </summary>
-        builder.Services.AddCors(options =>
+        policy.SetIsOriginAllowed(origin =>
         {
-            options.AddPolicy("AllowClient", policy =>
+            try
             {
-                policy.SetIsOriginAllowed(origin =>
-                {
-                    var uri = new Uri(origin);
-                    return uri.Host == "localhost";
-                })
-                    .AllowAnyMethod()
-                    .AllowAnyHeader()
-                    .AllowCredentials();
-            });
-        });
+                var uri = new Uri(origin);
+                return uri.Host == "localhost";
+            }
+            catch
+            {
+                return false;
+            }
+        })
+        .WithMethods("GET")  // Только GET запросы
+        .AllowAnyHeader()
+        .AllowCredentials();
+    });
+});
 
-        /// <summary>
-        /// Добавлен генератор
-        /// </summary>
-        builder.Services.AddSingleton<ProgramProjectFaker>();
-        
-        // Add services to the container.
+builder.Services.AddSingleton<ProgramProjectFaker>();
+builder.Services.AddScoped<IProjectService, ProjectService>();
 
-        builder.Services.AddControllers();
-        // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-        builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen();
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
-        var app = builder.Build();
+var app = builder.Build();
 
-        app.MapDefaultEndpoints();
-        app.UseCors("AllowClient");
+app.MapDefaultEndpoints();
+app.UseCors("AllowClient");
 
-        if (app.Environment.IsDevelopment())
-        {
-            app.UseSwagger();
-            app.UseSwaggerUI();
-        }
-
-        app.UseHttpsRedirection();
-
-        app.UseAuthorization();
-
-
-        app.MapControllers();
-
-        app.Run();
-    }
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
+
+app.UseHttpsRedirection();
+app.UseAuthorization();
+app.MapControllers();
+
+app.Run();

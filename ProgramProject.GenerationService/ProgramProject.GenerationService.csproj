@@ -7,15 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.StackExchange.Redis" Version="13.1.1" />
-	  <PackageReference Include="Aspire.StackExchange.Redis.DistributedCaching" Version="13.1.1" />
+	<PackageReference Include="Aspire.StackExchange.Redis.DistributedCaching" Version="13.1.1" />
     <PackageReference Include="Bogus" Version="35.6.5" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Client.Wasm\Client.Wasm.csproj" />
-    <ProjectReference Include="..\ProgramProject.AppHost\ProgramProject.AppHost.csproj" />
     <ProjectReference Include="..\ProgramProject.ServiceDefaults\ProgramProject.ServiceDefaults.csproj" />
   </ItemGroup>
 
