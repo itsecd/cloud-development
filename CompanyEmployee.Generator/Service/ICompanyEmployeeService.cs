@@ -11,8 +11,8 @@ public interface ICompanyEmployeeService
     /// Метод получения сотрудника компании по идентификатору
     /// Сначала пытается найти сотрудника в кэше, если не находит, то генерирует нового и записывает его в кэш
     /// </summary>
-    /// <param name="id">Идентификатор сотрудника</param>
+    /// <param name="employeeId">Идентификатор сотрудника</param>
     /// <param name="token">Токен отмены запроса</param>
     /// <returns>DTO сотрудника компании</returns>
-    public Task<CompanyEmployeeDto> GetByIdAsync(int id, CancellationToken token);
+    public Task<CompanyEmployeeDto> GetByIdAsync(int employeeId, CancellationToken token);
 }

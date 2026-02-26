@@ -7,6 +7,7 @@ namespace CompanyEmployee.Generator.Service;
 /// <summary>
 /// Генератор сотрудника по идентификатору
 /// </summary>
+/// <param name="logger">Логгер</param>
 public class CompanyEmployeeGenerator(
     ILogger<CompanyEmployeeGenerator> logger
     ) : ICompanyEmployeeGenerator
@@ -15,10 +16,10 @@ public class CompanyEmployeeGenerator(
     
     private static readonly string[] _grade = ["Junior", "Middle", "Senior"];
     
-    public CompanyEmployeeDto Generate(int id)
+    public CompanyEmployeeDto Generate(int employeeId)
     {
         var faker = new Faker<CompanyEmployeeDto>("ru")
-            .RuleFor(e => e.Id, _ => id)
+            .RuleFor(e => e.Id, _ => employeeId)
             .RuleFor(e => e.FullName, f =>
             {
                 var gender = f.PickRandom(Enum.GetValues(typeof(Name.Gender)).Cast<Name.Gender>().ToArray());
@@ -50,7 +51,7 @@ public class CompanyEmployeeGenerator(
             .RuleFor(e => e.DismissalDate, (f, e) => !e.DismissalFlag ? null : 
                     f.Date.BetweenDateOnly(e.EmploymentDate, DateOnly.FromDateTime(DateTime.UtcNow)));
         
-        logger.LogInformation("Generated employee with id {}", id);
+         logger.LogInformation("Generated employee with id {employeeId}", employeeId);
         return faker.Generate();
     }
 }

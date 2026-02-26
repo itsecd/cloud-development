@@ -7,6 +7,8 @@ namespace CompanyEmployee.Generator.Controller;
 /// <summary>
 /// Контроллер для получения сотрудника компании по id
 /// </summary>
+/// <param name="service">Сервис получения сотрудника компании</param>
+/// <param name="logger">Логгер</param>
 [ApiController]
 [Route("company-employee")]
 public class CompanyEmployeeController(
@@ -31,7 +33,7 @@ public class CompanyEmployeeController(
         {
             return BadRequest("Id must be greater or equal than 0");
         }
-        logger.LogInformation("HTTP GET /company-employee, id: {id}", id);
+        logger.LogInformation("HTTP GET /company-employee, id: {employeeId}", id);
         
         var employee = await service.GetByIdAsync(id, cancellationToken);
         return Ok(employee);

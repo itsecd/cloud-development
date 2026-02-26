@@ -7,6 +7,10 @@ namespace CompanyEmployee.Generator.Service;
 /// <summary>
 /// Сервис получения сотрудника компании
 /// </summary>
+/// <param name="generator">Генератор сотрудника по идентификатору</param>
+/// <param name="cache">Сервис кэширования</param>
+/// <param name="configuration">Конфигурация приложения</param>
+/// <param name="logger">Логгер</param>
 public class CompanyEmployeeService(
     ICompanyEmployeeGenerator generator,
     IDistributedCache cache,
@@ -18,16 +22,16 @@ public class CompanyEmployeeService(
     
     private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web);
     
-    public async Task<CompanyEmployeeDto> GetByIdAsync(int id, CancellationToken token)
+    public async Task<CompanyEmployeeDto> GetByIdAsync(int employeeId, CancellationToken token)
     {
-        var cacheKey = _companyEmployeeCachePrefix + id;
+        var cacheKey = _companyEmployeeCachePrefix + employeeId;
         var cachedValue = await cache.GetStringAsync(cacheKey, token);
 
         CompanyEmployeeDto companyEmployee;
 
         if (!string.IsNullOrEmpty(cachedValue))
         {
-            logger.LogInformation("Read from cache, key: {}", cacheKey);
+            logger.LogInformation("Read from cache, key: {cacheKey}", cacheKey);
             try
             {
                 companyEmployee = JsonSerializer.Deserialize<CompanyEmployeeDto>(cachedValue, _jsonOptions);
@@ -38,11 +42,11 @@ public class CompanyEmployeeService(
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "Error deserializing cached employee, key: {}", cacheKey);
+                logger.LogWarning(ex, "Error deserializing cached employee, key: {cacheKey}", cacheKey);
             }
         }
 
-        companyEmployee = generator.Generate(id);
+        companyEmployee = generator.Generate(employeeId);
         
         var ttlSeconds = configuration.GetValue("CompanyEmployeeCache:TtlSeconds", 600);
         var cacheOpts = new DistributedCacheEntryOptions
@@ -54,11 +58,11 @@ public class CompanyEmployeeService(
         {
             await cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(companyEmployee, _jsonOptions), cacheOpts,
                 token);
-            logger.LogInformation("Write to cache, key: {}", cacheKey);
+            logger.LogInformation("Write to cache, key: {cacheKey}", cacheKey);
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "Error in caching companyEmployee, key: {}", cacheKey);
+            logger.LogWarning(ex, "Error in caching companyEmployee, key: {cacheKey}", cacheKey);
         }
         
         return companyEmployee;

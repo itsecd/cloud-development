@@ -10,8 +10,8 @@ public interface ICompanyEmployeeGenerator
     /// <summary>
     /// Метод для генерации сотрудника по идентификатору
     /// </summary>
-    /// <param name="id">Идентификатор сотрудника</param>
+    /// <param name="employeeId">Идентификатор сотрудника</param>
     /// <returns>DTO сотрудника компании</returns>
-    public CompanyEmployeeDto Generate(int id);
+    public CompanyEmployeeDto Generate(int employeeId);
 
 }
