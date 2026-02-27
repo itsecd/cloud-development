@@ -1,17 +1,19 @@
 using CreditApp.Application.Interfaces;
+using CreditApp.ServiceDefaults;
+using CreditApp.Application.Options;
 using CreditApp.Application.Services;
 using CreditApp.Infrastructure.Generators;
-using Microsoft.OpenApi;
 using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.AddServiceDefaults();
 builder.AddRedisDistributedCache("credit-cache");
 
-var centralBankRate = builder.Configuration.GetValue<double>("CreditGenerator:CentralBankRate", 16.0);
+builder.Services.AddSingleton<ICreditApplicationGenerator, CreditApplicationGenerator>();
 
-builder.Services.AddSingleton<ICreditApplicationGenerator>(
-    new CreditApplicationGenerator(centralBankRate));
+builder.Services.Configure<CacheOptions>(
+    builder.Configuration.GetSection(CacheOptions.SectionName));
 
 builder.Services.AddScoped<ICreditService, CreditService>();
 
@@ -24,12 +26,19 @@ builder.Services.AddSwaggerGen(options =>
     options.IncludeXmlComments(xmlPath);
 });
 
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("DefaultCors",
-        policy => policy.AllowAnyOrigin()
-                        .AllowAnyHeader()
-                        .AllowAnyMethod());
+    options.AddPolicy("DefaultCors", policy =>
+    {
+        policy.AllowAnyHeader().AllowAnyMethod();
+
+        if (builder.Environment.IsDevelopment())
+            policy.AllowAnyOrigin();
+        else
+            policy.WithOrigins(allowedOrigins);
+    });
 });
 
 var app = builder.Build();
@@ -46,6 +55,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("DefaultCors");
 
+app.MapDefaultEndpoints();
 app.MapControllers();
 
 app.Run();

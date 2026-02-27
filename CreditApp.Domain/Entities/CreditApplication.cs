@@ -8,7 +8,7 @@ public class CreditApplication
     /// <summary>
     /// Идентификатор в системе
     /// </summary>
-    public int Id { get; init; }
+    public int Id { get; set; }
     /// <summary>
     /// Тип кредита
     /// </summary>

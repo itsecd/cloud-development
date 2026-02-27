@@ -1,4 +1,5 @@
 ﻿using CreditApp.Application.Interfaces;
+using CreditApp.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CreditApp.Api.Controllers;
@@ -23,7 +24,9 @@ public class CreditController(
     /// <param name="ct">Токен отмены для асинхронной операции.</param>
     /// <returns>HTTP 200 с объектом заявки при успешном получении.</returns>
     [HttpGet]
-    public async Task<IActionResult> Get([FromQuery] int id, CancellationToken ct)
+    [ProducesResponseType<CreditApplication>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<CreditApplication>> Get([FromQuery] int id, CancellationToken ct)
     {
         logger.LogInformation("Request for credit {CreditId} started", id);
 

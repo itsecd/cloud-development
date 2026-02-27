@@ -1,53 +1,39 @@
-﻿using Bogus;
+using Bogus;
 using CreditApp.Application.Interfaces;
 using CreditApp.Domain.Dictionaries;
 using CreditApp.Domain.Entities;
+using Microsoft.Extensions.Configuration;
 
 namespace CreditApp.Infrastructure.Generators;
 
-public class CreditApplicationGenerator(double centralBankRate)
-    : ICreditApplicationGenerator
+public class CreditApplicationGenerator : ICreditApplicationGenerator
 {
-    public Task<CreditApplication> GenerateAsync(int id, CancellationToken ct)
+    private readonly Faker<CreditApplication> _faker;
+
+    public CreditApplicationGenerator(IConfiguration configuration)
     {
-        var faker = new Faker();
+        var centralBankRate = configuration.GetValue("CreditGenerator:CentralBankRate", 16.0);
 
-        var status = faker.PickRandom(CreditDictionaries.Statuses);
+        _faker = new Faker<CreditApplication>()
+            .RuleFor(c => c.CreditType, f => f.PickRandom(CreditDictionaries.CreditTypes))
+            .RuleFor(c => c.RequestedAmount, f => Math.Round(f.Random.Decimal(100_000, 10_000_000), 2))
+            .RuleFor(c => c.TermMonths, f => f.Random.Int(6, 360))
+            .RuleFor(c => c.InterestRate, f => Math.Round(f.Random.Double(centralBankRate, centralBankRate + 10), 2))
+            .RuleFor(c => c.SubmissionDate, f => DateOnly.FromDateTime(f.Date.Between(DateTime.Now.AddYears(-2), DateTime.Now)))
+            .RuleFor(c => c.HasInsurance, f => f.Random.Bool())
+            .RuleFor(c => c.Status, f => f.PickRandom(CreditDictionaries.Statuses))
+            .RuleFor(c => c.DecisionDate, (f, c) => CreditDictionaries.IsTerminal(c.Status)
+                ? c.SubmissionDate.AddDays(f.Random.Int(1, 30))
+                : null)
+            .RuleFor(c => c.ApprovedAmount, (f, c) => c.Status == "Одобрена"
+                ? Math.Round(f.Random.Decimal(10_000, c.RequestedAmount), 2)
+                : null);
+    }
 
-        var submissionDate = DateOnly.FromDateTime(
-            faker.Date.Between(DateTime.Now.AddYears(-2), DateTime.Now));
-
-        DateOnly? decisionDate = null;
-        decimal? approvedAmount = null;
-
-        var requested = Math.Round(faker.Random.Decimal(100_000, 10_000_000), 2);
-
-        if (CreditDictionaries.IsTerminal(status))
-        {
-            decisionDate = submissionDate.AddDays(faker.Random.Int(1, 30));
-
-            if (status == "Одобрена")
-            {
-                approvedAmount = Math.Round(
-                    faker.Random.Decimal(10_000, requested), 2);
-            }
-        }
-
-        var interestRate = Math.Round(
-            faker.Random.Double(centralBankRate, centralBankRate + 10), 2);
-
-        return Task.FromResult(new CreditApplication
-        {
-            Id = id,
-            CreditType = faker.PickRandom(CreditDictionaries.CreditTypes),
-            RequestedAmount = requested,
-            TermMonths = faker.Random.Int(6, 360),
-            InterestRate = interestRate,
-            SubmissionDate = submissionDate,
-            HasInsurance = faker.Random.Bool(),
-            Status = status,
-            DecisionDate = decisionDate,
-            ApprovedAmount = approvedAmount
-        });
+    public Task<CreditApplication> GenerateAsync(int id)
+    {
+        var application = _faker.Generate();
+        application.Id = id;
+        return Task.FromResult(application);
     }
 }
