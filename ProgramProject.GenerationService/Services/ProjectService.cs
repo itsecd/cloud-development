@@ -42,8 +42,15 @@ public class ProjectService : IProjectService
             if (cachedBytes != null)
             {
                 var cachedProject = JsonSerializer.Deserialize<ProgramProjectModel>(cachedBytes);
-                _logger.LogInformation("Проект с ID {ProjectId} найден в кэше", id);
-                return cachedProject!;
+
+                if (cachedProject != null)
+                {
+                    _logger.LogInformation("Проект с ID {ProjectId} найден в кэше", id);
+                    return cachedProject;
+                }
+
+                _logger.LogWarning("Проект с ID {ProjectId} найден в кэше, но повреждён. Удаляем...", id);
+                await _cache.RemoveAsync(cacheKey);
             }
 
             _logger.LogInformation("Проект с ID {ProjectId} не найден в кэше. Генерируем новый", id);
