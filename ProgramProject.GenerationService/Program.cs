@@ -29,7 +29,7 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.Services.AddSingleton<ProgramProjectFaker>();
+builder.Services.AddSingleton<IProgramProjectFaker, ProgramProjectFaker>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 
 builder.Services.AddControllers();

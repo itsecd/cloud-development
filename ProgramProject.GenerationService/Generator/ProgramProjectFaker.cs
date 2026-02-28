@@ -3,7 +3,10 @@ using ProgramProject.GenerationService.Models;
 
 namespace ProgramProject.GenerationService.Generator;
 
-public class ProgramProjectFaker
+/// <summary>
+/// Генератор нового проекта
+/// </summary>
+public class ProgramProjectFaker : IProgramProjectFaker
 {
     private readonly Faker<ProgramProjectModel> _faker;
 
@@ -44,7 +47,6 @@ public class ProgramProjectFaker
             // Бюджет: от 10k до 1M
             .RuleFor(p => p.Budget, f => f.Finance.Amount(10000, 1000000, 2))
 
-
             // Процент выполнения: от 0 до 100
             .RuleFor(p => p.CompletionPercentage, f => f.Random.Int(0, 100))
 
@@ -63,9 +65,9 @@ public class ProgramProjectFaker
                 return null;
             });
     }
-
-    public ProgramProjectModel Generate()
-    {
-        return _faker.Generate();
-    }
+    /// <summary>
+    /// Метод вызова генерации
+    /// </summary>
+    public ProgramProjectModel Generate() =>
+        _faker.Generate();
 }

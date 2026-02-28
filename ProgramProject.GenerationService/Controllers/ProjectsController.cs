@@ -8,9 +8,17 @@ namespace ProgramProject.GenerationService.Controllers;
 [ApiController]
 public class ProjectsController(IProjectService projectService, ILogger<ProjectsController> logger) : ControllerBase
 {
-    [HttpGet("{id}")]
-    public async Task<ActionResult<ProgramProjectModel>> GetProject(int id)
+    [HttpGet]
+    [ProducesResponseType(typeof(ProgramProjectModel), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ProgramProjectModel>> GetProject([FromQuery] int id)
     {
+        if (id <= 0)
+        {
+            return BadRequest("ID должен быть положительным числом");
+        }
+
         try
         {
             logger.LogInformation("Запрос проекта с ID {ProjectId}", id);
@@ -22,12 +30,5 @@ public class ProjectsController(IProjectService projectService, ILogger<Projects
             logger.LogError(ex, "Ошибка при обработке запроса проекта ID {ProjectId}", id);
             return StatusCode(500, "Внутренняя ошибка сервера");
         }
-    }
-
-    [HttpGet]
-    public async Task<ActionResult<ProgramProjectModel>> GetProjectByIdQuery(
-    [FromQuery] int id)
-    {
-        return await GetProject(id);
     }
 }

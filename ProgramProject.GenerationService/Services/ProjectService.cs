@@ -5,16 +5,19 @@ using System.Text.Json;
 
 namespace ProgramProject.GenerationService.Services;
 
+/// <summary>
+/// Сервис работы с кэшем и с объектами
+/// </summary>
 public class ProjectService : IProjectService
 {
     private readonly IDistributedCache _cache;
-    private readonly ProgramProjectFaker _faker;
+    private readonly IProgramProjectFaker _faker;
     private readonly ILogger<ProjectService> _logger;
     private readonly DistributedCacheEntryOptions _cacheOptions;
 
     public ProjectService(
         IDistributedCache cache,
-        ProgramProjectFaker faker,
+        IProgramProjectFaker faker,
         ILogger<ProjectService> logger,
         IConfiguration configuration)
     {
@@ -22,7 +25,7 @@ public class ProjectService : IProjectService
         _faker = faker;
         _logger = logger;
 
-        var cacheMinutes = configuration.GetValue<int>("Cache:ExpirationMinutes", 5);
+        var cacheMinutes = configuration.GetValue("Cache:ExpirationMinutes", 5);
         _cacheOptions = new DistributedCacheEntryOptions()
             .SetAbsoluteExpiration(TimeSpan.FromMinutes(cacheMinutes));
     }
