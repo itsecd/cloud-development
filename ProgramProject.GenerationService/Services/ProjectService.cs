@@ -49,8 +49,8 @@ public class ProjectService : IProjectService
                     return cachedProject;
                 }
 
-                _logger.LogWarning("Проект с ID {ProjectId} найден в кэше, но повреждён. Удаляем...", id);
-                await _cache.RemoveAsync(cacheKey);
+                _logger.LogWarning("Проект с ID {ProjectId} найден в кэше, но повреждён. Удаляем.", id);
+                await _cache.RemoveAsync(cacheKey, cancellationToken);
             }
 
             _logger.LogInformation("Проект с ID {ProjectId} не найден в кэше. Генерируем новый", id);
@@ -59,7 +59,7 @@ public class ProjectService : IProjectService
             var newProject = _faker.Generate();
             newProject.Id = id;
 
-            // СОхраняем в кэш
+            // Сораняем в кэш
             var serializedProject = JsonSerializer.SerializeToUtf8Bytes(newProject);
             await _cache.SetAsync(cacheKey, serializedProject, _cacheOptions, cancellationToken);
 
