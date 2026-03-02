@@ -4,46 +4,73 @@ using Inventory.ApiService.Generation;
 using Microsoft.Extensions.Caching.Distributed;
 
 namespace Inventory.ApiService.Cache;
-
-public class InventoryCache
+/// <summary>
+/// Реализация сервиса кэширования для получения продукта.
+/// Сначала пытается получить данные из кэша, при отсутствии — генерирует продукт и сохраняет его в кэш.
+/// </summary>
+/// <param name="_cache"> Сервис распределённого кэширования</param>
+/// <param name="_configuration"> Конфигурация приложения</param>
+/// <param name="_logger"> Логгер для записи событий</param>
+/// <param name="_generator"> Генератор </param>
+public class InventoryCache(IDistributedCache _cache, IConfiguration _configuration, ILogger<InventoryCache> _logger, Generator _generator) : IInventoryCache
 {
-    private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web);
-    private readonly IDistributedCache _cache;
-    private readonly Generator _generator;
-    private readonly ILogger<InventoryCache> _logger;
-
-    public InventoryCache(IDistributedCache cache, Generator generator, ILogger<InventoryCache> logger)
+    /// <summary>
+    /// Возвращает продукт по идентификатору.
+    /// При наличии в кэше возвращает сохранённые данные, иначе генерирует новый объект и сохраняет его в кэш 
+    /// </summary>
+    /// <param name="id"> Идентификатор продукта</param>
+    /// <param name="ct"> Токен отмены операции</param>
+    /// <returns></returns>
+    public async Task<Product> GetAsync(int id, CancellationToken ct)
     {
-        _cache = cache;
-        _generator = generator;
-        _logger = logger;
-    }
+        var cacheKey = $"inventory-{id}";
+        _logger.LogInformation("Try get product {Id} from cache", id);
 
-    public async Task<IReadOnlyList<Product>> GetAsync(int count, int? seed, CancellationToken ct)
-    {
-        var cacheKey = $"inventory:count={count}:seed={(seed?.ToString() ?? "null")}";
+        var cachedData = await _cache.GetStringAsync(cacheKey, ct);
 
-        var cached = await _cache.GetStringAsync(cacheKey, ct);
 
-        if (cached is not null)
+        if (!string.IsNullOrEmpty(cachedData))
         {
-            _logger.LogInformation("Inventory cache HIT {CacheKey}", cacheKey);
-            return JsonSerializer.Deserialize<List<Product>>(cached, _jsonOptions) ?? new List<Product>();
+            try
+            {
+                var cachedProduct = JsonSerializer.Deserialize<Product>(cachedData);
+                if (cachedProduct is not null)
+                {
+                    _logger.LogInformation("Cache HIT for product {Id}", id);
+                    return cachedProduct;
+                }
+
+                _logger.LogWarning("Cache HIT but deserialize returned null for product {Id}", id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Deserialize failed for product {Id}. Continue without cache.", id);
+            }
         }
 
-        _logger.LogInformation("Inventory cache MISS {CacheKey}. Generating {Count} items.", cacheKey, count);
+        _logger.LogInformation("Cache MISS for product {Id}. Generating.", id);
+        var product = _generator.Generate(id);
 
-        var sw = System.Diagnostics.Stopwatch.StartNew();
-        var data = Generator.Generate(count, seed);
+        try
+        {
+            var expirationMinutes = _configuration.GetValue("CacheSettings:ExpirationMinutes", 5);
+            var options = new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(expirationMinutes)
+            };
 
-        sw.Stop();
+            await _cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(product), options, ct);
+            _logger.LogInformation("Product {Id} saved to cache", id);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Cache WRITE failed for {Id}. Continue without cache.", id);
+        }
 
-        _logger.LogInformation("Generated inventory {Count} items in {ElapsedMs}ms", data.Count, sw.ElapsedMilliseconds);
-
-        var json = JsonSerializer.Serialize(data, _jsonOptions);
-
-        await _cache.SetStringAsync(cacheKey, json, new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5) }, ct);
-
-        return data;
+        return product;
     }
 }

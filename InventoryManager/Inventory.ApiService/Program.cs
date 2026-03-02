@@ -26,7 +26,7 @@ builder.Services.AddCors(options =>
 
 // DI
 builder.Services.AddSingleton<Generator>();
-builder.Services.AddScoped<InventoryCache>();
+builder.Services.AddScoped<IInventoryCache, InventoryCache>();
 
 var app = builder.Build();
 
