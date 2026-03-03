@@ -34,15 +34,13 @@ public sealed class QueryBasedLoadBalancer : ILoadBalancer
             _logger.LogError("Нет доступных реплик для балансировки");
             return new ErrorResponse<ServiceHostAndPort>(new ServicesAreEmptyError("Нет доступных реплик"));
         }
-
         try
         {
             var idValue = ExtractIdFromQuery(httpContext);
             var replicaIndex = CalculateReplicaIndex(idValue);
             var selectedService = _services[replicaIndex];
 
-            _logger.LogInformation(
-                "Запрос с id={Id} направлен на реплику {ReplicaIndex} ({HostAndPort})",
+            _logger.LogInformation("Запрос с id={Id} направлен на реплику {ReplicaIndex} ({HostAndPort})",
                 idValue, replicaIndex, selectedService.HostAndPort);
 
             return new OkResponse<ServiceHostAndPort>(selectedService.HostAndPort);
@@ -55,7 +53,7 @@ public sealed class QueryBasedLoadBalancer : ILoadBalancer
     }
 
     /// <summary>
-    /// Извлекаем значение id из query string
+    /// Извлекаем значение id
     /// </summary>
     private int ExtractIdFromQuery(HttpContext context)
     {

@@ -7,6 +7,9 @@ using Ocelot.ServiceDiscovery.Providers;
 
 namespace ProgramProject.Gateway.LoadBalancers;
 
+/// <summary>
+/// Генератор (хотя его ещё и называют фабрикой) балансировщиков
+/// </summary>
 public class QueryBasedLoadBalancerFactory : ILoadBalancerFactory
 {
     private readonly ILogger<QueryBasedLoadBalancer> _logger;

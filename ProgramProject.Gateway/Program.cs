@@ -6,7 +6,7 @@ using ProgramProject.Gateway.LoadBalancers;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Добавляем конфигурацию Ocelot
+// Добавляем конфигурацию с Ocelot
 builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
 
 // Регистрируем фабрику балансировщика
@@ -16,7 +16,7 @@ builder.Services.AddSingleton<ILoadBalancerFactory, QueryBasedLoadBalancerFactor
 builder.Services.AddOcelot()
     .AddKubernetes(); // Провайдер Kubernetes, с которым у меня наконец-то всё запустилось и заработало!
 
-// Добавляем Service Discovery для Aspire
+// Добавляем Service Discovery 
 builder.Services.AddServiceDiscovery();
 
 var app = builder.Build();
