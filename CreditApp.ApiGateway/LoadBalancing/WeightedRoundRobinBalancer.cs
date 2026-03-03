@@ -1,7 +1,5 @@
-using Microsoft.Extensions.Logging;
 using Ocelot.Errors;
 using Ocelot.LoadBalancer.Interfaces;
-using Ocelot.Middleware;
 using Ocelot.Responses;
 using Ocelot.Values;
 
@@ -23,7 +21,7 @@ public class WeightedRoundRobinLoadBalancer(Func<Task<List<Service>>> servicesPr
     public string Type => "WeightedRoundRobin";
 
     public async Task<Response<ServiceHostAndPort>> LeaseAsync(HttpContext httpContext)
-    { 
+    {
         var services = await servicesProvider();
 
         if (services == null || services.Count == 0)
@@ -48,7 +46,7 @@ public class WeightedRoundRobinLoadBalancer(Func<Task<List<Service>>> servicesPr
 
             var currentService = services[_currentIndex];
             selectedService = currentService.HostAndPort;
-            
+
             _remainingRequests--;
         }
         return new OkResponse<ServiceHostAndPort>(selectedService);
