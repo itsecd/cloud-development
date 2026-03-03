@@ -8,7 +8,7 @@ using Ocelot.ServiceDiscovery.Providers;
 namespace ProgramProject.Gateway.LoadBalancers;
 
 /// <summary>
-/// Генератор (хотя его ещё и называют фабрикой) балансировщиков
+/// Генератор (хотя его ещё называют  и фабрикой) балансировщиков
 /// </summary>
 public class QueryBasedLoadBalancerFactory : ILoadBalancerFactory
 {
@@ -36,7 +36,6 @@ public class QueryBasedLoadBalancerFactory : ILoadBalancerFactory
 
         try
         {
-            // Получаем провайдер обнаружения сервисов
             var serviceDiscoveryProvider = _serviceProvider.GetService<IServiceDiscoveryProvider>();
 
             if (serviceDiscoveryProvider == null)
@@ -47,7 +46,6 @@ public class QueryBasedLoadBalancerFactory : ILoadBalancerFactory
                         "ServiceDiscoveryProvider не найден в контейнере"));
             }
 
-            // Получаем список сервисов
             var services = serviceDiscoveryProvider.GetAsync().GetAwaiter().GetResult().ToList();
 
             if (services.Count == 0)
