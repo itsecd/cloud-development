@@ -1,6 +1,7 @@
 ## Ле Хань Хоанг 6513
 ## Вариант 45 - Товар на складке
 ## Лабораторная работа №1 - Кэширование
-<img width="1915" height="538" alt="image" src="https://github.com/user-attachments/assets/cd053c44-522d-4dd6-95d1-8fdaff39a544" />
-<img width="1908" height="943" alt="image" src="https://github.com/user-attachments/assets/ff490752-1ca4-45f5-8d7e-452156c63439" />
+<img width="1852" height="464" alt="image" src="https://github.com/user-attachments/assets/0584db51-26f4-4eea-8c55-37920bf20c0b" />
+
+<img width="1912" height="912" alt="image" src="https://github.com/user-attachments/assets/1078462f-b8a4-4caa-a2e7-c4b545c8589a" />
 
