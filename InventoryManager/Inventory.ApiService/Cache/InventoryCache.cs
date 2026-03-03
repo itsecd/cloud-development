@@ -12,8 +12,13 @@ namespace Inventory.ApiService.Cache;
 /// <param name="_configuration"> Конфигурация приложения</param>
 /// <param name="_logger"> Логгер для записи событий</param>
 /// <param name="_generator"> Генератор </param>
-public class InventoryCache(IDistributedCache _cache, IConfiguration _configuration, ILogger<InventoryCache> _logger, Generator _generator) : IInventoryCache
+public class InventoryCache(IDistributedCache cache, IConfiguration configuration, ILogger<InventoryCache> logger,Generator generator) : IInventoryCache
 {
+    private readonly IDistributedCache _cache = cache;
+    private readonly IConfiguration _configuration = configuration;
+    private readonly ILogger<InventoryCache> _logger = logger;
+    private readonly Generator _generator = generator;
+
     /// <summary>
     /// Возвращает продукт по идентификатору.
     /// При наличии в кэше возвращает сохранённые данные, иначе генерирует новый объект и сохраняет его в кэш 
@@ -26,8 +31,16 @@ public class InventoryCache(IDistributedCache _cache, IConfiguration _configurat
         var cacheKey = $"inventory-{id}";
         _logger.LogInformation("Try get product {Id} from cache", id);
 
-        var cachedData = await _cache.GetStringAsync(cacheKey, ct);
+        string? cachedData = null;
 
+        try
+        {
+            cachedData = await _cache.GetStringAsync(cacheKey, ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Cache READ failed for {Id}. Continue without cache.", id);
+        }
 
         if (!string.IsNullOrEmpty(cachedData))
         {
