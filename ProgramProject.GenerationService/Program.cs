@@ -23,7 +23,7 @@ builder.Services.AddCors(options =>
                 return false;
             }
         })
-        .WithMethods("GET")  // Только GET запросы
+        .WithMethods("GET")
         .AllowAnyHeader()
         .AllowCredentials();
     });

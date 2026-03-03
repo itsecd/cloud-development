@@ -1,0 +1,21 @@
+{
+  "Routes": [
+    {
+      "DownstreamPathTemplate": "/api/projects",
+      "DownstreamScheme": "http",
+      "UpstreamPathTemplate": "/api/projects",
+      "UpstreamHttpMethod": [ "GET" ],
+      "ServiceName": "generation-service",
+      "LoadBalancerOptions": {
+        "Type": "QueryBased",
+        "Key": "id"
+      }
+    }
+  ],
+  "GlobalConfiguration": {
+    "BaseUrl": "http://localhost:5232",
+    "ServiceDiscoveryProvider": {
+      "Type": "AppHost"
+    }
+  }
+}
