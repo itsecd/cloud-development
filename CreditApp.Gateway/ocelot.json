@@ -1,0 +1,21 @@
+{
+  "Routes": [
+    {
+      "DownstreamPathTemplate": "/api/Credit",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "localhost", "Port": 7001 },
+        { "Host": "localhost", "Port": 7002 },
+        { "Host": "localhost", "Port": 7003 }
+      ],
+      "UpstreamPathTemplate": "/api/Credit",
+      "UpstreamHttpMethod": [ "GET" ],
+      "LoadBalancerOptions": {
+        "Type": "WeightedRoundRobinBalancer"
+      }
+    }
+  ],
+  "GlobalConfiguration": {
+    "BaseUrl": "https://localhost:7201"
+  }
+}
