@@ -1,4 +1,3 @@
-using Ocelot.Errors;
 using Ocelot.LoadBalancer.Errors;
 using Ocelot.LoadBalancer.Interfaces;
 using Ocelot.Responses;
@@ -9,7 +8,7 @@ namespace CreditApp.ApiGateway.LoadBalancing;
 /// <summary>
 /// Weighted Round Robin балансировщик нагрузки для Ocelot.
 /// </summary>
-public class WeightedRoundRobinLoadBalancer(Func<Task<List<Service>>> servicesProvider, Dictionary<string, double> hostPortWeights) : ILoadBalancer
+public class WeightedRoundRobinLoadBalancer(Func<Task<List<Service>>> servicesProvider, Dictionary<string, int> hostPortWeights) : ILoadBalancer
 {
     private static int _currentIndex = -1;
     private static int _remainingRequests = 0;
@@ -26,22 +25,38 @@ public class WeightedRoundRobinLoadBalancer(Func<Task<List<Service>>> servicesPr
             return new ErrorResponse<ServiceHostAndPort>(
                 new ServicesAreEmptyError("No services available"));
         }
+
+        var availableServices = services
+            .Where(s =>
+            {
+                var hostPort = $"{s.HostAndPort.DownstreamHost}:{s.HostAndPort.DownstreamPort}";
+                var weight = hostPortWeights.TryGetValue(hostPort, out var w) ? w : 1.0;
+                return weight > 0;
+            })
+            .ToList();
+
+        if (availableServices.Count == 0)
+        {
+            return new ErrorResponse<ServiceHostAndPort>(
+                new ServicesAreEmptyError("No services with positive weight available"));
+        }
+
         ServiceHostAndPort selectedService;
 
         lock (_lock)
         {
             if (_remainingRequests <= 0)
             {
-                _currentIndex = (_currentIndex + 1) % services.Count;
+                _currentIndex = (_currentIndex + 1) % availableServices.Count;
 
-                var service = services[_currentIndex];
+                var service = availableServices[_currentIndex];
                 var hostPort = $"{service.HostAndPort.DownstreamHost}:{service.HostAndPort.DownstreamPort}";
 
                 var weight = hostPortWeights.TryGetValue(hostPort, out var w) ? w : 1.0;
-                _remainingRequests = (int)Math.Ceiling(weight);
+                _remainingRequests = Math.Max(1, (int)Math.Ceiling(weight));
             }
 
-            var currentService = services[_currentIndex];
+            var currentService = availableServices[_currentIndex];
             selectedService = currentService.HostAndPort;
 
             _remainingRequests--;

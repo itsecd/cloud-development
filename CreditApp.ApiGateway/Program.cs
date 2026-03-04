@@ -13,10 +13,10 @@ builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange
 var generatorNames = builder.Configuration.GetSection("GeneratorServices").Get<string[]>() ?? [];
 var serviceWeights = builder.Configuration
     .GetSection("ReplicaWeights")
-    .Get<Dictionary<string, double>>() ?? [];
+    .Get<Dictionary<string, int>>() ?? [];
 
 var addressOverrides = new List<KeyValuePair<string, string?>>();
-var hostPortWeights = new Dictionary<string, double>();
+var hostPortWeights = new Dictionary<string, int>();
 
 for (var i = 0; i < generatorNames.Length; i++)
 {
