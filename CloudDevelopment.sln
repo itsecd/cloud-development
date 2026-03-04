@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ResidentialBuilding.AppHost
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ResidentialBuilding.ServiceDefaults", "ResidentialBuilding.ServiceDefaults\ResidentialBuilding.ServiceDefaults.csproj", "{3AEE6EF1-603F-411D-89C2-5CE78EBCAEBA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ResidentialBuilding.Gateway", "ResidentialBuilding.Gateway\ResidentialBuilding.Gateway.csproj", "{2CC59865-F962-47FF-9C2F-1CB6F535316B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{3AEE6EF1-603F-411D-89C2-5CE78EBCAEBA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3AEE6EF1-603F-411D-89C2-5CE78EBCAEBA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3AEE6EF1-603F-411D-89C2-5CE78EBCAEBA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2CC59865-F962-47FF-9C2F-1CB6F535316B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2CC59865-F962-47FF-9C2F-1CB6F535316B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2CC59865-F962-47FF-9C2F-1CB6F535316B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2CC59865-F962-47FF-9C2F-1CB6F535316B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
