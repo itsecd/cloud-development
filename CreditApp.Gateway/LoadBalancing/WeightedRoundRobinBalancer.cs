@@ -59,14 +59,14 @@ public class WeightedRoundRobinBalancer(
     /// </summary>
     public Task<Response<ServiceHostAndPort>> LeaseAsync(HttpContext httpContext)
     {
+        if (_config.Services.Count == 0)
+        {
+            return Task.FromResult<Response<ServiceHostAndPort>>(
+                new ErrorResponse<ServiceHostAndPort>(new ServicesAreEmptyError("Generator services list is empty, no hosts were discovered")));
+        }
+
         lock (_lock)
         {
-            if (_config.Services.Count == 0)
-            {
-                return Task.FromResult<Response<ServiceHostAndPort>>(
-                    new ErrorResponse<ServiceHostAndPort>(new ServicesAreEmptyError("Weighted services list is empty")));
-            }
-
             _currentIndex = (_currentIndex + 1) % _config.TotalWeight;
 
             var cumulative = 0;
@@ -86,7 +86,7 @@ public class WeightedRoundRobinBalancer(
             }
 
             return Task.FromResult<Response<ServiceHostAndPort>>(
-                new ErrorResponse<ServiceHostAndPort>(new ServicesAreEmptyError("Weighted services list is empty")));
+                new ErrorResponse<ServiceHostAndPort>(new ServicesAreEmptyError("Could not match any service host within cumulative weight bounds")));
         }
     }
 
