@@ -50,9 +50,7 @@ builder.Services
     .AddOcelot(builder.Configuration)
     .AddCustomLoadBalancer((serviceProvider, route, serviceDiscovery) =>
     {
-        return new WeightedRoundRobinLoadBalancer(
-            async () => await serviceDiscovery.GetAsync(),
-            hostPortWeights);
+        return new WeightedRoundRobinLoadBalancer(serviceDiscovery.GetAsync, hostPortWeights);
     });
 
 builder.Services.AddCors(options =>

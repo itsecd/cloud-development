@@ -1,13 +1,10 @@
 using Ocelot.Errors;
+using Ocelot.LoadBalancer.Errors;
 using Ocelot.LoadBalancer.Interfaces;
 using Ocelot.Responses;
 using Ocelot.Values;
 
 namespace CreditApp.ApiGateway.LoadBalancing;
-
-public class NoServicesAvailableError(string message) : Error(message, OcelotErrorCode.UnableToCompleteRequestError, 503)
-{
-}
 
 /// <summary>
 /// Weighted Round Robin балансировщик нагрузки для Ocelot.
@@ -27,7 +24,7 @@ public class WeightedRoundRobinLoadBalancer(Func<Task<List<Service>>> servicesPr
         if (services == null || services.Count == 0)
         {
             return new ErrorResponse<ServiceHostAndPort>(
-                new NoServicesAvailableError("No services available"));
+                new ServicesAreEmptyError("No services available"));
         }
         ServiceHostAndPort selectedService;
 
@@ -52,7 +49,5 @@ public class WeightedRoundRobinLoadBalancer(Func<Task<List<Service>>> servicesPr
         return new OkResponse<ServiceHostAndPort>(selectedService);
     }
 
-    public void Release(ServiceHostAndPort hostAndPort)
-    {
-    }
+    public void Release(ServiceHostAndPort hostAndPort) {}
 }
