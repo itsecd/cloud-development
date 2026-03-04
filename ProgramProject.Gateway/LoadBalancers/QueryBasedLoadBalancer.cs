@@ -13,7 +13,6 @@ public class QueryBasedLoadBalancer : ILoadBalancer
     private readonly ILogger<QueryBasedLoadBalancer> _logger;
     private readonly string _queryParameterName;
 
-    // Конструктор с параметрами - всё явно передается
     public QueryBasedLoadBalancer(List<Service> services, ILogger<QueryBasedLoadBalancer> logger, string queryParameterName = "id")
     {
         _services = services;
