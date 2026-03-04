@@ -18,10 +18,10 @@ public class ResidentialBuildingController(ILogger<ResidentialBuildingController
     /// <returns>DTO объекта жилого строительства.</returns>
     /// <response code="200">Успешное получение объекта.</response>
     /// <response code="400">Некорректный id.</response>
-    [HttpGet("{id:int}")]
+    [HttpGet]
     [ProducesResponseType<ResidentialBuildingDto>(StatusCodes.Status200OK)]
     [ProducesResponseType<string>(StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<ResidentialBuildingDto>> GetResidentialBuilding(int id)
+    public async Task<ActionResult<ResidentialBuildingDto>> GetResidentialBuilding([FromQuery] int id)
     {
         if (id <= 0)
         {
