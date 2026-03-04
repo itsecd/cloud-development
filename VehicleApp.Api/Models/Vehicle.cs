@@ -13,37 +13,37 @@ public class Vehicle
     /// <summary>
     /// VIN-номер
     /// </summary>
-    public string Vin { get; set; } = string.Empty;
+    public required string Vin { get; set; }
 
     /// <summary>
     /// Производитель
     /// </summary>
-    public string Manufacturer { get; set; } = string.Empty;
+    public required string Manufacturer { get; set; }
 
     /// <summary>
     /// Модель
     /// </summary>
-    public string Model { get; set; } = string.Empty;
+    public required string Model { get; set; }
 
     /// <summary>
     /// Год выпуска
     /// </summary>
-    public int Year { get; set; }
+    public required int Year { get; set; }
 
     /// <summary>
     /// Тип корпуса
     /// </summary>
-    public string BodyType { get; set; } = string.Empty;
+    public required string BodyType { get; set; }
 
     /// <summary>
     /// Тип топлива
     /// </summary>
-    public string FuelType { get; set; } = string.Empty;
+    public required string FuelType { get; set; }
 
     /// <summary>
     /// Цвет корпуса
     /// </summary>
-    public string BodyColor { get; set; } = string.Empty;
+    public required string BodyColor { get; set; }
 
     /// <summary>
     /// Пробег (км)
