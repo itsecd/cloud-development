@@ -1,4 +1,4 @@
-using Ocelot.Errors;
+using Ocelot.LoadBalancer.Errors;
 using Ocelot.LoadBalancer.Interfaces;
 using Ocelot.Responses;
 using Ocelot.ServiceDiscovery.Providers;
@@ -16,7 +16,7 @@ public class WeightedRoundRobinBalancer(
     Dictionary<string, int> replicaWeights,
     Dictionary<string, string> hostPortToServiceName) : ILoadBalancer
 {
-    private readonly List<ServiceHostAndPort> _weightedServices =
+    private readonly (List<(ServiceHostAndPort Host, int Weight)> Services, int TotalWeight) _config =
         BuildWeightedList(serviceDiscoveryProvider, replicaWeights, hostPortToServiceName);
 
     private int _currentIndex = -1;
@@ -27,13 +27,14 @@ public class WeightedRoundRobinBalancer(
     /// <summary>
     /// Строит развёрнутый список хостов: хост с весом 3 появляется 3 раза.
     /// </summary>
-    private static List<ServiceHostAndPort> BuildWeightedList(
+    private static (List<(ServiceHostAndPort Host, int Weight)> Services, int TotalWeight) BuildWeightedList(
         IServiceDiscoveryProvider provider,
         Dictionary<string, int> replicaWeights,
         Dictionary<string, string> hostPortToServiceName)
     {
         var services = provider.GetAsync().Result;
-        var list = new List<ServiceHostAndPort>();
+        var list = new List<(ServiceHostAndPort Host, int Weight)>();
+        var totalWeight = 0;
 
         foreach (var service in services)
         {
@@ -46,11 +47,11 @@ public class WeightedRoundRobinBalancer(
                 weight = configuredWeight;
             }
 
-            for (var i = 0; i < weight; i++)
-                list.Add(service.HostAndPort);
+            list.Add((service.HostAndPort, weight));
+            totalWeight += weight;
         }
 
-        return list;
+        return (list, totalWeight);
     }
 
     /// <summary>
@@ -60,22 +61,32 @@ public class WeightedRoundRobinBalancer(
     {
         lock (_lock)
         {
-            if (_weightedServices.Count == 0)
+            if (_config.Services.Count == 0)
             {
                 return Task.FromResult<Response<ServiceHostAndPort>>(
-                    new ErrorResponse<ServiceHostAndPort>(new List<Error>()));
+                    new ErrorResponse<ServiceHostAndPort>(new ServicesAreEmptyError("Weighted services list is empty")));
             }
 
-            _currentIndex = (_currentIndex + 1) % _weightedServices.Count;
-            var selected = _weightedServices[_currentIndex];
+            _currentIndex = (_currentIndex + 1) % _config.TotalWeight;
 
-            var key = $"{selected.DownstreamHost}:{selected.DownstreamPort}";
-            var serviceName = hostPortToServiceName.GetValueOrDefault(key, key);
+            var cumulative = 0;
 
-            httpContext.Items["SelectedService"] = serviceName;
+            foreach (var (host, weight) in _config.Services)
+            {
+                cumulative += weight;
+                if (_currentIndex < cumulative)
+                {
+                    var key = $"{host.DownstreamHost}:{host.DownstreamPort}";
+                    var serviceName = hostPortToServiceName.GetValueOrDefault(key, key);
+                    httpContext.Items["SelectedService"] = serviceName;
+
+                    return Task.FromResult<Response<ServiceHostAndPort>>(
+                        new OkResponse<ServiceHostAndPort>(host));
+                }
+            }
 
             return Task.FromResult<Response<ServiceHostAndPort>>(
-                new OkResponse<ServiceHostAndPort>(selected));
+                new ErrorResponse<ServiceHostAndPort>(new ServicesAreEmptyError("Weighted services list is empty")));
         }
     }
 

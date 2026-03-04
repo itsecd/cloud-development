@@ -3,7 +3,7 @@ var builder = DistributedApplication.CreateBuilder(args);
 var redis = builder.AddRedis("credit-cache")
                    .WithRedisInsight(containerName: "credit-redis-insight");
 
-var replicaPorts = new Dictionary<string, (int http, int https)>
+var replicaPorts = new Dictionary<string, (int Http, int Https)>
 {
     ["credit-api-1"] = (7001, 7081),
     ["credit-api-2"] = (7002, 7082),
