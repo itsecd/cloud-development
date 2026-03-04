@@ -1,16 +1,13 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-var cache = builder.AddRedis("cache");
+var cache = builder.AddRedis("cache").WithRedisInsight(containerName: "cache-insight");
 
-var apiService = builder.AddProject<Projects.AppHost_ServiceDeafaults>("apiservice")
+var generationService = builder.AddProject<Projects.GenerationService>("generation-service")
+    .WithReference(cache, "RedisCache")
+    .WaitFor(cache)
     .WithHttpHealthCheck("/health");
 
-builder.AddProject<Projects.AppHost_Web>("webfrontend")
-    .WithExternalHttpEndpoints()
-    .WithHttpHealthCheck("/health")
-    .WithReference(cache)
-    .WaitFor(cache)
-    .WithReference(apiService)
-    .WaitFor(apiService);
+builder.AddProject<Projects.Client_Wasm>("client")
+    .WaitFor(generationService);
 
 builder.Build().Run();

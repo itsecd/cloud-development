@@ -1,6 +1,6 @@
 ﻿using Bogus;
-using GenerationService.Entities;
-using GenerationService.SeedData;
+using Domain.Entities;
+using Domain.SeedData;
 
 namespace GenerationService.Services;
 
