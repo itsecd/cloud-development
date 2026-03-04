@@ -3,6 +3,10 @@ using ProgramProject.GenerationService.Services;
 using ProgramProject.ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Починка кодировки в консоли
+Console.OutputEncoding = System.Text.Encoding.UTF8;
+
 builder.AddServiceDefaults();
 
 builder.AddRedisDistributedCache("cache");
