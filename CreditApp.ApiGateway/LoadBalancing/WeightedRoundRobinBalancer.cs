@@ -30,7 +30,7 @@ public class WeightedRoundRobinLoadBalancer(Func<Task<List<Service>>> servicesPr
             .Where(s =>
             {
                 var hostPort = $"{s.HostAndPort.DownstreamHost}:{s.HostAndPort.DownstreamPort}";
-                var weight = hostPortWeights.TryGetValue(hostPort, out var w) ? w : 1.0;
+                var weight = hostPortWeights.TryGetValue(hostPort, out var w) ? w : 1;
                 return weight > 0;
             })
             .ToList();
@@ -52,8 +52,8 @@ public class WeightedRoundRobinLoadBalancer(Func<Task<List<Service>>> servicesPr
                 var service = availableServices[_currentIndex];
                 var hostPort = $"{service.HostAndPort.DownstreamHost}:{service.HostAndPort.DownstreamPort}";
 
-                var weight = hostPortWeights.TryGetValue(hostPort, out var w) ? w : 1.0;
-                _remainingRequests = Math.Max(1, (int)Math.Ceiling(weight));
+                var weight = hostPortWeights.TryGetValue(hostPort, out var w) ? w : 1;
+                _remainingRequests = weight;
             }
 
             var currentService = availableServices[_currentIndex];
