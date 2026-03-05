@@ -32,8 +32,8 @@ app.MapDefaultEndpoints();
 
 app.MapGet("/course", async (int id, IDistributedCache cache, IConfiguration configuration, ILogger<Program> logger) =>
 {
-    if (id <= 0)
-        return Results.BadRequest("Received invalid ID. ID must be a positive number");
+    if (id < 0)
+        return Results.BadRequest("Received invalid ID. ID must be a non-negative number");
 
     var cacheKey = $"course:{id}";
 
