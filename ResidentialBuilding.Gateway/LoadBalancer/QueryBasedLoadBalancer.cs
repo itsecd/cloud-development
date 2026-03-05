@@ -13,8 +13,6 @@ namespace ResidentialBuilding.Gateway.LoadBalancer;
 public class QueryBasedLoadBalancer(ILogger<QueryBasedLoadBalancer> logger, Func<Task<List<Service>>> services)
     : ILoadBalancer
 {
-    private static readonly object _lock = new();
-    
     public string Type => nameof(QueryBasedLoadBalancer);
 
     /// <summary>
@@ -34,33 +32,30 @@ public class QueryBasedLoadBalancer(ILogger<QueryBasedLoadBalancer> logger, Func
     public async Task<Response<ServiceHostAndPort>> LeaseAsync(HttpContext httpContext)
     {
         var currentServices = await services.Invoke();
-        lock (_lock)
+        var query = httpContext.Request.Query;
+        
+        if (query.Count <= 0)
         {
-            var query = httpContext.Request.Query;
+            var randomIndex = Random.Shared.Next(currentServices.Count);
+            logger.LogWarning("Query doesn't contain any query parameters, index={randomIndex} selected by random.", randomIndex);
             
-            if (query.Count <= 0)
-            {
-                var randomIndex = Random.Shared.Next(currentServices.Count);
-                logger.LogWarning("Query doesn't contain any query parameters, index={randomIndex} selected by random.", randomIndex);
-                
-                return new OkResponse<ServiceHostAndPort>(currentServices[randomIndex].HostAndPort);
-            }
-            
-            var queryParams = query
-                .OrderBy(kvp => kvp.Key, StringComparer.Ordinal)
-                .Select(kvp => $"{kvp.Key}={string.Join(",", kvp.Value.OrderBy(v => v))}")
-                .ToList();
-            
-            var hashKey = string.Join("&", queryParams);
-            var hash = hashKey.GetHashCode();
-            if (hash < 0)
-            {
-                hash = -hash;
-            }
-            var index = (hash % currentServices.Count);
-            logger.LogInformation("Query based selected index={index} for hash={hash} calculated for string='{hashKey}'", index, hash, hashKey);
-            
-            return new OkResponse<ServiceHostAndPort>(currentServices[index].HostAndPort);
+            return new OkResponse<ServiceHostAndPort>(currentServices[randomIndex].HostAndPort);
         }
+        
+        var queryParams = query
+            .OrderBy(kvp => kvp.Key, StringComparer.Ordinal)
+            .Select(kvp => $"{kvp.Key}={string.Join(",", kvp.Value.OrderBy(v => v))}")
+            .ToList();
+        
+        var hashKey = string.Join("&", queryParams);
+        var hash = hashKey.GetHashCode();
+        if (hash < 0)
+        {
+            hash = -hash;
+        }
+        var index = (hash % currentServices.Count);
+        logger.LogInformation("Query based selected index={index} for hash={hash} calculated for string='{hashKey}'", index, hash, hashKey);
+        
+        return new OkResponse<ServiceHostAndPort>(currentServices[index].HostAndPort);
     }
 }
