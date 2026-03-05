@@ -1,0 +1,20 @@
+﻿{
+  "Routes": [
+    {
+      "DownstreamPathTemplate": "/api/residential-building",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "localhost", "Port": 5201 },
+        { "Host": "localhost", "Port": 5202 },
+        { "Host": "localhost", "Port": 5203 },
+        { "Host": "localhost", "Port": 5204 },
+        { "Host": "localhost", "Port": 5205 }
+      ],
+      "UpstreamPathTemplate": "/residential-building",
+      "UpstreamHttpMethod": [ "GET" ],
+      "LoadBalancerOptions": {
+        "Type": "QueryBasedLoadBalancer"
+      }
+    }
+  ]
+}
