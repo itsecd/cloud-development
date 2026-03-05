@@ -6,13 +6,15 @@ namespace ResidentialBuilding.Gateway.LoadBalancer;
 
 /// <summary>
 /// Query-based балансировщик нагрузки для Ocelot.
-/// Выбирает downstream-сервис на основе хэша от отсортированных query-параметров запроса.
+/// Выбирает downstream-сервис на основе query-параметра id запроса.
 /// </summary>
 /// <param name="logger">Логгер.</param>
 /// <param name="services">Асинхронная функция, возвращающая актуальный список доступных downstream-сервисов.</param>
 public class QueryBasedLoadBalancer(ILogger<QueryBasedLoadBalancer> logger, Func<Task<List<Service>>> services)
     : ILoadBalancer
 {
+    private const string IdQueryParamName = "id";
+    
     public string Type => nameof(QueryBasedLoadBalancer);
 
     /// <summary>
@@ -22,40 +24,41 @@ public class QueryBasedLoadBalancer(ILogger<QueryBasedLoadBalancer> logger, Func
     public void Release(ServiceHostAndPort hostAndPort) { }
     
     /// <summary>
-    /// Основной метод выбора downstream-сервиса на основе query-параметров текущего запроса.
+    /// Основной метод выбора downstream-сервиса на основе query-параметра id текущего запроса.
     /// </summary>
     /// <param name="httpContext">Контекст HTTP-запроса (используется для доступа к Query string).</param>
     /// <returns>
-    /// OkResponse с выбранным адресом сервиса в зависимости от query-параметров, либо случайно выбранный адрес
-    /// сервиса, если query-параметры не заданы.
+    /// OkResponse с выбранным адресом сервиса в зависимости от query-параметра id, либо случайно выбранный адрес
+    /// сервиса, если query-параметр не задан.
     /// </returns>
     public async Task<Response<ServiceHostAndPort>> LeaseAsync(HttpContext httpContext)
     {
         var currentServices = await services.Invoke();
         var query = httpContext.Request.Query;
         
-        if (query.Count <= 0)
+        if (!query.TryGetValue(IdQueryParamName, out var idValues) || idValues.Count <= 0)
         {
-            var randomIndex = Random.Shared.Next(currentServices.Count);
-            logger.LogWarning("Query doesn't contain any query parameters, index={randomIndex} selected by random.", randomIndex);
-            
-            return new OkResponse<ServiceHostAndPort>(currentServices[randomIndex].HostAndPort);
+            return SelectRandomService(currentServices);
         }
         
-        var queryParams = query
-            .OrderBy(kvp => kvp.Key, StringComparer.Ordinal)
-            .Select(kvp => $"{kvp.Key}={string.Join(",", kvp.Value.OrderBy(v => v))}")
-            .ToList();
+        var idStr = idValues.First();
         
-        var hashKey = string.Join("&", queryParams);
-        var hash = hashKey.GetHashCode();
-        if (hash < 0)
+        if (string.IsNullOrWhiteSpace(idStr) || !int.TryParse(idStr, out var id) || id < 0)
         {
-            hash = -hash;
+            return SelectRandomService(currentServices);
         }
-        var index = (hash % currentServices.Count);
-        logger.LogInformation("Query based selected index={index} for hash={hash} calculated for string='{hashKey}'", index, hash, hashKey);
+        
+        var index = id % currentServices.Count;
+        logger.LogInformation("Query based selected index={index}.", index);
         
         return new OkResponse<ServiceHostAndPort>(currentServices[index].HostAndPort);
+    }
+
+    private OkResponse<ServiceHostAndPort> SelectRandomService(List<Service> currentServices)
+    {
+        var randomIndex = Random.Shared.Next(currentServices.Count);
+        logger.LogWarning("Query doesn't contain correct id parameter, index={randomIndex} selected by random.", randomIndex);
+            
+        return new OkResponse<ServiceHostAndPort>(currentServices[randomIndex].HostAndPort);
     }
 }
