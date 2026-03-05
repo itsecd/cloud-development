@@ -35,7 +35,7 @@ public class TrainingCourse
     /// Дата окончания курса
     /// </summary>
     [JsonPropertyName("endDate")]
-    public DateOnly? EndDate { get; set; }
+    public DateOnly EndDate { get; set; }
 
     /// <summary>
     /// Максимальное число студентов
@@ -47,7 +47,7 @@ public class TrainingCourse
     /// Текущее число студентов
     /// </summary>
     [JsonPropertyName("currentStudents")]
-    public int? CurrentStudents { get; set; }
+    public int CurrentStudents { get; set; }
 
     /// <summary>
     /// Выдача сертификата по окончании
@@ -59,11 +59,11 @@ public class TrainingCourse
     /// Стоимость курса
     /// </summary>
     [JsonPropertyName("price")]
-    public decimal? Price { get; set; }
+    public decimal Price { get; set; }
 
     /// <summary>
     /// Рейтинг курса (от 1 до 5)
     /// </summary>
     [JsonPropertyName("rating")]
-    public int? Rating { get; set; }
+    public int Rating { get; set; }
 }

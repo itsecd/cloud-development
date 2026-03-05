@@ -16,7 +16,7 @@ public class GeneratorService (IDistributedCache cache, IConfiguration configura
     /// <summary>
     /// Генерирует один случайный учебный курс и сохраняет в кэш
     /// </summary>
-    public async Task<TrainingCourse> ProcessTrainingCourse(int id)
+    public async Task<TrainingCourse?> ProcessTrainingCourse(int id)
     {
         try
         {
@@ -26,7 +26,7 @@ public class GeneratorService (IDistributedCache cache, IConfiguration configura
             {
                 return trainingCourse;
             }
-            trainingCourse = TrainingCourseGenerator.GenerateOne();
+            trainingCourse = TrainingCourseGenerator.GenerateOne(id);
             logger.LogInformation("Курс успешно сгенерирован. ID: {CourseId}", trainingCourse.Id);
             await SaveCourseToCacheAsync(trainingCourse);
             return trainingCourse;
@@ -41,7 +41,7 @@ public class GeneratorService (IDistributedCache cache, IConfiguration configura
     /// <summary>
     /// Получает курс по ID из кэша
     /// </summary>
-    public async Task<TrainingCourse?> GetCourseFromCacheAsync(int id)
+    private async Task<TrainingCourse?> GetCourseFromCacheAsync(int id)
     {
         var cachedData = await cache.GetStringAsync(id.ToString());
         if (string.IsNullOrEmpty(cachedData))

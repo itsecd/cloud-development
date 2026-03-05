@@ -9,7 +9,6 @@ namespace Service.Api.Generator;
 public static class TrainingCourseGenerator
 {
     private static readonly Faker<TrainingCourse> _courseFaker;
-    private static int _idCounter = 1;
 
     /// <summary>
     /// Инициализирует генератор
@@ -34,34 +33,53 @@ public static class TrainingCourseGenerator
             "Azure DevOps",
             "Git и CI/CD"
         };
-
-        var firstNames = new[] { "Иван", "Петр", "Сергей", "Анна", "Мария", "Елена", "Дмитрий", "Алексей", "Ольга", "Наталья" };
+        var maleFirstNames = new[] { "Иван", "Петр", "Сергей", "Дмитрий", "Алексей", "Михаил", "Андрей", "Николай", "Владимир", "Павел" };
+        var femaleFirstNames = new[] { "Анна", "Мария", "Елена", "Ольга", "Наталья", "Татьяна", "Ирина", "Светлана", "Екатерина", "Юлия" };
         var lastNames = new[] { "Иванов", "Петров", "Сидоров", "Смирнов", "Кузнецов", "Попов", "Васильев", "Соколов", "Михайлов", "Федоров" };
-        var patronymics = new[] { "Иванович", "Петрович", "Сергеевич", "Алексеевич", "Дмитриевич", "Андреевич", "Михайловна", "Александровна", "Владимировна", "Павловна" };
+        
+        var malePatronymics = new[] { "Иванович", "Петрович", "Сергеевич", "Алексеевич", "Дмитриевич", "Андреевич", "Михайлович", "Александрович", "Владимирович", "Павлович" };
+        
+        var femalePatronymics = new[] { "Ивановна", "Петровна", "Сергеевна", "Алексеевна", "Дмитриевна", "Андреевна", "Михайловна", "Александровна", "Владимировна", "Павловна" };
 
         _courseFaker = new Faker<TrainingCourse>("ru")
-            .RuleFor(c => c.Id, f => _idCounter++)
+            .RuleFor(c => c.Id, f => f.IndexFaker + 1)
             .RuleFor(c => c.Name, f => f.PickRandom(courseNames))
             .RuleFor(c => c.TeacherFullName, f =>
             {
-                var lastName = f.PickRandom(lastNames);
-                var firstName = f.PickRandom(firstNames);
-                var patronymic = f.PickRandom(patronymics);
-                return $"{lastName} {firstName} {patronymic}";
+                var isMale = f.Random.Bool();
+                
+                string lastName = f.PickRandom(lastNames);
+                string firstName;
+                string patronymic;
+                
+                if (isMale)
+                {
+                    firstName = f.PickRandom(maleFirstNames);
+                    patronymic = f.PickRandom(malePatronymics);
+                    
+                    return $"{lastName} {firstName} {patronymic}";
+                }
+                else
+                {
+                    firstName = f.PickRandom(femaleFirstNames);
+                    patronymic = f.PickRandom(femalePatronymics);
+                    
+                    string femaleLastName = lastName.EndsWith("ов") || lastName.EndsWith("ев") 
+                        ? lastName + "а" 
+                        : lastName + "а";
+                    
+                    return $"{femaleLastName} {firstName} {patronymic}";
+                }
             })
             .RuleFor(c => c.StartDate, f =>
             {
                 var daysToStart = f.Random.Int(3, 60);
-                return DateOnly.FromDateTime(DateTime.Now.AddDays(daysToStart));
+                return f.Date.SoonDateOnly(daysToStart);
             })
             .RuleFor(c => c.EndDate, (f, c) =>
             {
-                if (f.Random.Bool(0.8f))
-                {
-                    var durationDays = f.Random.Int(10, 90);
-                    return c.StartDate.AddDays(durationDays);
-                }
-                return null;
+                var durationDays = f.Random.Int(10, 90);
+                return c.StartDate.AddDays(durationDays);
             })
             .RuleFor(c => c.MaxStudents, f => f.Random.Int(5, 30))
             .RuleFor(c => c.CurrentStudents, (f, c) =>
@@ -71,28 +89,15 @@ public static class TrainingCourseGenerator
                 {
                     return f.Random.Int(0, c.MaxStudents);
                 }
-                return f.Random.Bool(0.7f) ? (int?)null : 0;
+                return f.Random.Int(0, c.MaxStudents / 2);
             })
             .RuleFor(c => c.HasCertificate, f => f.Random.Bool(0.9f))
             .RuleFor(c => c.Price, f =>
             {
-                if (f.Random.Bool(0.15f))
-                {
-                    return null;
-                }
                 var price = f.Random.Decimal(5000, 150000);
                 return Math.Round(price, 2);
             })
-            .RuleFor(c => c.Rating, f =>
-            {
-                if (f.Random.Bool(0.1f)) return null;
-                var rand = f.Random.Int(1, 100);
-                if (rand <= 5) return 1;
-                if (rand <= 15) return 2;
-                if (rand <= 35) return 3;
-                if (rand <= 70) return 4;
-                return 5;
-            });
+            .RuleFor(c => c.Rating, f => f.Random.Int(1, 5));
     }
 
     /// <summary>
