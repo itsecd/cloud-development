@@ -31,7 +31,8 @@ public static class StudyCoureGenerator
         .RuleFor(s => s.GivesCertificate, f => f.Random.Bool())
         .RuleFor(s => s.Cost, f => Math.Round(f.Random.Decimal(_minCost, _maxCost), _digitsRound))
         .RuleFor(s => s.MaxStudents, f => f.Random.Int(_minStudents, _maxStudents))
-        .RuleFor(s => s.CurrentStudents, (f, s) => f.Random.Int(_minStudents, s.MaxStudents ?? _maxStudents));
+        .RuleFor(s => s.CurrentStudents, (f, s) => f.Random.Int(_minStudents, s.MaxStudents ?? _maxStudents))
+        .RuleFor(s => s.Rating, f => f.Random.Int(_minRating, _maxRating));
 
     public static StudyCourse GenerateCourse(int id)
     {
