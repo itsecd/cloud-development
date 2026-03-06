@@ -1,0 +1,56 @@
+﻿{
+  "Routes": [
+    {
+      "DownstreamPathTemplate": "/api/courses/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 8081
+        },
+        {
+          "Host": "localhost",
+          "Port": 8082
+        },
+        {
+          "Host": "localhost",
+          "Port": 8083
+        }
+      ],
+      "UpstreamPathTemplate": "/courses/{everything}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "LoadBalancerOptions": {
+        "Type": "LeastConnection",
+        "Key": "course-api"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/health",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 8081
+        },
+        {
+          "Host": "localhost",
+          "Port": 8082
+        },
+        {
+          "Host": "localhost",
+          "Port": 8083
+        }
+      ],
+      "UpstreamPathTemplate": "/health",
+      "UpstreamHttpMethod": [ "GET" ],
+      "Priority": 1,
+      "LoadBalancerOptions": {
+        "Type": "LeastConnection",
+        "Key": "course-api-health"
+      }
+    }
+  ],
+  "GlobalConfiguration": {
+    "BaseUrl": "http://localhost:5000"
+  }
+}

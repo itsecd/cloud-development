@@ -53,7 +53,7 @@ public class CourseGenerator(ILogger<CourseGenerator> logger)
     /// <summary>
     /// Экземпляр генератора данных
     /// </summary>
-    private readonly Faker<CourseDto> _courseFaker = new Faker<CourseDto>("ru")
+    private static readonly Faker<CourseDto> _courseFaker = new Faker<CourseDto>("ru")
             .RuleFor(c => c.Title, f => f.PickRandom(_courseTitles))
             .RuleFor(c => c.Lector, f => f.Name.FullName())
             .RuleFor(c => c.StartDate, f => DateOnly.FromDateTime(f.Date.Future(1)))
