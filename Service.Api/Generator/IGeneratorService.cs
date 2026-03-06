@@ -11,5 +11,5 @@ public interface IGeneratorService
     /// Генерирует один случайный учебный курс
     /// </summary>
     /// <returns>Сгенерированный курс</returns>
-    Task<TrainingCourse> ProcessTrainingCourse(int id);
+    Task<TrainingCourse?> ProcessTrainingCourse(int id);
 }

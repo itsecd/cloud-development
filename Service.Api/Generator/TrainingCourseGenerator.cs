@@ -1,4 +1,5 @@
 ﻿using Bogus;
+using Bogus.DataSets;
 using Service.Api.Entities;
 
 namespace Service.Api.Generator;
@@ -33,43 +34,20 @@ public static class TrainingCourseGenerator
             "Azure DevOps",
             "Git и CI/CD"
         };
-        var maleFirstNames = new[] { "Иван", "Петр", "Сергей", "Дмитрий", "Алексей", "Михаил", "Андрей", "Николай", "Владимир", "Павел" };
-        var femaleFirstNames = new[] { "Анна", "Мария", "Елена", "Ольга", "Наталья", "Татьяна", "Ирина", "Светлана", "Екатерина", "Юлия" };
-        var lastNames = new[] { "Иванов", "Петров", "Сидоров", "Смирнов", "Кузнецов", "Попов", "Васильев", "Соколов", "Михайлов", "Федоров" };
-        
-        var malePatronymics = new[] { "Иванович", "Петрович", "Сергеевич", "Алексеевич", "Дмитриевич", "Андреевич", "Михайлович", "Александрович", "Владимирович", "Павлович" };
-        
-        var femalePatronymics = new[] { "Ивановна", "Петровна", "Сергеевна", "Алексеевна", "Дмитриевна", "Андреевна", "Михайловна", "Александровна", "Владимировна", "Павловна" };
-
         _courseFaker = new Faker<TrainingCourse>("ru")
             .RuleFor(c => c.Id, f => f.IndexFaker + 1)
             .RuleFor(c => c.Name, f => f.PickRandom(courseNames))
             .RuleFor(c => c.TeacherFullName, f =>
             {
-                var isMale = f.Random.Bool();
+                var gender = f.PickRandom<Name.Gender>();
+            
+                var firstName = f.Name.FirstName(gender);
+                var lastName = f.Name.LastName(gender);
                 
-                string lastName = f.PickRandom(lastNames);
-                string firstName;
-                string patronymic;
+                var patronymicSuffix = gender == Name.Gender.Male ? "ович" : "овна";
+                var patronymic = f.Name.FirstName(Name.Gender.Male) + patronymicSuffix;
                 
-                if (isMale)
-                {
-                    firstName = f.PickRandom(maleFirstNames);
-                    patronymic = f.PickRandom(malePatronymics);
-                    
-                    return $"{lastName} {firstName} {patronymic}";
-                }
-                else
-                {
-                    firstName = f.PickRandom(femaleFirstNames);
-                    patronymic = f.PickRandom(femalePatronymics);
-                
-                    string femaleLastName = lastName.EndsWith("ов") || lastName.EndsWith("ев") 
-                        ? lastName + "а" 
-                        : lastName + "а";
-                    
-                    return $"{femaleLastName} {firstName} {patronymic}";
-                }
+                return $"{lastName} {firstName} {patronymic}";
             })
             .RuleFor(c => c.StartDate, f =>
             {
