@@ -29,9 +29,8 @@ public class GeneratorService(IProgramProjectCache cache, ILogger<GeneratorServi
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Exception occured during program project {id} processing", id);
-            throw;
+            logger.LogError(ex, "Произошла ошибка во время обработки программного проекта {id}.", id);
+            return null;
         }
     }
-
 }

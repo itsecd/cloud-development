@@ -15,19 +15,19 @@ public class ProgramProject
     /// Название проекта
     /// </summary>
     [JsonPropertyName("name")]
-    public string? Name { get; set; }
+    public string Name { get; set; }
 
     /// <summary>
     /// Заказчик проекта
     /// </summary>
     [JsonPropertyName("customer")]
-    public string? Customer { get; set; }
+    public string Customer { get; set; }
 
     /// <summary>
     /// Менеджер проекта
     /// </summary>
     [JsonPropertyName("manager")]
-    public string? Manager { get; set; }
+    public string Manager { get; set; }
 
     /// <summary>
     /// Дата начала
@@ -64,9 +64,4 @@ public class ProgramProject
     /// </summary>
     [JsonPropertyName("percentComplete")]
     public int PercentComplete { get; set; }
-
-
 }
-
-
-

@@ -1,6 +1,5 @@
 ﻿using Bogus;
 using ServiceApi.Entities;
-using ServiceApi.Generator;
 
 namespace ServiceApi.Generator;
 
@@ -9,30 +8,21 @@ namespace ServiceApi.Generator;
 /// </summary>
 public static class ProgramProjectGenerator
 {
-    private static Faker<ProgramProject> _faker = new Faker<ProgramProject>("ru")
+    private static readonly Faker<ProgramProject> _faker = new Faker<ProgramProject>("ru")
         .RuleFor(o => o.Name, f =>
-        f.Commerce.Department() + " " +
         f.Lorem.Word() + " " +
-        f.Hacker.Abbreviation() + " " +
-        f.Finance.AccountName())
-        
-
+        f.Hacker.Abbreviation())
         .RuleFor(o => o.Customer, f => f.Company.CompanyName())
-
         .RuleFor(o => o.Manager, f => f.Name.FullName())
-
         .RuleFor(o => o.StartDate, f => DateOnly.FromDateTime(f.Date.Past(3, DateTime.Now)))
         .RuleFor(o => o.PlanEndDate, (f, o) => DateOnly.FromDateTime(f.Date.Future(3, o.StartDate.ToDateTime(TimeOnly.MinValue))))
         .RuleFor(o => o.ActualEndDate, (f, o) =>
         {
             DateTime end = f.Date.Between(o.StartDate.ToDateTime(TimeOnly.MinValue), o.PlanEndDate.ToDateTime(TimeOnly.MinValue));
-            if (end > DateTime.Now) return null;
-            else return DateOnly.FromDateTime(end);
+            return end > DateTime.Now ? null : DateOnly.FromDateTime(end);
         })
-
         .RuleFor(o => o.Budget, f => Math.Round(f.Finance.Amount(100000, 10000000), 2))
         .RuleFor(o => o.PercentComplete, (f, o) => o.ActualEndDate != null ? 100 : f.Random.Number(0, 99))
-
         .RuleFor(o => o.ActualCost, (f, o) =>
         {
             var scatter = Convert.ToInt32(o.Budget) / 10;
