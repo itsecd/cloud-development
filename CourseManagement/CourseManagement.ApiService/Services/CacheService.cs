@@ -8,7 +8,7 @@ namespace CourseManagement.ApiService.Services;
 /// </summary>
 /// <param name="cache">Кэш</param>
 /// <param name="logger">Логгер</param>
-public class CacheService<T>(IDistributedCache cache, ILogger<CacheService<T>> logger)
+public class CacheService<T>(ILogger<CacheService<T>> logger, IDistributedCache cache)
 {
     /// <summary>
     /// Время жизни данных в кэше

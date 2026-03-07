@@ -1,9 +1,11 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
+
 // Cache (Redis)
 var redis = builder.AddRedis("course-cache")
     .WithRedisInsight(containerName: "course-insight")
     .WithDataVolume();
+
 
 // API services (Backend)
 var apiService1 = builder.AddProject<Projects.CourseManagement_ApiService>("course-api-1")
@@ -24,6 +26,7 @@ var apiService3 = builder.AddProject<Projects.CourseManagement_ApiService>("cour
     .WithHttpEndpoint(port: 8083, name: "course-api-endpoint", isProxied: false)
     .WithExternalHttpEndpoints();
 
+
 // API Gateway (Ocelot)
 var apiGateway = builder.AddProject<Projects.CourseManagement_ApiGateway>("course-gateway")
     .WithReference(apiService1)
@@ -33,11 +36,13 @@ var apiGateway = builder.AddProject<Projects.CourseManagement_ApiGateway>("cours
     .WithExternalHttpEndpoints()
     .WithHttpHealthCheck("/health");
 
+
 // Client (Frontend)
 builder.AddProject<Projects.Client_Wasm>("course-wasm")
     .WithExternalHttpEndpoints()
     .WithHttpHealthCheck("/health")
     .WithReference(apiGateway)
     .WaitFor(apiGateway);
+
 
 builder.Build().Run();

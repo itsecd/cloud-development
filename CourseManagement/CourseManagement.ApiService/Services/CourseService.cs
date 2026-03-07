@@ -8,7 +8,7 @@ namespace CourseManagement.ApiService.Services;
 /// <param name="generator">Генератор курсов</param>
 /// <param name="logger">Логгер</param>
 /// <param name="cacheService">Сервис для взаимодействия с кэшем</param>
-public class CourseService(CourseGenerator generator, ILogger<CourseService> logger, CacheService<CourseDto> cacheService)
+public class CourseService(ILogger<CourseService> logger, CourseGenerator generator, CacheService<CourseDto> cacheService)
 {
     /// <summary>
     /// Константа для ключа кэша

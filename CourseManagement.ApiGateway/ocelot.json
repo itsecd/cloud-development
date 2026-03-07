@@ -20,7 +20,7 @@
       "UpstreamPathTemplate": "/courses/{everything}",
       "UpstreamHttpMethod": [ "GET" ],
       "LoadBalancerOptions": {
-        "Type": "LeastConnection",
+        "Type": "RoundRobin",
         "Key": "course-api"
       }
     },
@@ -45,7 +45,7 @@
       "UpstreamHttpMethod": [ "GET" ],
       "Priority": 1,
       "LoadBalancerOptions": {
-        "Type": "LeastConnection",
+        "Type": "RoundRobin",
         "Key": "course-api-health"
       }
     }
