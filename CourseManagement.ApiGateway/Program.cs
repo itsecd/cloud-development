@@ -11,13 +11,13 @@ builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange
 
 // Добавление Ocelot с Query Based балансировщиком нагрузки
 builder.Services.AddOcelot()
-    .AddCustomLoadBalancer<QueryLoadBalancer>((serviceProvider, downstreamRoute, serviceDiscoveryProvider) =>
+    .AddCustomLoadBalancer<QueryBased>((serviceProvider, downstreamRoute, serviceDiscoveryProvider) =>
     {
-        var logger = serviceProvider.GetRequiredService<ILogger<QueryLoadBalancer>>();
+        var logger = serviceProvider.GetRequiredService<ILogger<QueryBased>>();
 
         var services = serviceDiscoveryProvider.GetAsync().GetAwaiter().GetResult().ToList();
 
-        return new QueryLoadBalancer(logger, services);
+        return new QueryBased(logger, services);
     });
 
 // CORS

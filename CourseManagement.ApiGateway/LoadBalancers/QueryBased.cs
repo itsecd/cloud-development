@@ -9,12 +9,12 @@ namespace CourseManagement.ApiGateway.LoadBalancers;
 /// </summary>
 /// <param name="logger">Логгер</param>
 /// <param name="services">Список сервисов</param>
-public class QueryLoadBalancer(ILogger<QueryLoadBalancer> logger, List<Service> services) : ILoadBalancer
+public class QueryBased(ILogger<QueryBased> logger, List<Service> services) : ILoadBalancer
 {
     /// <summary>
     /// Тип балансировщика нагрузки
     /// </summary>
-    public string Type => "QueryLoadBalancer";
+    public string Type => "QueryBased";
 
     /// <summary>
     /// Метод выбора сервиса на основе запроса

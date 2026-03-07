@@ -26,14 +26,14 @@ foreach(var port in ports)
     apiServices.Add(builder.AddProject<Projects.CourseManagement_ApiService>($"course-api-{serviceId++}")
         .WithReference(redis)
         .WithHttpHealthCheck("/health")
-        .WithHttpEndpoint(port: port, name: "course-api-endpoint", isProxied: false)
+        .WithHttpsEndpoint(port: port, name: "course-api-endpoint", isProxied: false)
         .WithExternalHttpEndpoints());
 }
 
 
 // API Gateway (Ocelot)
 var apiGateway = builder.AddProject<Projects.CourseManagement_ApiGateway>("course-gateway")
-    .WithHttpEndpoint(port: gatewayPort, name: "course-gateway-endpoint", isProxied: false)
+    .WithHttpsEndpoint(port: gatewayPort, name: "course-gateway-endpoint", isProxied: false)
     .WithExternalHttpEndpoints()
     .WithHttpHealthCheck("/health");
 
