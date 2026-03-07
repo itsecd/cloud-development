@@ -16,3 +16,11 @@ builder.Services
     .AddFontAwesomeIcons();
 
 await builder.Build().RunAsync();
+
+var apiBaseUrl = builder.Configuration["BaseAddress"]
+    ?? throw new InvalidOperationException("BaseAddress not configured");
+
+builder.Services.AddHttpClient("ApiClient", client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+});

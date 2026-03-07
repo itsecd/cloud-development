@@ -15,8 +15,8 @@ builder.Services.AddCors(options =>
     options.AddDefaultPolicy(policy =>
     {
         policy.WithOrigins("http://localhost:5127")
-              .AllowAnyMethod()
-              .AllowAnyHeader();
+              .WithMethods("GET")                
+              .WithHeaders("Content-Type"); 
     });
 });
 
@@ -31,5 +31,6 @@ app.MapGet("/warehouse", async (IWarehouseGeneratorService service, int id) =>
 });
 
 app.UseCors();
+
 
 app.Run();

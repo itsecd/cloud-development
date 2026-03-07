@@ -6,11 +6,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(RunConfiguration)' == 'https' " />
-  <PropertyGroup Condition=" '$(RunConfiguration)' == 'http' " />
-  <ItemGroup>
-  </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="Blazorise" Version="1.8.8" />
     <PackageReference Include="Blazorise.Bootstrap5" Version="1.8.8" />
