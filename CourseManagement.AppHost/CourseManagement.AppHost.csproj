@@ -13,8 +13,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Client.Wasm\Client.Wasm.csproj" />
-    <ProjectReference Include="..\..\CourseManagement.ApiGateway\CourseManagement.ApiGateway.csproj" />
+    <ProjectReference Include="..\Client.Wasm\Client.Wasm.csproj" />
+    <ProjectReference Include="..\CourseManagement.ApiGateway\CourseManagement.ApiGateway.csproj" />
     <ProjectReference Include="..\CourseManagement.ApiService\CourseManagement.ApiService.csproj" />
   </ItemGroup>
 
