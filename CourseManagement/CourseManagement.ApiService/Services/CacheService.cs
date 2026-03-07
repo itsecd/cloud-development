@@ -6,8 +6,8 @@ namespace CourseManagement.ApiService.Services;
 /// <summary>
 /// Сервис для взаимодействия с кэшем
 /// </summary>
-/// <param name="cache">Кэш</param>
 /// <param name="logger">Логгер</param>
+/// <param name="cache">Кэш</param>
 public class CacheService<T>(ILogger<CacheService<T>> logger, IDistributedCache cache)
 {
     /// <summary>

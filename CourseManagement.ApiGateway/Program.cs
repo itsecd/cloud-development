@@ -2,15 +2,14 @@ using CourseManagement.ApiGateway.LoadBalancers;
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
-// Add Ocelot config
+// Подключение конфига Ocelot
 builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
 
-// Add Ocelot with Query Load Balancer
+// Добавление Ocelot с Query Based балансировщиком нагрузки
 builder.Services.AddOcelot()
     .AddCustomLoadBalancer<QueryLoadBalancer>((serviceProvider, downstreamRoute, serviceDiscoveryProvider) =>
     {
@@ -21,9 +20,21 @@ builder.Services.AddOcelot()
         return new QueryLoadBalancer(logger, services);
     });
 
+// CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowClient", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .WithMethods("GET")
+              .WithHeaders("Content-Type");
+    });
+});
+
 var app = builder.Build();
 
-// Use Ocelot
+app.UseCors("AllowClient");
+
 await app.UseOcelot();
 
 app.Run();

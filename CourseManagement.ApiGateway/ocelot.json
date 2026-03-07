@@ -1,7 +1,7 @@
 ﻿{
   "Routes": [
     {
-      "DownstreamPathTemplate": "/api/courses/{everything}",
+      "DownstreamPathTemplate": "/api/courses",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -17,7 +17,7 @@
           "Port": 8083
         }
       ],
-      "UpstreamPathTemplate": "/courses/{everything}",
+      "UpstreamPathTemplate": "/courses",
       "UpstreamHttpMethod": [ "GET" ],
       "LoadBalancerOptions": {
         "Type": "RoundRobin",

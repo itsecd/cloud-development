@@ -5,8 +5,8 @@ namespace CourseManagement.ApiService.Services;
 /// <summary>
 /// Сервис для сущности типа Курс
 /// </summary>
-/// <param name="generator">Генератор курсов</param>
 /// <param name="logger">Логгер</param>
+/// <param name="generator">Генератор курсов</param>
 /// <param name="cacheService">Сервис для взаимодействия с кэшем</param>
 public class CourseService(ILogger<CourseService> logger, CourseGenerator generator, CacheService<CourseDto> cacheService)
 {

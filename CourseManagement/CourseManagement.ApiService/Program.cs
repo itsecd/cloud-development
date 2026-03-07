@@ -16,17 +16,6 @@ builder.Services.AddOpenApi();
 // Контроллеры
 builder.Services.AddControllers();
 
-// CORS
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowClient", policy =>
-    {
-        policy.AllowAnyOrigin()
-              .WithMethods("GET")
-              .WithHeaders("Content-Type");
-    });
-});
-
 // Генератор курсов
 builder.Services.AddSingleton<CourseGenerator>();
 
@@ -40,7 +29,6 @@ var app = builder.Build();
 
 // Configure the HTTP request pipeline
 app.UseExceptionHandler();
-app.UseCors("AllowClient");
 
 // Mapping
 if (app.Environment.IsDevelopment())
