@@ -8,8 +8,11 @@
 - [x] Сервис для взаимодействия с кешем 
 - [x] Структурное логирование сервисов
 - [x] Оркестрация Aspire
+- [x] Поддержка работы с несколькими репликами сервиса генерации
+- [x] Api Gateway Ocelot
+- [x] QueryBased балансировщик нагрузки
 
-<img width="1905" height="706" alt="image" src="https://github.com/user-attachments/assets/370013e0-d143-4035-b426-615c5ac5f1d8" />
+<img width="1912" height="715" alt="image" src="https://github.com/user-attachments/assets/d2288fd6-edb3-4568-b53c-735065542e7a" />
 
+<img width="1914" height="832" alt="image" src="https://github.com/user-attachments/assets/9d2f1bf0-662e-455e-99a4-7f5b282fbb6f" />
 
-<img width="1918" height="833" alt="image" src="https://github.com/user-attachments/assets/7319cb92-eb4e-4e63-a3b1-64610b719e0e" />
