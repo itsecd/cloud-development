@@ -1,0 +1,62 @@
+{
+  "Routes": [
+    {
+      "UpstreamPathTemplate": "/inventory",
+      "UpstreamHttpMethod": [ "GET" ],
+
+      "DownstreamPathTemplate": "/inventory",
+      "DownstreamScheme": "https",
+
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7001
+        },
+        {
+          "Host": "localhost",
+          "Port": 7002
+        },
+        {
+          "Host": "localhost",
+          "Port": 7003
+        }
+      ],
+
+      "LoadBalancerOptions": {
+        "Type": "RandomSelector"
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/health",
+      "UpstreamHttpMethod": [ "GET" ],
+      "Priority": 1,
+
+      "DownstreamPathTemplate": "/health",
+      "DownstreamScheme": "https",
+
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7001
+        },
+        {
+          "Host": "localhost",
+          "Port": 7002
+        },
+        {
+          "Host": "localhost",
+          "Port": 7003
+        }
+      ],
+
+      "LoadBalancerOptions": {
+        "Type": "RandomSelector"
+      }
+    }
+  ],
+
+  "GlobalConfiguration": {
+    "BaseUrl": "https://localhost:5000",
+    "RequestIdKey": "Gateway-Request-Id"
+  }
+}

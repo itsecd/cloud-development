@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Inventory.ApiService.Entity;
 using Inventory.ApiService.Cache;
-using Inventory.ApiService.Generation;
 
 namespace Inventory.ApiService.Controllers;
 
