@@ -1,9 +1,11 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
+// Redis
 var cache = builder.AddRedis("cache")
     .WithRedisCommander();
 
 var apis = new List<IResourceBuilder<ProjectResource>>();
+
 
 var basePort = 7001;
 

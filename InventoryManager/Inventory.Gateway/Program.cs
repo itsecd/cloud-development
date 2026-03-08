@@ -30,9 +30,6 @@ builder.Services.AddCors(policy =>
 });
 
 var app = builder.Build();
-
 app.UseCors("cors");
-
 await app.UseOcelot();
-
 app.Run();
