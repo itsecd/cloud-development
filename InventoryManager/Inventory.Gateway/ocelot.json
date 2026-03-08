@@ -22,6 +22,8 @@
         }
       ],
 
+      "DangerousAcceptAnyServerCertificateValidator": true,
+
       "LoadBalancerOptions": {
         "Type": "WeightedRandom"
       }
@@ -29,7 +31,6 @@
     {
       "UpstreamPathTemplate": "/health",
       "UpstreamHttpMethod": [ "GET" ],
-      "Priority": 1,
 
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "https",
@@ -49,6 +50,8 @@
         }
       ],
 
+      "DangerousAcceptAnyServerCertificateValidator": true,
+
       "LoadBalancerOptions": {
         "Type": "WeightedRandom"
       }
@@ -56,7 +59,7 @@
   ],
 
   "GlobalConfiguration": {
-    "BaseUrl": "https://localhost:5000",
+    "BaseUrl": "https://localhost:7000",
     "RequestIdKey": "Gateway-Request-Id"
   }
 }

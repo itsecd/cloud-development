@@ -8,7 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
 
 builder.Configuration
-    .AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
+    .AddJsonFile("ocelot.json", false, true);
 
 builder.Services.AddOcelot()
     .AddCustomLoadBalancer<WeightedRandom>((sp, route, discovery) =>

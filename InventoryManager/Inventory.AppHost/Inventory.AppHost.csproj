@@ -11,6 +11,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Client.Wasm\Client.Wasm.csproj" />
     <ProjectReference Include="..\Inventory.ApiService\Inventory.ApiService.csproj" />
+    <ProjectReference Include="..\Inventory.Gateway\Inventory.Gateway.csproj" />
   </ItemGroup>
 
   <ItemGroup>
