@@ -1,7 +1,9 @@
 ## Ле Хань Хоанг 6513
-## Вариант 45 - Товар на складке
-## Лабораторная работа №1 - Кэширование
-<img width="1852" height="464" alt="image" src="https://github.com/user-attachments/assets/0584db51-26f4-4eea-8c55-37920bf20c0b" />
+## Вариант 45 - Товар на складке, алгоритм балансировки - Weighted Random
+## Лабораторная работа №2 - Балансировка нагрузки
+<img width="1847" height="654" alt="image" src="https://github.com/user-attachments/assets/827956d5-409a-4070-a6d4-26ace98fe0f9" />
 
-<img width="1912" height="912" alt="image" src="https://github.com/user-attachments/assets/1078462f-b8a4-4caa-a2e7-c4b545c8589a" />
+
+<img width="1893" height="900" alt="image" src="https://github.com/user-attachments/assets/6abcebbe-fe92-40a7-9fab-d17dca63cb15" />
+
 
