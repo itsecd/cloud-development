@@ -10,24 +10,18 @@ builder.AddServiceDefaults();
 builder.Configuration
     .AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
 
-builder.Services
-    .AddOcelot()
-    .AddCustomLoadBalancer<RandomSelector>((provider, route, discovery) =>
+builder.Services.AddOcelot()
+    .AddCustomLoadBalancer<WeightedRandom>((sp, route, discovery) =>
     {
-        var log = provider.GetRequiredService<ILogger<RandomSelector>>();
+        var logger = sp.GetRequiredService<ILogger<WeightedRandom>>();
+        var services = discovery.GetAsync().GetAwaiter().GetResult().ToList();
 
-        var downstream = discovery
-            .GetAsync()
-            .GetAwaiter()
-            .GetResult()
-            .ToList();
-
-        return new RandomSelector(log, downstream);
+        return new WeightedRandom(logger, services);
     });
 
 builder.Services.AddCors(policy =>
 {
-    policy.AddPolicy("ClientPolicy", cfg =>
+    policy.AddPolicy("cors", cfg =>
     {
         cfg.AllowAnyOrigin()
            .WithMethods("GET")
@@ -37,7 +31,7 @@ builder.Services.AddCors(policy =>
 
 var app = builder.Build();
 
-app.UseCors("ClientPolicy");
+app.UseCors("cors");
 
 await app.UseOcelot();
 

@@ -23,7 +23,7 @@
       ],
 
       "LoadBalancerOptions": {
-        "Type": "RandomSelector"
+        "Type": "WeightedRandom"
       }
     },
     {
@@ -50,7 +50,7 @@
       ],
 
       "LoadBalancerOptions": {
-        "Type": "RandomSelector"
+        "Type": "WeightedRandom"
       }
     }
   ],
