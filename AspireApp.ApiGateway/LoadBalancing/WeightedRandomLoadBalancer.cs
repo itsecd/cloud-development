@@ -4,48 +4,65 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Ocelot.Errors;
-using Ocelot.LoadBalancer.Abstractions;
 using Ocelot.Responses;
 using Ocelot.Values;
+using Ocelot.LoadBalancer;
+using Ocelot.LoadBalancer.Interfaces;
 
 namespace AspireApp.ApiGateway.LoadBalancing;
 
-/// <summary>
-/// Weighted Random балансировщик
-/// </summary>
 public class WeightedRandomLoadBalancer : ILoadBalancer
 {
     private readonly Func<Task<List<Service>>> _servicesProvider;
     private readonly Dictionary<string, int> _weights;
     private readonly Random _random = new();
 
+    public string Type => throw new NotImplementedException();
+
+
+    public WeightedRandomLoadBalancer() 
+    {
+        _servicesProvider = null!;
+        _weights = null!;
+    }
+
     public WeightedRandomLoadBalancer(
         Func<Task<List<Service>>> servicesProvider,
-        Dictionary<string, int> weights)
+        Dictionary<string, int> weights) : this()
     {
         _servicesProvider = servicesProvider;
         _weights = weights;
     }
 
-    public string Type => "WeightedRandom";
-
     public async Task<Response<ServiceHostAndPort>> LeaseAsync(HttpContext httpContext)
     {
         var services = await _servicesProvider();
-        if (services?.Count == 0)
-            return new ErrorResponse<ServiceHostAndPort>(new ServicesAreEmptyError("Нет сервисов"));
+        if (services == null || services.Count == 0)
+            return new ErrorResponse<ServiceHostAndPort>(new ServicesAreEmptyError("Нет доступных сервисов"));
 
         var available = services
-            .Where(s => _weights.GetValueOrDefault($"{s.HostAndPort.DownstreamHost}:{s.HostAndPort.DownstreamPort}", 1) > 0)
+            .Where(s => GetWeight(s) > 0)
             .ToList();
 
         if (available.Count == 0)
             return new ErrorResponse<ServiceHostAndPort>(new ServicesAreEmptyError("Нет сервисов с весом больше 0"));
 
-        var weighted = available.SelectMany(s => 
-            Enumerable.Repeat(s, _weights.GetValueOrDefault($"{s.HostAndPort.DownstreamHost}:{s.HostAndPort.DownstreamPort}", 1))).ToList();
+        var weightedList = new List<Service>();
+        foreach (var service in available)
+        {
+            var weight = GetWeight(service);
+            for (var i = 0; i < weight; i++)
+                weightedList.Add(service);
+        }
 
-        return new OkResponse<ServiceHostAndPort>(weighted[_random.Next(weighted.Count)].HostAndPort);
+        var selected = weightedList[_random.Next(weightedList.Count)];
+        return new OkResponse<ServiceHostAndPort>(selected.HostAndPort);
+    }
+
+    private int GetWeight(Service service)
+    {
+        var key = $"{service.HostAndPort.DownstreamHost}:{service.HostAndPort.DownstreamPort}";
+        return _weights?.TryGetValue(key, out var weight) == true ? weight : 1;
     }
 
     public void Release(ServiceHostAndPort hostAndPort) { }
@@ -53,5 +70,6 @@ public class WeightedRandomLoadBalancer : ILoadBalancer
 
 public class ServicesAreEmptyError : Error
 {
-    public ServicesAreEmptyError(string message) : base(message, OcelotErrorCode.ServicesAreEmptyError, 503) { }
+    public ServicesAreEmptyError(string message) 
+        : base(message, OcelotErrorCode.ServicesAreEmptyError, 503) { }
 }
