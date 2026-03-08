@@ -1,0 +1,49 @@
+{
+  "Routes": [
+    {
+      "DownstreamPathTemplate": "/warehouse",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5001
+        },
+        {
+          "Host": "localhost",
+          "Port": 5002
+        },
+        {
+          "Host": "localhost",
+          "Port": 5003
+        }
+      ],
+      "UpstreamPathTemplate": "/warehouse",
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
+      "LoadBalancerOptions": {
+        "Type": "WeightedRandom",
+        "Weights": [
+          {
+            "Host": "localhost",
+            "Port": 5001,
+            "Weight": 5
+          },
+          {
+            "Host": "localhost",
+            "Port": 5002,
+            "Weight": 3
+          },
+          {
+            "Host": "localhost",
+            "Port": 5003,
+            "Weight": 2
+          }
+        ]
+      },
+      "HttpHandlerOptions": {
+        "UseTracing": true
+      }
+    }
+  ]
+}
