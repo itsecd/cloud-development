@@ -1,10 +1,10 @@
 {
   "Routes": [
     {
-      "UpstreamPathTemplate": "/inventory",
+      "UpstreamPathTemplate": "/api/inventory",
       "UpstreamHttpMethod": [ "GET" ],
 
-      "DownstreamPathTemplate": "/inventory",
+      "DownstreamPathTemplate": "/api/inventory",
       "DownstreamScheme": "https",
 
       "DownstreamHostAndPorts": [
