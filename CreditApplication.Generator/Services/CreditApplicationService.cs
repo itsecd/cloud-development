@@ -11,7 +11,8 @@ public class CreditApplicationService(
     CreditApplicationGenerator generator,
     IDistributedCache cache,
     IConfiguration configuration,
-    ILogger<CreditApplicationService> logger)
+    ILogger<CreditApplicationService> logger,
+    SnsPublisherService snsPublisher)
 {
     private readonly TimeSpan _cacheExpiration = TimeSpan.FromMinutes(
         configuration.GetValue("CacheSettings:ExpirationMinutes", 5));
@@ -25,13 +26,13 @@ public class CreditApplicationService(
     {
         var cacheKey = $"{CacheKeyPrefix}{id}";
 
-        logger.LogInformation("Request for credit application with ID: {Id}", id);
+        logger.LogDebug("Request for credit application with ID: {Id}", id);
 
         var cachedData = await cache.GetStringAsync(cacheKey, cancellationToken);
 
         if (!string.IsNullOrEmpty(cachedData))
         {
-            logger.LogInformation("Credit application {Id} found in cache", id);
+            logger.LogDebug("Credit application {Id} found in cache", id);
 
             CreditApplicationModel? cachedApplication = null;
             try
@@ -61,10 +62,14 @@ public class CreditApplicationService(
 
         await cache.SetStringAsync(cacheKey, serializedData, cacheOptions, cancellationToken);
 
-        logger.LogInformation(
-            "Credit application {Id} saved to cache with TTL {CacheExpiration} minutes",
-            id,
-            _cacheExpiration.TotalMinutes);
+        try
+        {
+            await snsPublisher.PublishAsync(application, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to publish credit application {Id} to SNS", id);
+        }
 
         return application;
     }

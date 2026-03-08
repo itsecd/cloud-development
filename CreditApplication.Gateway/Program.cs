@@ -44,6 +44,21 @@ for (var i = 0; i < generatorNames.Length; i++)
 if (addressOverrides.Count > 0)
     builder.Configuration.AddInMemoryCollection(addressOverrides);
 
+// Resolve file-service address from Aspire service discovery
+var fileServiceUrl = builder.Configuration["services:file-service:http:0"];
+if (!string.IsNullOrEmpty(fileServiceUrl) && Uri.TryCreate(fileServiceUrl, UriKind.Absolute, out var fileUri))
+{
+    var fileHost = fileUri.Host;
+    var filePort = fileUri.Port.ToString();
+    builder.Configuration.AddInMemoryCollection(
+    [
+        new($"Routes:1:DownstreamHostAndPorts:0:Host", fileHost),
+        new($"Routes:1:DownstreamHostAndPorts:0:Port", filePort),
+        new($"Routes:2:DownstreamHostAndPorts:0:Host", fileHost),
+        new($"Routes:2:DownstreamHostAndPorts:0:Port", filePort)
+    ]);
+}
+
 builder.Services
     .AddOcelot(builder.Configuration)
     .AddCustomLoadBalancer((route, serviceDiscovery) =>

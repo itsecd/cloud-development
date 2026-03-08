@@ -10,6 +10,7 @@
 |-----|-------|----------|
 | 1 | `Lab1` | Генератор + Redis + Blazor + Aspire |
 | 2 | `Lab2` | + API-шлюз Ocelot + 3 реплики + взвешенный балансировщик |
+| 3 | `Lab3` | + Брокер (SNS/SQS) + S3 (LocalStack) + Файловый сервис + Интеграционные тесты |
 
 ---
 
@@ -62,6 +63,22 @@
 
 ---
 
+## 🧪 Лабораторная работа №3
+
+Реализация файлового сервиса и объектного хранилища, интеграционное тестирование бекенда.
+
+### Цели
+- Добавление в оркестрацию объектного хранилища и брокера сообщений (**LocalStack** с эмуляцией сервисов **Amazon S3, SNS, SQS**).
+- Реализация отправки генерируемых данных (заявок на кредит) в файловый сервис посредством брокера сообщений (**Amazon SNS**).
+- Реализация **файлового сервиса** (`FileService`), который:
+  - Фоново считывает заявки из очереди **Amazon SQS**, подписанной на SNS-топик генератора.
+  - Сериализует полученные данные в формат JSON и сохраняет их в объектном хранилище **Amazon S3**.
+  - Предоставляет API (`/files`) для получения списка файлов и их содержимого из бакета.
+- Добавление маршрутов обращения к `/files` через API-шлюз **Ocelot**.
+- Реализация **интеграционных тестов** (на базе `xUnit` и `Aspire.Hosting.Testing`), поднимающих полноценный AppHost и проверяющих сквозную (end-to-end) корректность работы шлюза, генераторов, кэша и файлового сервиса (включая проверку сохранения в S3 через брокер).
+
+---
+
 ## 🏗️ Архитектура
 
 ### Структура решения
@@ -80,9 +97,20 @@ cloud-development/
 ├── CreditApplication.Generator/            # Сервис генерации (запускается в 3 репликах)
 │   ├── Services/
 │   │   ├── CreditApplicationGenerator.cs   # Генератор на основе Bogus
-│   │   └── CreditApplicationService.cs     # Кэш-aside логика (Redis)
+│   │   ├── CreditApplicationService.cs     # Кэш-aside логика (Redis)
+│   │   └── SnsPublisherService.cs          # Публикация заявок в SNS
 │   └── Models/
 │       └── CreditApplicationModel.cs       # Модель кредитной заявки
+│
+├── CreditApplication.FileService/          # Файловый сервис
+│   ├── Services/
+│   │   ├── S3StorageService.cs             # Чтение/запись в Amazon S3
+│   │   ├── SqsListenerService.cs           # Фоновое чтение из очереди Amazon SQS
+│   │   └── AwsResourceInitializer.cs       # Настройка AWS-ресурсов при старте
+│   └── Program.cs                          # API проксирования к S3
+│
+├── CreditApplication.IntegrationTests/     # Интеграционные тесты
+│   └── IntegrationTests.cs                 # xUnit + Aspire.Hosting.Testing (E2E-тесты)
 │
 ├── CreditApplication.ServiceDefaults/      # Общие расширения всех сервисов
 │   └── Extensions.cs                       # Serilog, OpenTelemetry, CORS, Health checks
@@ -103,16 +131,28 @@ graph TB
     subgraph Gateway["API Gateway — Ocelot :5200"]
         LB["WeightedRandomLoadBalancer
         0.5 / 0.3 / 0.2"]
+        Routes["Routes:
+        /credit-application → Generators
+        /files → FileService"]
     end
 
     subgraph Generators["Реплики генератора"]
-        G1["generator-1 
-        :5101"]
-        G2["generator-2
-        :5102"]
-        G3["generator-3
-        :5103"]
+        G1["generator-1 :5101"]
+        G2["generator-2 :5102"]
+        G3["generator-3 :5103"]
     end
+
+    subgraph LocalStack["LocalStack (AWS Emulator)"]
+        SNS["Amazon SNS
+        Topic: credit-applications"]
+        SQS["Amazon SQS
+        Queue: credit-applications-file-queue"]
+        S3[("Amazon S3
+        Bucket: credit-applications")]
+    end
+
+    FileService["File Service :5300
+    (Фоновый воркер + API)"]
 
     Redis[("Redis
     Distributed Cache")]
@@ -120,15 +160,27 @@ graph TB
     (seed = ID заявки)"]
 
     Client -->|"GET /credit-application"| Gateway
+    Client -->|"GET /files"| Gateway
+
     Gateway -->|"Взвешенный выбор"| LB
     LB -->|"50%"| G1
     LB -->|"30%"| G2
     LB -->|"20%"| G3
+    Gateway -->|"/files/*"| FileService
 
     G1 & G2 & G3 -->|"Cache lookup"| Redis
-    Redis -->|"Hit"| G1 & G2 & G3
+    Redis -.->|"Hit"| G1 & G2 & G3
+
     G1 & G2 & G3 -->|"Miss → генерация"| Bogus
     G1 & G2 & G3 -->|"Cache set"| Redis
+
+    G1 & G2 & G3 -->|"Publish JSON"| SNS
+    SNS -->|"Push"| SQS
+
+    FileService -->|"Poll messages"| SQS
+    FileService -->|"Save JSON"| S3
+
+    FileService -->|"List/Get files"| S3
 ```
 
 ### Порты сервисов
@@ -139,6 +191,8 @@ graph TB
 | `generator-1` | 5101 | Реплика генератора (вес 0.5) |
 | `generator-2` | 5102 | Реплика генератора (вес 0.3) |
 | `generator-3` | 5103 | Реплика генератора (вес 0.2) |
+| `file-service` | 5300 | Сервис получения файлов из S3 |
+| `localstack` | 4566 | Эмулятор AWS (S3, SNS, SQS) |
 | `redis` | 6379 | Кэш |
 | Redis Commander | 8081 | Веб-UI Redis (только Development) |
 
@@ -168,7 +222,10 @@ graph TB
 
 | Технология | Версия | Назначение |
 |------------|--------|-----------|
-| .NET Aspire | 9.5.2 | Оркестрация, service discovery, dashboard |
+| .NET Aspire | 9.5.2 | Оркестрация, service discovery, dashboard, тестирование |
+| LocalStack | latest | Эмуляция инфраструктуры AWS (S3, SNS, SQS) |
+| AWSSDK | 3.7.x | Взаимодействие с объектным хранилищем и брокером |
+| xUnit | 2.5.x | Интеграционное E2E тестирование бекенда |
 | Ocelot | 23.3.3 | API Gateway, маршрутизация |
 | Bogus | latest | Детерминированная генерация данных |
 | Redis | latest | Распределённый кэш |

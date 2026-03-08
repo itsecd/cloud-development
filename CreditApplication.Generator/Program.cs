@@ -1,4 +1,6 @@
-﻿using CreditApplication.Generator.Services;
+﻿using Amazon.Runtime;
+using Amazon.SimpleNotificationService;
+using CreditApplication.Generator.Services;
 using CreditApplication.ServiceDefaults;
 using Serilog;
 
@@ -8,6 +10,14 @@ builder.AddServiceDefaults();
 
 builder.AddRedisDistributedCache("redis");
 
+// AWS SNS client for publishing to LocalStack
+var awsServiceUrl = builder.Configuration["AWS:ServiceURL"] ?? "http://localhost:4566";
+builder.Services.AddSingleton<IAmazonSimpleNotificationService>(_ =>
+    new AmazonSimpleNotificationServiceClient(
+        new BasicAWSCredentials("test", "test"),
+        new AmazonSimpleNotificationServiceConfig { ServiceURL = awsServiceUrl }));
+
+builder.Services.AddSingleton<SnsPublisherService>();
 builder.Services.AddSingleton<CreditApplicationGenerator>();
 builder.Services.AddScoped<CreditApplicationService>();
 
@@ -24,8 +34,6 @@ app.MapGet("/credit-application", async (
     ILogger<Program> logger,
     CancellationToken cancellationToken) =>
 {
-    logger.LogInformation("Received request for credit application with ID: {Id}", id);
-
     if (id <= 0)
     {
         logger.LogWarning("Received invalid ID: {Id}", id);

@@ -19,6 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="..\CreditApplication.Gateway\CreditApplication.Gateway.csproj" />
     <ProjectReference Include="..\CreditApplication.Generator\CreditApplication.Generator.csproj" />
+    <ProjectReference Include="..\CreditApplication.FileService\CreditApplication.FileService.csproj" />
     <ProjectReference Include="..\Client.Wasm\Client.Wasm.csproj" />
   </ItemGroup>
 
