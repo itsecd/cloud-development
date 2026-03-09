@@ -49,21 +49,34 @@ public class SqsListenerService(
 
     private async Task ProcessMessageAsync(string queueUrl, Message message, CancellationToken ct)
     {
+        string? payload;
+        int id;
+
         try
         {
             using var envelope = JsonDocument.Parse(message.Body);
-            var payload = envelope.RootElement.GetProperty("Message").GetString();
+            payload = envelope.RootElement.GetProperty("Message").GetString();
 
             if (string.IsNullOrEmpty(payload))
             {
-                logger.LogWarning("Empty message payload, skipping");
+                logger.LogWarning("Empty message payload, skipping and deleting message {MessageId}", message.MessageId);
+                await sqsClient.DeleteMessageAsync(queueUrl, message.ReceiptHandle, ct);
                 return;
             }
 
             using var doc = JsonDocument.Parse(payload);
-            var id = doc.RootElement.GetProperty("Id").GetInt32();
-            var key = $"credit-application-{id}.json";
+            id = doc.RootElement.GetProperty("Id").GetInt32();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Invalid message format for {MessageId}, skipping and deleting", message.MessageId);
+            await sqsClient.DeleteMessageAsync(queueUrl, message.ReceiptHandle, ct);
+            return;
+        }
 
+        try
+        {
+            var key = $"credit-application-{id}.json";
             await storageService.UploadAsync(key, payload, ct);
 
             await sqsClient.DeleteMessageAsync(queueUrl, message.ReceiptHandle, ct);

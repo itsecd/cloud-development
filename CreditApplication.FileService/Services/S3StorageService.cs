@@ -40,7 +40,7 @@ public class S3StorageService(
     {
         try
         {
-            var response = await s3Client.GetObjectAsync(_bucketName, key, ct);
+            using var response = await s3Client.GetObjectAsync(_bucketName, key, ct);
             using var reader = new StreamReader(response.ResponseStream);
             return await reader.ReadToEndAsync(ct);
         }

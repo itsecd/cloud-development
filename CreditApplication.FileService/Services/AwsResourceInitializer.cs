@@ -51,6 +51,38 @@ public class AwsResourceInitializer(
         // Subscribe SQS → SNS
         await snsClient.SubscribeAsync(topicResponse.TopicArn, "sqs", queueArn, cancellationToken);
         logger.LogInformation("SQS queue subscribed to SNS topic");
+
+        // Set SQS policy to allow SNS to publish messages
+        var policy = $$"""
+        {
+          "Version": "2012-10-17",
+          "Id": "Policy{{Guid.NewGuid()}}",
+          "Statement": [
+            {
+              "Sid": "Allow-SNS-SendMessage",
+              "Effect": "Allow",
+              "Principal": "*",
+              "Action": "sqs:SendMessage",
+              "Resource": "{{queueArn}}",
+              "Condition": {
+                "ArnEquals": {
+                  "aws:SourceArn": "{{topicResponse.TopicArn}}"
+                }
+              }
+            }
+          ]
+        }
+        """;
+
+        await sqsClient.SetQueueAttributesAsync(new SetQueueAttributesRequest
+        {
+            QueueUrl = queueResponse.QueueUrl,
+            Attributes = new Dictionary<string, string>
+            {
+                { "Policy", policy }
+            }
+        }, cancellationToken);
+        logger.LogInformation("Set SQS policy to allow SNS topic to SendMessage");
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;

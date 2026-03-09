@@ -133,9 +133,19 @@ public static class Extensions
                         .GetSection("Cors:AllowedOrigins")
                         .Get<string[]>() ?? [];
 
-                    policy.WithOrigins(allowedOrigins)
-                          .WithMethods("GET")
-                          .WithHeaders("Content-Type", "Authorization");
+                    if (allowedOrigins.Length == 0)
+                    {
+
+                        policy.AllowAnyOrigin()
+                              .WithMethods("GET")
+                              .WithHeaders("Content-Type", "Authorization");
+                    }
+                    else
+                    {
+                        policy.WithOrigins(allowedOrigins)
+                              .WithMethods("GET")
+                              .WithHeaders("Content-Type", "Authorization");
+                    }
                 }
             });
         });

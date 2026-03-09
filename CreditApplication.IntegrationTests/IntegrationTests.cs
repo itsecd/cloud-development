@@ -2,6 +2,7 @@ using Aspire.Hosting;
 using Aspire.Hosting.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Xunit;
 
 namespace CreditApplication.IntegrationTests;
@@ -64,7 +65,10 @@ public class IntegrationTests(AppHostFixture fixture) : IClassFixture<AppHostFix
         response2.EnsureSuccessStatusCode();
         var content2 = await response2.Content.ReadAsStringAsync();
 
-        Assert.Equal(content1, content2);
+        var node1 = JsonNode.Parse(content1);
+        var node2 = JsonNode.Parse(content2);
+
+        Assert.True(JsonNode.DeepEquals(node1, node2), "Cached JSON responses should be semantically equal");
     }
 
     [Fact]
