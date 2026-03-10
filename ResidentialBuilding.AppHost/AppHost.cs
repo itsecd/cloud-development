@@ -10,10 +10,9 @@ var gateway = builder.AddProject<Projects.ResidentialBuilding_Gateway>("gateway"
 const int generatorPortBase = 5200;
 for (var i = 1; i <= 5; ++i)
 {
-    var i1 = i;
     var generator = builder.AddProject<Projects.ResidentialBuilding_Generator>($"generator-{i}")
         .WithReference(cache, "residential-building-cache")
-        .WithEndpoint("http", endpoint => endpoint.Port = generatorPortBase + i1)
+        .WithEndpoint("http", endpoint => endpoint.Port = generatorPortBase + i)
         .WaitFor(cache);
     
     gateway.WaitFor(generator);
