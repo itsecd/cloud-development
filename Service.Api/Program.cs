@@ -11,11 +11,13 @@ builder.AddServiceDefaults();
 
 builder.Services.AddEndpointsApiExplorer();
 
+builder.Services.AddHealthChecks();
+
 builder.Services.AddSingleton<Faker<ProgramProject>, ProgramProjectFaker>();
 
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
 {
-    var configuration = builder.Configuration.GetConnectionString("programproj-cache");
+    var configuration = builder.Configuration.GetConnectionString("RedisCache");
     if (configuration != null) return ConnectionMultiplexer.Connect(configuration);
     else throw new InvalidOperationException("u should fix the redis connection");
 });
@@ -44,6 +46,8 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+app.MapHealthChecks("health");
+
 app.UseCors();
 
 app.MapDefaultEndpoints();
@@ -55,5 +59,5 @@ app.MapGet("/program-proj", async (int id, ProgramProjectCacheService cacheServi
     return Results.Ok(await cacheService.GetOrGenerateAsync(id));
 })
 .WithName("GetProgramProject");
-
+app.MapGet("/", () => Results.Ok("ok"));
 app.Run();
