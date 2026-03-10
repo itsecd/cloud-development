@@ -1,29 +1,37 @@
+using CompanyEmployee.Gateway.LoadBalancers;
+using CompanyEmployee.ServiceDefaults;
+using Ocelot.DependencyInjection;
+using Ocelot.Middleware;
+using Ocelot.Provider.Polly;
+using Ocelot.LoadBalancer.Interfaces;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
-// Add services to the container.
+builder.Configuration.AddJsonFile("ocelot.json", false, true);
 
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("wasm", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .WithMethods("GET")
+              .WithHeaders("Content-Type");
+    });
+});
+
+builder.Services.AddOcelot()
+    .AddPolly();
+
+builder.Services.AddSingleton<ILoadBalancerFactory, WeightedRandomLoadBalancerFactory>();
 
 var app = builder.Build();
 
 app.MapDefaultEndpoints();
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
+app.UseCors("wasm");
 app.UseHttpsRedirection();
 
-app.UseAuthorization();
-
-app.MapControllers();
+await app.UseOcelot();
 
 app.Run();

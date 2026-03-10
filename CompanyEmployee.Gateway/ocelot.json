@@ -3,26 +3,26 @@
     {
       "DownstreamPathTemplate": "/api/employee",
       "DownstreamScheme": "https",
-      "DownstreamHostAndPorts": [
+      "DownstreamAddresses": [
         {
           "Host": "localhost",
-          "Port": 5001
+          "Port": 6001
         },
         {
           "Host": "localhost",
-          "Port": 5002
+          "Port": 6002
         },
         {
           "Host": "localhost",
-          "Port": 5003
+          "Port": 6003
         },
         {
           "Host": "localhost",
-          "Port": 5004
+          "Port": 6004
         },
         {
           "Host": "localhost",
-          "Port": 5005
+          "Port": 6005
         }
       ],
       "UpstreamPathTemplate": "/api/employee",
