@@ -1,0 +1,30 @@
+{
+    "Routes": [
+        {
+            "UpstreamPathTemplate": "/api/orders",
+            "UpstreamHttpMethod": [ "Get" ],
+            "DownstreamPathTemplate": "/credit-orders",
+            "DownstreamScheme": "https",
+            "DownstreamHostAndPorts": [
+                {
+                    "Host": "localhost",
+                    "Port": 7241
+                },
+                {
+                    "Host": "localhost",
+                    "Port": 7242
+                },
+                {
+                    "Host": "localhost",
+                    "Port": 7243
+                }
+            ],
+            "LoadBalancerOptions": {
+                "Type": "WeightedRandomLoadBalancer"
+            }
+        }
+    ],
+    "GlobalConfiguration": {
+        "BaseUrl": "https://localhost:7124"
+    }
+}
