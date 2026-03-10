@@ -11,4 +11,6 @@ builder.AddProject<Projects.Client_Wasm>("client")
     .WithReference(api)
     .WaitFor(api);
 
+builder.AddProject<Projects.CompanyEmployee_Gateway>("companyemployee-gateway");
+
 builder.Build().Run();

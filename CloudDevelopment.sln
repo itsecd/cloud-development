@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CompanyEmployee.Domain", "C
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CompanyEmployee.Api", "CompanyEmployee.Api\CompanyEmployee.Api.csproj", "{EEC6E8C9-9951-4CE6-DBC8-FEDF498A759B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CompanyEmployee.Gateway", "CompanyEmployee.Gateway\CompanyEmployee.Gateway.csproj", "{73C5B926-EAC3-32E1-1AD5-911888B0E715}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{EEC6E8C9-9951-4CE6-DBC8-FEDF498A759B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EEC6E8C9-9951-4CE6-DBC8-FEDF498A759B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EEC6E8C9-9951-4CE6-DBC8-FEDF498A759B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{73C5B926-EAC3-32E1-1AD5-911888B0E715}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{73C5B926-EAC3-32E1-1AD5-911888B0E715}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{73C5B926-EAC3-32E1-1AD5-911888B0E715}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{73C5B926-EAC3-32E1-1AD5-911888B0E715}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
