@@ -14,7 +14,7 @@ public class QueryBased(ILogger<QueryBased> logger, List<Service> services) : IL
     /// <summary>
     /// Тип балансировщика нагрузки
     /// </summary>
-    public string Type => "QueryBased";
+    public string Type => nameof(QueryBased);
 
     /// <summary>
     /// Метод выбора сервиса на основе запроса

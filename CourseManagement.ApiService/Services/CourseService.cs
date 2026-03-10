@@ -19,26 +19,19 @@ public class CourseService(ILogger<CourseService> logger, CourseGenerator genera
     /// Метод для получения курса
     /// </summary>
     /// <param name="id">Идентификатор курса</param>
-    /// <returns>Курс или null при ошибке</returns>
-    public async Task<CourseDto?> GetCourse(int id)
+    /// <returns>Курс</returns>
+    public async Task<CourseDto> GetCourse(int id)
     {
-        try
-        {
-            var course = await cacheService.FetchAsync(CacheKeyPrefix, id);
-            if (course != null)
-                return course;
+        var course = await cacheService.FetchAsync(CacheKeyPrefix, id);
+        if (course != null)
+            return course;
 
-            var newCourse = generator.GenerateOne(id);
+        var newCourse = generator.GenerateOne(id);
 
-            await cacheService.StoreAsync(CacheKeyPrefix, id, newCourse);
+        await cacheService.StoreAsync(CacheKeyPrefix, id, newCourse);
 
-            return newCourse;
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error processing course {ResourceId}", id);
-        }
+        logger.LogInformation("Course {ResourceId} processed", id);
 
-        return null;
+        return newCourse;
     }
 }

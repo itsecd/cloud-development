@@ -15,6 +15,14 @@
         {
           "Host": "localhost",
           "Port": 8083
+        },
+        {
+          "Host": "localhost",
+          "Port": 8084
+        },
+        {
+          "Host": "localhost",
+          "Port": 8085
         }
       ],
       "UpstreamPathTemplate": "/course-management",
@@ -39,6 +47,14 @@
         {
           "Host": "localhost",
           "Port": 8083
+        },
+        {
+          "Host": "localhost",
+          "Port": 8084
+        },
+        {
+          "Host": "localhost",
+          "Port": 8085
         }
       ],
       "UpstreamPathTemplate": "/health",

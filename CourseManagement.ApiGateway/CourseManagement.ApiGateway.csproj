@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CourseManagement\CourseManagement.ServiceDefaults\CourseManagement.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\CourseManagement.ServiceDefaults\CourseManagement.ServiceDefaults.csproj" />
   </ItemGroup>
 
 </Project>

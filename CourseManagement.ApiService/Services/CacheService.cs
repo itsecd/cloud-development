@@ -72,6 +72,5 @@ public class CacheService<T>(ILogger<CacheService<T>> logger, IDistributedCache 
         {
             logger.LogWarning(ex, "Сache is unavailable");
         }
-
     }
 }

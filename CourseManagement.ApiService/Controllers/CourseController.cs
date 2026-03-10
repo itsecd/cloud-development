@@ -25,6 +25,6 @@ public class CourseController(ILogger<CourseController> logger, CourseService co
 
         var course = await courseService.GetCourse(id ?? 0);
 
-        return course != null ? Ok(course) : Problem("Internal server error", statusCode: 500);
+        return Ok(course);
     }
 }
