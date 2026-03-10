@@ -19,6 +19,14 @@
         {
           "Host": "localhost",
           "Port": 7003
+        },
+        {
+          "Host": "localhost",
+          "Port": 7004
+        },
+        {
+          "Host": "localhost",
+          "Port": 7005
         }
       ],
 
@@ -47,6 +55,14 @@
         {
           "Host": "localhost",
           "Port": 7003
+        },
+        {
+          "Host": "localhost",
+          "Port": 7004
+        },
+        {
+          "Host": "localhost",
+          "Port": 7005
         }
       ],
 

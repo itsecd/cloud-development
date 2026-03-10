@@ -7,8 +7,7 @@ namespace Inventory.Gateway.LoadBalancer;
 /// <summary>
 /// Пользовательский балансировщик нагрузки для Ocelot,реализующий алгоритм взвешенного случайного выбора (Weighted Random).
 /// Каждый сервис получает вес, увеличивающийся в зависимости от его позиции в списке,
-/// после чего один из сервисов выбирается случайным образом
-/// пропорционально своему весу.
+/// после чего один из сервисов выбирается случайным образом пропорционально своему весу.
 /// </summary>
 /// <param name="logger"> Логгер для записи информации о выбранном сервисе</param>
 /// <param name="services"> Список доступных сервисов для балансировки нагрузки</param>
@@ -17,7 +16,7 @@ public class WeightedRandom(ILogger<WeightedRandom> logger, List<Service> servic
     /// <summary>
     /// Тип используемого балансировщика нагрузки.
     /// </summary>
-    public string Type => "WeightedRandom";
+    public string Type => nameof(WeightedRandom);
 
     /// <summary>
     /// Генератор случайных чисел для выбора сервиса.

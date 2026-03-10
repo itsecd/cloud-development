@@ -9,7 +9,7 @@ var apis = new List<IResourceBuilder<ProjectResource>>();
 
 var basePort = 7001;
 
-for (var i = 0; i < 3; i++)
+for (var i = 0; i < 5; i++)
 {
     var port = basePort + i;
 
@@ -23,13 +23,15 @@ for (var i = 0; i < 3; i++)
 
 // Gateway
 var gateway = builder.AddProject<Projects.Inventory_Gateway>("apigateway")
-    .WithHttpsEndpoint(port: 7000, name: "gateway")
-    .WaitFor(apis[0])
-    .WaitFor(apis[1])
-    .WaitFor(apis[2]);
+    .WithHttpsEndpoint(port: 7000, name: "gateway");
+
+foreach (var api in apis)
+{
+    gateway = gateway.WaitFor(api);
+}
 
 // Client
-var client = builder.AddProject<Projects.Client_Wasm>("client-wasm")
+builder.AddProject<Projects.Client_Wasm>("client-wasm")
     .WithExternalHttpEndpoints()
     .WaitFor(gateway);
 
