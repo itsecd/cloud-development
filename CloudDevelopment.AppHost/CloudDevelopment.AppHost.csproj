@@ -16,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\CreditOrder.Gateway\CreditOrder.Gateway.csproj" />
     <ProjectReference Include="..\Generator\Generator.csproj" />
 	<ProjectReference Include="..\Client.Wasm\Client.Wasm.csproj" />
   </ItemGroup>
