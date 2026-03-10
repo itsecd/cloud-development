@@ -3,7 +3,7 @@
     {
       "DownstreamPathTemplate": "/api/employee",
       "DownstreamScheme": "https",
-      "DownstreamAddresses": [
+      "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
           "Port": 6001
@@ -39,6 +39,6 @@
     }
   ],
   "GlobalConfiguration": {
-    "BaseUrl": "https://localhost:7000"
+    "BaseUrl": "https://localhost:7001"
   }
 }

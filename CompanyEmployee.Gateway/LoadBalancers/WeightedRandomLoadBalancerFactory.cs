@@ -26,14 +26,14 @@ public class WeightedRandomLoadBalancerFactory : ILoadBalancerFactory
 
         foreach (var address in route.DownstreamAddresses)
         {
-            var hostAndPort = new ServiceHostAndPort(
+            var serviceHostAndPort = new ServiceHostAndPort(
                 address.Host,
                 address.Port,
                 route.DownstreamScheme);
 
             var service = new Service(
                 $"{address.Host}:{address.Port}",
-                hostAndPort,
+                serviceHostAndPort,
                 string.Empty,
                 string.Empty,
                 Enumerable.Empty<string>());
