@@ -10,33 +10,12 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("wasm", policy =>
-        policy.SetIsOriginAllowed(origin =>
-            {
-                try
-                {
-                    var uri = new Uri(origin);
-                    return uri.Host == "localhost";
-                }
-                catch
-                {
-                    return false;
-                }
-            })
-            .WithMethods("GET")
-            .AllowAnyHeader());
-});
-
 builder.AddRedisDistributedCache(connectionName: "cache");
 
 builder.Services.AddSingleton<ICompanyEmployeeGenerator, CompanyEmployeeGenerator>();
 builder.Services.AddSingleton<ICompanyEmployeeService, CompanyEmployeeService>();
 
 var app = builder.Build();
-
-app.UseCors();
 
 app.MapDefaultEndpoints();
 
@@ -45,12 +24,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
-
-app.UseCors("wasm");
 
 app.MapControllers();
 

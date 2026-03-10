@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CompanyEmployee.AppHost", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CompanyEmployee.ServiceDefaults", "CompanyEmployee.ServiceDefaults\CompanyEmployee.ServiceDefaults.csproj", "{DF70F3CE-6CD9-4334-AB24-0A2BBBD081E8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CompanyEmployee.ApiGateway", "CompanyEmployee.ApiGateway\CompanyEmployee.ApiGateway.csproj", "{00432BCA-E982-451B-9D3F-648FE20FF285}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{DF70F3CE-6CD9-4334-AB24-0A2BBBD081E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DF70F3CE-6CD9-4334-AB24-0A2BBBD081E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DF70F3CE-6CD9-4334-AB24-0A2BBBD081E8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{00432BCA-E982-451B-9D3F-648FE20FF285}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{00432BCA-E982-451B-9D3F-648FE20FF285}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{00432BCA-E982-451B-9D3F-648FE20FF285}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{00432BCA-E982-451B-9D3F-648FE20FF285}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

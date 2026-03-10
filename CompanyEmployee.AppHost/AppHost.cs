@@ -3,12 +3,24 @@ var builder = DistributedApplication.CreateBuilder(args);
 var cache = builder.AddRedis("cache")
     .WithRedisInsight(containerName: "redis-insight");
 
-var generator = builder.AddProject<Projects.CompanyEmployee_Generator>("generator")
-    .WithReference(cache)
-    .WaitFor(cache);
+var gateway = builder.AddProject<Projects.CompanyEmployee_ApiGateway>("apiGateway")
+    .WithEndpoint("https", e => e.Port = 7200)
+    .WithExternalHttpEndpoints();
+
+const int startGeneratorPort = 7301;
+for (var i = 0; i < 3; ++i)
+{
+    var port = startGeneratorPort + i;
+    var generator = builder.AddProject<Projects.CompanyEmployee_Generator>($"generator-{i}")
+        .WithEndpoint("https", e => e.Port = port)
+        .WithReference(cache)
+        .WaitFor(cache);
+
+    gateway.WaitFor(generator);
+}
 
 var client = builder.AddProject<Projects.Client_Wasm>("client")
-    .WithReference(generator)
-    .WaitFor(generator);
+    .WithReference(gateway)
+    .WaitFor(gateway);
 
 builder.Build().Run();
