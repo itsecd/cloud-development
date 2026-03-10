@@ -19,7 +19,7 @@ app.MapDefaultEndpoints();
 
 app.MapGet("/vehicles", async (int id, IVehicleService vehicleService) =>
 {
-    var vehicle = await vehicleService.GetVehicleAsync(id);
+    var vehicle = await vehicleService.GetVehicle(id);
     return Results.Ok(vehicle);
 });
 

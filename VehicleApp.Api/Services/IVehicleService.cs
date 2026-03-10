@@ -12,5 +12,5 @@ public interface IVehicleService
     /// </summary>
     /// <param name="id">Идентификатор ТС</param>
     /// <returns>Транспортное средство</returns>
-    public Task<Vehicle> GetVehicleAsync(int id);
+    public Task<Vehicle> GetVehicle(int id);
 }
