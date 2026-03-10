@@ -1,0 +1,6 @@
+@Service.ApiGw_HostAddress = http://localhost:5247
+
+GET {{Service.ApiGw_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
