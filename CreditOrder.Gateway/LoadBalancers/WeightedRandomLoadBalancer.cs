@@ -25,7 +25,16 @@ public sealed class WeightedRandomLoadBalancer(IConfiguration configuration,
     /// Используется Ocelot для сопоставления с конфигурацией
     /// <c>LoadBalancerOptions.Type</c>.
     /// </summary>
-    public string Type => "WeightedRandomLoadBalancer";
+    public string Type => nameof(WeightedRandomLoadBalancer);
+
+    /// <summary>
+    /// lookup весов по паре (Host, Port).
+    /// </summary>
+    private readonly Dictionary<(string Host, int Port), int> _weightsByEndpoint =
+        (configuration.GetSection("ReplicaWeights").Get<List<ReplicaWeight>>() ?? [])
+        .ToDictionary(
+            w => (w.Host.ToLowerInvariant(), w.Port),
+            w => w.Weight);
 
     /// <summary>
     /// Выбирает downstream-сервис для обработки запроса.
@@ -46,21 +55,20 @@ public sealed class WeightedRandomLoadBalancer(IConfiguration configuration,
     {
         var services = await _services();
 
-        var candidates = services
-            .Select(service => new
+        var candidates = new List<(Service Service, int Weight)>();
+
+        foreach (var service in services)
+        {
+            var key = (
+                service.HostAndPort.DownstreamHost.ToLowerInvariant(),
+                service.HostAndPort.DownstreamPort
+            );
+
+            if (_weightsByEndpoint.TryGetValue(key, out var serviceWeight))
             {
-                Service = service,
-                Weight = _weights.FirstOrDefault(w =>
-                    string.Equals(w.Host, service.HostAndPort.DownstreamHost, StringComparison.OrdinalIgnoreCase) &&
-                    w.Port == service.HostAndPort.DownstreamPort)
-            })
-            .Where(x => x.Weight is not null)
-            .Select(x => new
-            {
-                x.Service,
-                Weight = x.Weight!.Weight
-            })
-            .ToList();
+                candidates.Add((service, serviceWeight));
+            }
+        }
 
         if (candidates.Count == 0)
         {

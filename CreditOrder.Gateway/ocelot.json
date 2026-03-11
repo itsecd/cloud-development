@@ -17,6 +17,14 @@
                 {
                     "Host": "localhost",
                     "Port": 7243
+                },
+                {
+                    "Host": "localhost",
+                    "Port": 7244
+                },
+                {
+                    "Host": "localhost",
+                    "Port": 7245
                 }
             ],
             "LoadBalancerOptions": {

@@ -9,30 +9,22 @@ var ports = builder.Configuration.GetSection("ApiService:Ports").Get<int[]>()
 var cache = builder.AddRedis("credit-order-cache")
     .WithRedisInsight(containerName: "credit-order-insight");
 
-var generators = new List<IResourceBuilder<ProjectResource>>();
-
+var gateway = builder.AddProject<Projects.CreditOrder_Gateway>("gateway");
 for (var i = 0; i < ports.Length; i++)
 {
     var httpsPort = ports[i];
     var httpPort = ports[i] - 1000;
     var urls = $"https://localhost:{httpsPort};http://localhost:{httpPort}";
 
-    generators.Add(
-        builder.AddProject<Projects.Generator>($"generator-r{i + 1}")
+    var geenrator = builder.AddProject<Projects.Generator>($"generator-r{i + 1}")
             .WithReference(cache, "RedisCache")
             .WithEnvironment("ASPNETCORE_URLS", urls)
-            .WaitFor(cache)
-    );
-}
+            .WaitFor(cache);
 
-var gateway = builder.AddProject<Projects.CreditOrder_Gateway>("gateway");
-foreach (var g in generators)
-{
-    gateway.WaitFor(g);
+    gateway.WaitFor(geenrator);
 }
 
 var client = builder.AddProject<Projects.Client_Wasm>("credit-order-wasm")
-    .WithReference(gateway)
     .WaitFor(gateway);
 
 builder.Build().Run();
