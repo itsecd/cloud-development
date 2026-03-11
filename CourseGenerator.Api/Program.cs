@@ -5,6 +5,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<ICourseContractGenerator, CourseContractGenerator>();
+builder.Services.AddSingleton<ICourseContractCacheService, CourseContractCacheService>();
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration.GetConnectionString("redis") ?? "localhost:6379";
+    options.InstanceName = "course-generator:";
+});
 
 var app = builder.Build();
 
@@ -14,7 +20,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.MapGet("/api/courses/generate", (int count, ICourseContractGenerator generator) =>
+app.MapGet("/api/courses/generate", async (int count, ICourseContractGenerator generator, ICourseContractCacheService cache, CancellationToken cancellationToken) =>
     {
         if (count is < 1 or > 100)
         {
@@ -24,7 +30,15 @@ app.MapGet("/api/courses/generate", (int count, ICourseContractGenerator generat
             });
         }
 
+        var cachedContracts = await cache.GetAsync(count, cancellationToken);
+        if (cachedContracts is not null)
+        {
+            return Results.Ok(cachedContracts);
+        }
+
         var contracts = generator.Generate(count);
+        await cache.SetAsync(count, contracts, cancellationToken);
+
         return Results.Ok(contracts);
     })
     .WithName("GenerateCourses")
