@@ -1,13 +1,9 @@
 using Bogus;
 using Bogus.DataSets;
+using CourseGenerator.Api.Interfaces;
 using CourseGenerator.Api.Models;
 
 namespace CourseGenerator.Api.Services;
-
-public interface ICourseContractGenerator
-{
-    IReadOnlyList<CourseContract> Generate(int count);
-}
 
 public sealed class CourseContractGenerator(ILogger<CourseContractGenerator> logger) : ICourseContractGenerator
 {

@@ -1,14 +1,9 @@
 using System.Text.Json;
+using CourseGenerator.Api.Interfaces;
 using CourseGenerator.Api.Models;
 using Microsoft.Extensions.Caching.Distributed;
 
 namespace CourseGenerator.Api.Services;
-
-public interface ICourseContractCacheService
-{
-    Task<IReadOnlyList<CourseContract>?> GetAsync(int count, CancellationToken cancellationToken = default);
-    Task SetAsync(int count, IReadOnlyList<CourseContract> contracts, CancellationToken cancellationToken = default);
-}
 
 public sealed class CourseContractCacheService(IDistributedCache cache, ILogger<CourseContractCacheService> logger) : ICourseContractCacheService
 {
