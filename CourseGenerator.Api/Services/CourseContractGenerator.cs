@@ -24,6 +24,30 @@ public sealed class CourseContractGenerator(ILogger<CourseContractGenerator> log
         "Машинное обучение в разработке ПО"
     ];
 
+    private static readonly string[] PatronymicDictionary =
+    [
+        "Иванович",
+        "Петрович",
+        "Сергеевич",
+        "Алексеевич",
+        "Дмитриевич",
+        "Андреевич",
+        "Игоревич",
+        "Олегович",
+        "Владимирович",
+        "Николаевич",
+        "Ивановна",
+        "Петровна",
+        "Сергеевна",
+        "Алексеевна",
+        "Дмитриевна",
+        "Андреевна",
+        "Игоревна",
+        "Олеговна",
+        "Владимировна",
+        "Николаевна"
+    ];
+
     public IReadOnlyList<CourseContract> Generate(int count)
     {
         logger.LogInformation("Course generation started: {Count}", count);
@@ -47,7 +71,7 @@ public sealed class CourseContractGenerator(ILogger<CourseContractGenerator> log
                 return new CourseContract(
                     Id: idSeed++,
                     CourseName: f.PickRandom(CourseDictionary),
-                    TeacherFullName: $"{f.Name.LastName()} {f.Name.FirstName()} {f.Name.FirstName()}",
+                    TeacherFullName: $"{f.Name.LastName()} {f.Name.FirstName()} {f.PickRandom(PatronymicDictionary)}",
                     StartDate: startDate,
                     EndDate: endDate,
                     MaxStudents: maxStudents,
