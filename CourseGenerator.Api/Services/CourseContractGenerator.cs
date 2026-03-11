@@ -1,0 +1,60 @@
+using Bogus;
+using CourseGenerator.Api.Models;
+
+namespace CourseGenerator.Api.Services;
+
+public interface ICourseContractGenerator
+{
+    IReadOnlyList<CourseContract> Generate(int count);
+}
+
+public sealed class CourseContractGenerator : ICourseContractGenerator
+{
+    private static readonly string[] CourseDictionary =
+    [
+        "Основы программирования на C#",
+        "Проектирование микросервисов",
+        "Базы данных и SQL",
+        "Инженерия требований",
+        "Тестирование программного обеспечения",
+        "Алгоритмы и структуры данных",
+        "Распределенные системы",
+        "Web-разработка на ASP.NET Core",
+        "DevOps и CI/CD",
+        "Машинное обучение в разработке ПО"
+    ];
+
+    public IReadOnlyList<CourseContract> Generate(int count)
+    {
+        if (count <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(count), "Count must be greater than zero.");
+        }
+
+        var idSeed = 1;
+
+        var faker = new Faker<CourseContract>("ru")
+            .CustomInstantiator(f =>
+            {
+                var startDate = DateOnly.FromDateTime(f.Date.Soon(60));
+                var endDate = startDate.AddDays(f.Random.Int(1, 180));
+                var maxStudents = f.Random.Int(10, 200);
+                var currentStudents = f.Random.Int(0, maxStudents);
+                var price = decimal.Round(f.Random.Decimal(1000m, 120000m), 2, MidpointRounding.AwayFromZero);
+
+                return new CourseContract(
+                    Id: idSeed++,
+                    CourseName: f.PickRandom(CourseDictionary),
+                    TeacherFullName: $"{f.Name.LastName()} {f.Name.FirstName()} {f.Name.MiddleName()}",
+                    StartDate: startDate,
+                    EndDate: endDate,
+                    MaxStudents: maxStudents,
+                    CurrentStudents: currentStudents,
+                    HasCertificate: f.Random.Bool(),
+                    Price: price,
+                    Rating: f.Random.Int(1, 5));
+            });
+
+        return faker.Generate(count);
+    }
+}
