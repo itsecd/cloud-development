@@ -1,3 +1,4 @@
+using k8s.Models;
 using Microsoft.Extensions.Configuration;
 
 var builder = DistributedApplication.CreateBuilder(args);
@@ -17,28 +18,26 @@ var redis = builder.AddRedis("course-cache")
     .WithDataVolume();
 
 
-// API services (Backend)
-var apiServices = new List<IResourceBuilder<ProjectResource>>();
-
-var serviceId = 1;
-foreach(var port in ports)
-{
-    apiServices.Add(builder.AddProject<Projects.CourseManagement_ApiService>($"course-api-{serviceId++}")
-        .WithReference(redis)
-        .WithHttpHealthCheck("/health")
-        .WithHttpsEndpoint(port: port, name: "course-api-endpoint", isProxied: false)
-        .WithExternalHttpEndpoints());
-}
-
-
 // API Gateway (Ocelot)
 var apiGateway = builder.AddProject<Projects.CourseManagement_ApiGateway>("course-gateway")
     .WithHttpsEndpoint(port: gatewayPort, name: "course-gateway-endpoint", isProxied: false)
     .WithExternalHttpEndpoints()
     .WithHttpHealthCheck("/health");
 
-foreach (var apiService in apiServices)
+
+// API services (Backend)
+var apiServices = new List<IResourceBuilder<ProjectResource>>();
+
+var serviceId = 1;
+foreach(var port in ports)
 {
+    var apiService = builder.AddProject<Projects.CourseManagement_ApiService>($"course-api-{serviceId++}")
+        .WithReference(redis)
+        .WithHttpHealthCheck("/health")
+        .WithHttpsEndpoint(port: port, name: "course-api-endpoint", isProxied: false)
+        .WithExternalHttpEndpoints();
+    apiServices.Add(apiService);
+
     apiGateway.WaitFor(apiService);
 }
 
