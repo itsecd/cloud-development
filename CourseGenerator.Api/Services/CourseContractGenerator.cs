@@ -47,7 +47,7 @@ public sealed class CourseContractGenerator(ILogger<CourseContractGenerator> log
                 return new CourseContract(
                     Id: idSeed++,
                     CourseName: f.PickRandom(CourseDictionary),
-                    TeacherFullName: $"{f.Name.LastName()} {f.Name.FirstName()} {f.Name.MiddleName()}",
+                    TeacherFullName: $"{f.Name.LastName()} {f.Name.FirstName()} {f.Name.FirstName()}",
                     StartDate: startDate,
                     EndDate: endDate,
                     MaxStudents: maxStudents,

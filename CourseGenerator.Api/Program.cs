@@ -2,7 +2,6 @@ using CourseGenerator.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.AddServiceDefaults();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<ICourseContractGenerator, CourseContractGenerator>();
@@ -20,8 +19,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
-app.MapDefaultEndpoints();
 
 app.MapGet("/api/courses/generate", async (int count, ICourseContractGenerator generator, ICourseContractCacheService cache, CancellationToken cancellationToken) =>
     {
@@ -55,7 +52,6 @@ app.MapGet("/api/courses/generate", async (int count, ICourseContractGenerator g
 
         return Results.Ok(contracts);
     })
-    .WithName("GenerateCourses")
-    .WithOpenApi();
+    .WithName("GenerateCourses");
 
 app.Run();
