@@ -1,4 +1,5 @@
-﻿using Ocelot.LoadBalancer.Interfaces;
+﻿using Ocelot.LoadBalancer.Errors;
+using Ocelot.LoadBalancer.Interfaces;
 using Ocelot.Responses;
 using Ocelot.Values;
 
@@ -24,12 +25,20 @@ public class QueryBasedLoadBalancer : ILoadBalancer
 
     public async Task<Response<ServiceHostAndPort>> LeaseAsync(HttpContext httpContext)
     {
+        if (_services == null || _services.Count == 0)
+        {
+            _logger.LogError("Нет доступных сервисов для балансировки");
+            return new ErrorResponse<ServiceHostAndPort>(new ServicesAreEmptyError("Нет доступных реплик"));
+        }
+
         var idValue = ExtractIdFromQuery(httpContext);
         var replicaIndex = Math.Abs(idValue) % _services.Count;
         var selectedService = _services[replicaIndex];
 
-        _logger.LogInformation("Запрос с id={Id} направлен на реплику {Index}", idValue, replicaIndex);
+        _logger.LogInformation("Запрос с id={Id} направлен на реплику {Index} ({HostAndPort})",
+            idValue, replicaIndex, selectedService.HostAndPort);
 
+        await Task.CompletedTask;
         return new OkResponse<ServiceHostAndPort>(selectedService.HostAndPort);
     }
 

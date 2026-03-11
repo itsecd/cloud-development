@@ -7,7 +7,7 @@ var generationService = builder.AddProject<Projects.ProgramProject_GenerationSer
     .WithExternalHttpEndpoints()
     .WithReference(cache)
     .WaitFor(cache)
-    .WithReplicas(3);
+    .WithReplicas(5);
 
 // Шлюз
 var gateway = builder.AddProject<Projects.ProgramProject_Gateway>("gateway")

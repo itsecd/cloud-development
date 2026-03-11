@@ -10,15 +10,13 @@ builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange
 
 // Регистрируем балансировщик
 builder.Services.AddOcelot()
-    .AddKubernetes() // провайдер, с которым всё запускается
+    .AddKubernetes()
     .AddCustomLoadBalancer((serviceProvider, route, serviceDiscoveryProvider) =>
     {
         var logger = serviceProvider.GetRequiredService<ILogger<QueryBasedLoadBalancer>>();
         var services = serviceDiscoveryProvider.GetAsync().GetAwaiter().GetResult().ToList();
 
-        var queryParameterName = route.LoadBalancerOptions?.Key ?? "id";
-
-        return new QueryBasedLoadBalancer(services, logger, queryParameterName);
+        return new QueryBasedLoadBalancer(services, logger);
     });
 
 // Добавляем Service Discovery 
