@@ -6,7 +6,9 @@
       "DownstreamHostAndPorts": [
         { "Host": "localhost", "Port": 7301 },
         { "Host": "localhost", "Port": 7302 },
-        { "Host": "localhost", "Port": 7303 }
+        { "Host": "localhost", "Port": 7303 },
+        { "Host": "localhost", "Port": 7304 },
+        { "Host": "localhost", "Port": 7305 }
       ],
       "UpstreamPathTemplate": "/company-employee",
       "UpstreamHttpMethod": [ "GET" ],

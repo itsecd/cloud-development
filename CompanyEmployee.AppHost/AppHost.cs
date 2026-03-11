@@ -8,11 +8,10 @@ var gateway = builder.AddProject<Projects.CompanyEmployee_ApiGateway>("apiGatewa
     .WithExternalHttpEndpoints();
 
 const int startGeneratorPort = 7301;
-for (var i = 0; i < 3; ++i)
+for (var i = 0; i < 5; ++i)
 {
-    var port = startGeneratorPort + i;
     var generator = builder.AddProject<Projects.CompanyEmployee_Generator>($"generator-{i}")
-        .WithEndpoint("https", e => e.Port = port)
+        .WithEndpoint("https", e => e.Port = startGeneratorPort + i)
         .WithReference(cache)
         .WaitFor(cache);
 
