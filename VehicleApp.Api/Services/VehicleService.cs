@@ -10,8 +10,9 @@ namespace VehicleApp.Api.Services;
 public class VehicleService(IDistributedCache cache, IConfiguration configuration,
                 ILogger<VehicleService> logger) : IVehicleService
 {
+    private readonly int _expirationMinutes = configuration.GetValue("CacheSettings:ExpirationMinutes", 15);
     /// <inheritdoc />
-    public async Task<Vehicle> GetVehicleAsync(int id)
+    public async Task<Vehicle> GetVehicle(int id)
     {
         var cacheKey = $"vehicle-{id}";
         logger.LogInformation("Requesting vehicle {VehicleId} from cache", id);
@@ -42,11 +43,11 @@ public class VehicleService(IDistributedCache cache, IConfiguration configuratio
 
         try
         {
-            var expirationMinutes = configuration.GetValue("CacheSettings:ExpirationMinutes", 15);
+            
 
             var cacheOptions = new DistributedCacheEntryOptions
             {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(expirationMinutes)
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(_expirationMinutes)
             };
 
             await cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(vehicle), cacheOptions);
