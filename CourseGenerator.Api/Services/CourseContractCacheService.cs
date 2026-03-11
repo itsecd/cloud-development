@@ -10,7 +10,7 @@ public interface ICourseContractCacheService
     Task SetAsync(int count, IReadOnlyList<CourseContract> contracts, CancellationToken cancellationToken = default);
 }
 
-public sealed class CourseContractCacheService(IDistributedCache cache) : ICourseContractCacheService
+public sealed class CourseContractCacheService(IDistributedCache cache, ILogger<CourseContractCacheService> logger) : ICourseContractCacheService
 {
     private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web);
 
@@ -21,8 +21,11 @@ public sealed class CourseContractCacheService(IDistributedCache cache) : ICours
 
         if (string.IsNullOrWhiteSpace(cachedPayload))
         {
+            logger.LogInformation("Cache miss for key {CacheKey}", key);
             return null;
         }
+
+        logger.LogInformation("Cache hit for key {CacheKey}", key);
 
         return JsonSerializer.Deserialize<IReadOnlyList<CourseContract>>(cachedPayload, SerializerOptions);
     }
@@ -38,6 +41,7 @@ public sealed class CourseContractCacheService(IDistributedCache cache) : ICours
         };
 
         await cache.SetStringAsync(key, payload, options, cancellationToken);
+        logger.LogInformation("Cache updated for key {CacheKey}", key);
     }
 
     private static string BuildKey(int count) => $"courses:count:{count}";

@@ -8,7 +8,7 @@ public interface ICourseContractGenerator
     IReadOnlyList<CourseContract> Generate(int count);
 }
 
-public sealed class CourseContractGenerator : ICourseContractGenerator
+public sealed class CourseContractGenerator(ILogger<CourseContractGenerator> logger) : ICourseContractGenerator
 {
     private static readonly string[] CourseDictionary =
     [
@@ -26,6 +26,8 @@ public sealed class CourseContractGenerator : ICourseContractGenerator
 
     public IReadOnlyList<CourseContract> Generate(int count)
     {
+        logger.LogInformation("Course generation started: {Count}", count);
+
         if (count <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(count), "Count must be greater than zero.");
@@ -55,6 +57,9 @@ public sealed class CourseContractGenerator : ICourseContractGenerator
                     Rating: f.Random.Int(1, 5));
             });
 
-        return faker.Generate(count);
+        var courses = faker.Generate(count);
+        logger.LogInformation("Course generation completed: {Count}", courses.Count);
+
+        return courses;
     }
 }

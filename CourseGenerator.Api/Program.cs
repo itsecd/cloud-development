@@ -22,6 +22,8 @@ if (app.Environment.IsDevelopment())
 
 app.MapGet("/api/courses/generate", async (int count, ICourseContractGenerator generator, ICourseContractCacheService cache, CancellationToken cancellationToken) =>
     {
+        var startedAt = DateTimeOffset.UtcNow;
+
         if (count is < 1 or > 100)
         {
             return Results.ValidationProblem(new Dictionary<string, string[]>
@@ -33,11 +35,20 @@ app.MapGet("/api/courses/generate", async (int count, ICourseContractGenerator g
         var cachedContracts = await cache.GetAsync(count, cancellationToken);
         if (cachedContracts is not null)
         {
+            app.Logger.LogInformation(
+                "Request processed from cache: {Count}, DurationMs={DurationMs}",
+                count,
+                (DateTimeOffset.UtcNow - startedAt).TotalMilliseconds);
             return Results.Ok(cachedContracts);
         }
 
         var contracts = generator.Generate(count);
         await cache.SetAsync(count, contracts, cancellationToken);
+
+        app.Logger.LogInformation(
+            "Request processed with generation: {Count}, DurationMs={DurationMs}",
+            count,
+            (DateTimeOffset.UtcNow - startedAt).TotalMilliseconds);
 
         return Results.Ok(contracts);
     })
