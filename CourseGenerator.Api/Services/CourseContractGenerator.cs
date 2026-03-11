@@ -1,4 +1,5 @@
 using Bogus;
+using Bogus.DataSets;
 using CourseGenerator.Api.Models;
 
 namespace CourseGenerator.Api.Services;
@@ -24,7 +25,7 @@ public sealed class CourseContractGenerator(ILogger<CourseContractGenerator> log
         "Машинное обучение в разработке ПО"
     ];
 
-    private static readonly string[] PatronymicDictionary =
+    private static readonly string[] MalePatronymicDictionary =
     [
         "Иванович",
         "Петрович",
@@ -35,7 +36,11 @@ public sealed class CourseContractGenerator(ILogger<CourseContractGenerator> log
         "Игоревич",
         "Олегович",
         "Владимирович",
-        "Николаевич",
+        "Николаевич"
+    ];
+
+    private static readonly string[] FemalePatronymicDictionary =
+    [
         "Ивановна",
         "Петровна",
         "Сергеевна",
@@ -67,11 +72,17 @@ public sealed class CourseContractGenerator(ILogger<CourseContractGenerator> log
                 var maxStudents = f.Random.Int(10, 200);
                 var currentStudents = f.Random.Int(0, maxStudents);
                 var price = decimal.Round(f.Random.Decimal(1000m, 120000m), 2, MidpointRounding.AwayFromZero);
+                var gender = f.PickRandom<Name.Gender>(Name.Gender.Male, Name.Gender.Female);
+                var firstName = f.Name.FirstName(gender);
+                var lastName = f.Name.LastName(gender);
+                var patronymic = gender == Name.Gender.Male
+                    ? f.PickRandom(MalePatronymicDictionary)
+                    : f.PickRandom(FemalePatronymicDictionary);
 
                 return new CourseContract(
                     Id: idSeed++,
                     CourseName: f.PickRandom(CourseDictionary),
-                    TeacherFullName: $"{f.Name.LastName()} {f.Name.FirstName()} {f.PickRandom(PatronymicDictionary)}",
+                    TeacherFullName: $"{lastName} {firstName} {patronymic}",
                     StartDate: startDate,
                     EndDate: endDate,
                     MaxStudents: maxStudents,
