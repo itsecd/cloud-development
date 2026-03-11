@@ -1,11 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.2.11408.102 d18.0
+VisualStudioVersion = 18.2.11408.102
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client.Wasm", "Client.Wasm\Client.Wasm.csproj", "{AE7EEA74-2FE0-136F-D797-854FD87E022A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domain", "Domain\Domain.csproj", "{9514D6C9-0955-4828-9D9E-E70BD24E37E9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infrastructure", "Infrastructure\Infrastructure.csproj", "{3A4E53A1-8D84-492D-BCD3-7E59921266EF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleAppForTests", "ConsoleAppForTests\ConsoleAppForTests.csproj", "{C7FD9BD2-4D8B-4CA6-91BC-8E5BB967F8F8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +25,14 @@ Global
 		{9514D6C9-0955-4828-9D9E-E70BD24E37E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9514D6C9-0955-4828-9D9E-E70BD24E37E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9514D6C9-0955-4828-9D9E-E70BD24E37E9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3A4E53A1-8D84-492D-BCD3-7E59921266EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3A4E53A1-8D84-492D-BCD3-7E59921266EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3A4E53A1-8D84-492D-BCD3-7E59921266EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3A4E53A1-8D84-492D-BCD3-7E59921266EF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C7FD9BD2-4D8B-4CA6-91BC-8E5BB967F8F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C7FD9BD2-4D8B-4CA6-91BC-8E5BB967F8F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C7FD9BD2-4D8B-4CA6-91BC-8E5BB967F8F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C7FD9BD2-4D8B-4CA6-91BC-8E5BB967F8F8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
