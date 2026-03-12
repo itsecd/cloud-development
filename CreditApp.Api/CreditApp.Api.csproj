@@ -15,6 +15,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Client.Wasm\Client.Wasm.csproj" />
     <ProjectReference Include="..\CreditApp.Domain\CreditApp.Domain.csproj" />
+    <ProjectReference Include="..\CreditApp.Gateway\CreditApp.Gateway.csproj" />
     <ProjectReference Include="..\CreditApp.ServiceDefaults\CreditApp.ServiceDefaults.csproj" />
   </ItemGroup>
 
