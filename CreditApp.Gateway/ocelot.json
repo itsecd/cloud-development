@@ -1,0 +1,38 @@
+{
+  "Routes": [
+    {
+      "DownstreamPathTemplate": "/api/Credit",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7401
+        },
+        {
+          "Host": "localhost",
+          "Port": 7402
+        },
+        {
+          "Host": "localhost",
+          "Port": 7403
+        },
+        {
+          "Host": "localhost",
+          "Port": 7404
+        },
+        {
+          "Host": "localhost",
+          "Port": 7405
+        }
+      ],
+      "UpstreamHttpMethod": [ "GET" ],
+      "UpstreamPathTemplate": "/api/Credit",
+      "LoadBalancerOptions": {
+        "Type": "WeightedRoundRobin"
+      }
+    }
+  ],
+  "GlobalConfiguration": {
+    "BaseUrl": "https://localhost:9001"
+  }
+}

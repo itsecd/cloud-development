@@ -1,0 +1,22 @@
+﻿<Project Sdk="Aspire.AppHost.Sdk/13.1.0">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UserSecretsId>b2dc854c-a0d1-4a18-8fc3-d0168e660b49</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.Redis" Version="13.1.1" />
+    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="10.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Client.Wasm\Client.Wasm.csproj" />
+    <ProjectReference Include="..\CreditApp.Api\CreditApp.Api.csproj" />
+    <ProjectReference Include="..\CreditApp.Gateway\CreditApp.Gateway.csproj" />
+  </ItemGroup>
+
+</Project>
