@@ -99,4 +99,23 @@ public sealed class CourseContractGenerator(ILogger<CourseContractGenerator> log
 
         return courses;
     }
+
+    /// <inheritdoc />
+    public CourseContract GenerateById(int id)
+    {
+        if (id < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(id), "Id must be non-negative.");
+        }
+
+        CourseContract contract;
+        lock (FakerLock)
+        {
+            contract = ContractFaker
+                .UseSeed(id + 1)
+                .Generate() with { Id = id };
+        }
+
+        return contract;
+    }
 }

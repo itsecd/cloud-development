@@ -7,7 +7,9 @@ namespace CourseGenerator.Api.Controllers;
 
 [ApiController]
 [Route("api/courses")]
-public sealed class CourseContractsController(ICourseContractsService contractsService) : ControllerBase
+public sealed class CourseContractsController(
+    ICourseContractsService contractsService,
+    ICourseContractGenerator contractGenerator) : ControllerBase
 {
     /// <summary>
     /// Генерирует список контрактов курсов с кэшированием результата в Redis.
@@ -56,7 +58,7 @@ public sealed class CourseContractsController(ICourseContractsService contractsS
     /// <summary>
     /// Возвращает один сгенерированный контракт по идентификатору для совместимости с клиентом.
     /// </summary>
-    /// <param name="id">Идентификатор объекта.</param>
+    /// <param name="id">Неотрицательный идентификатор объекта.</param>
     /// <param name="cancellationToken">Токен отмены запроса.</param>
     /// <returns>Сгенерированный контракт.</returns>
     /// <response code="200">Контракт успешно получен.</response>
@@ -64,12 +66,12 @@ public sealed class CourseContractsController(ICourseContractsService contractsS
     [HttpGet("by-id")]
     [ProducesResponseType(typeof(CourseContractDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<CourseContractDto>> GetByIdAsync(
-        [FromQuery, Range(1, int.MaxValue)] int id,
+    public ActionResult<CourseContractDto> GetByIdAsync(
+        [FromQuery, Range(0, int.MaxValue)] int id,
         CancellationToken cancellationToken)
     {
-        var contracts = await contractsService.GenerateAsync(1, cancellationToken);
-        var contract = contracts[0] with { Id = id };
+        cancellationToken.ThrowIfCancellationRequested();
+        var contract = contractGenerator.GenerateById(id);
 
         return Ok(new CourseContractDto(
             contract.Id,

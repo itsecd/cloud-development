@@ -13,4 +13,11 @@ public interface ICourseContractGenerator
     /// <param name="count">Количество элементов для генерации.</param>
     /// <returns>Список сгенерированных контрактов.</returns>
     IReadOnlyList<CourseContract> Generate(int count);
+
+    /// <summary>
+    /// Генерирует один контракт детерминированно по идентификатору.
+    /// </summary>
+    /// <param name="id">Идентификатор, используемый как seed генерации.</param>
+    /// <returns>Сгенерированный контракт.</returns>
+    CourseContract GenerateById(int id);
 }
