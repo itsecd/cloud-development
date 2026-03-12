@@ -24,7 +24,6 @@ for (var i = 0; i < replicaCount; i++)
 
 var client = builder.AddProject<Projects.Client_Wasm>("client")
     .WithReference(gateway)
-    .WithEnvironment("API_URL", "https://localhost:7001")
     .WaitFor(gateway);
 
 builder.Build().Run();
