@@ -5,10 +5,14 @@ using Microsoft.Extensions.Caching.Distributed;
 
 namespace CourseGenerator.Api.Services;
 
+/// <summary>
+/// Сервис работы с Redis-кэшем для списков учебных контрактов.
+/// </summary>
 public sealed class CourseContractCacheService(IDistributedCache cache, ILogger<CourseContractCacheService> logger) : ICourseContractCacheService
 {
     private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web);
 
+    /// <inheritdoc />
     public async Task<IReadOnlyList<CourseContract>?> GetAsync(int count, CancellationToken cancellationToken = default)
     {
         var key = BuildKey(count);
@@ -25,6 +29,7 @@ public sealed class CourseContractCacheService(IDistributedCache cache, ILogger<
         return JsonSerializer.Deserialize<IReadOnlyList<CourseContract>>(cachedPayload, SerializerOptions);
     }
 
+    /// <inheritdoc />
     public async Task SetAsync(int count, IReadOnlyList<CourseContract> contracts, CancellationToken cancellationToken = default)
     {
         var key = BuildKey(count);
