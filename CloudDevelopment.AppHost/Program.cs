@@ -7,7 +7,7 @@ var courseGeneratorApi = builder.AddProject<Projects.CourseGenerator_Api>("cours
     .WithEnvironment("ASPNETCORE_ENVIRONMENT", "Development")
     .WithReference(redis)
     .WaitFor(redis)
-    .WithExternalHttpEndpoints();
+    .WithHttpEndpoint(name: "api", port: 5117);
 
 builder.AddProject<Projects.Client_Wasm>("client-wasm")
     .WaitFor(courseGeneratorApi)
