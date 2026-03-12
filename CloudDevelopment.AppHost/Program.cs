@@ -4,7 +4,6 @@ var redis = builder.AddRedis("redis")
     .WithRedisInsight(containerName: "redis-insight");
 
 var courseGeneratorApi = builder.AddProject<Projects.CourseGenerator_Api>("course-generator-api")
-    .WithHttpEndpoint(name: "http")
     .WithEnvironment("ASPNETCORE_ENVIRONMENT", "Development")
     .WithReference(redis)
     .WaitFor(redis)
