@@ -6,6 +6,10 @@ using Ocelot.Values;
 
 namespace CreditApp.Gateway.LoadBalancers;
 
+/// <summary>
+/// Создатель балансировщика нагрузки WeightedRoundRobin для Ocelot
+/// </summary>
+
 public class WeightedRoundRobinCreator : ILoadBalancerCreator
 {
     public string Type => "WeightedRoundRobin";

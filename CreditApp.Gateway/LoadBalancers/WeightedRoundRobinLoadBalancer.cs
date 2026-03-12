@@ -5,6 +5,9 @@ using Ocelot.Values;
 
 namespace CreditApp.Gateway.LoadBalancers;
 
+/// <summary>
+/// Балансировщик нагрузки, реализующий алгоритм Weighted Round Robin
+/// </summary>
 public class WeightedRoundRobinLoadBalancer : ILoadBalancer
 {
     private readonly List<ServiceHostAndPort> _sequence;
@@ -13,7 +16,6 @@ public class WeightedRoundRobinLoadBalancer : ILoadBalancer
 
 
     public string Type => "WeightedRoundRobin";
-
     public WeightedRoundRobinLoadBalancer(List<ServiceHostAndPort> services)
     {
         var weights = new[] { 3, 2, 1, 1, 1 };
