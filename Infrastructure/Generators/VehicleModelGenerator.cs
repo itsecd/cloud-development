@@ -19,9 +19,9 @@ public class VehicleModelGenerator : IVehicleModelGenerator
     private readonly string _filePath;
     private List<VehicleModelJsonItem>? _items;
 
-    public VehicleModelGenerator(string filePath)
+    public VehicleModelGenerator()
     {
-        _filePath = filePath;
+        _filePath = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Domain", "Catalog", "vehicleModels.json"); ;
     }
 
     public VehicleCatalog Generate(int? seed = null)
