@@ -10,6 +10,8 @@ namespace CourseGenerator.Api.Services;
 /// </summary>
 public sealed class CourseContractGenerator(ILogger<CourseContractGenerator> logger) : ICourseContractGenerator
 {
+    private static readonly object FakerLock = new();
+
     private static readonly string[] CourseDictionary =
     [
         "Основы программирования на C#",
@@ -52,6 +54,28 @@ public sealed class CourseContractGenerator(ILogger<CourseContractGenerator> log
         "Николаевна"
     ];
 
+    private static readonly Faker<CourseContract> ContractFaker = new Faker<CourseContract>("ru")
+        .RuleFor(contract => contract.Id, _ => 0)
+        .RuleFor(contract => contract.CourseName, f => f.PickRandom(CourseDictionary))
+        .RuleFor(contract => contract.TeacherFullName, f =>
+        {
+            var gender = f.PickRandom<Name.Gender>(Name.Gender.Male, Name.Gender.Female);
+            var firstName = f.Name.FirstName(gender);
+            var lastName = f.Name.LastName(gender);
+            var patronymic = gender == Name.Gender.Male
+                ? f.PickRandom(MalePatronymicDictionary)
+                : f.PickRandom(FemalePatronymicDictionary);
+
+            return $"{lastName} {firstName} {patronymic}";
+        })
+        .RuleFor(contract => contract.StartDate, f => DateOnly.FromDateTime(f.Date.Soon(60)))
+        .RuleFor(contract => contract.EndDate, (f, contract) => contract.StartDate.AddDays(f.Random.Int(1, 180)))
+        .RuleFor(contract => contract.MaxStudents, f => f.Random.Int(10, 200))
+        .RuleFor(contract => contract.CurrentStudents, (f, contract) => f.Random.Int(0, contract.MaxStudents))
+        .RuleFor(contract => contract.HasCertificate, f => f.Random.Bool())
+        .RuleFor(contract => contract.Price, f => decimal.Round(f.Random.Decimal(1000m, 120000m), 2, MidpointRounding.AwayFromZero))
+        .RuleFor(contract => contract.Rating, f => f.Random.Int(1, 5));
+
     /// <inheritdoc />
     public IReadOnlyList<CourseContract> Generate(int count)
     {
@@ -62,31 +86,15 @@ public sealed class CourseContractGenerator(ILogger<CourseContractGenerator> log
             throw new ArgumentOutOfRangeException(nameof(count), "Count must be greater than zero.");
         }
 
-        var idSeed = 1;
+        List<CourseContract> generatedContracts;
+        lock (FakerLock)
+        {
+            generatedContracts = ContractFaker.Generate(count);
+        }
 
-        var faker = new Faker<CourseContract>("ru")
-            .RuleFor(contract => contract.Id, _ => idSeed++)
-            .RuleFor(contract => contract.CourseName, f => f.PickRandom(CourseDictionary))
-            .RuleFor(contract => contract.TeacherFullName, f =>
-            {
-                var gender = f.PickRandom<Name.Gender>(Name.Gender.Male, Name.Gender.Female);
-                var firstName = f.Name.FirstName(gender);
-                var lastName = f.Name.LastName(gender);
-                var patronymic = gender == Name.Gender.Male
-                    ? f.PickRandom(MalePatronymicDictionary)
-                    : f.PickRandom(FemalePatronymicDictionary);
-
-                return $"{lastName} {firstName} {patronymic}";
-            })
-            .RuleFor(contract => contract.StartDate, f => DateOnly.FromDateTime(f.Date.Soon(60)))
-            .RuleFor(contract => contract.EndDate, (f, contract) => contract.StartDate.AddDays(f.Random.Int(1, 180)))
-            .RuleFor(contract => contract.MaxStudents, f => f.Random.Int(10, 200))
-            .RuleFor(contract => contract.CurrentStudents, (f, contract) => f.Random.Int(0, contract.MaxStudents))
-            .RuleFor(contract => contract.HasCertificate, f => f.Random.Bool())
-            .RuleFor(contract => contract.Price, f => decimal.Round(f.Random.Decimal(1000m, 120000m), 2, MidpointRounding.AwayFromZero))
-            .RuleFor(contract => contract.Rating, f => f.Random.Int(1, 5));
-
-        var courses = faker.Generate(count);
+        var courses = generatedContracts
+            .Select((contract, index) => contract with { Id = index + 1 })
+            .ToList();
         logger.LogInformation("Course generation completed: {Count}", courses.Count);
 
         return courses;
