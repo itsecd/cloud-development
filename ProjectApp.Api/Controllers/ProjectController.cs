@@ -8,6 +8,12 @@ namespace ProjectApp.Api.Controllers;
 [ApiController]
 public class ProjectController(ProgramProjectGeneratorService generatorService, ILogger<ProjectController> logger) : ControllerBase
 {
+    /// <summary>
+    /// Возвращает проект по идентификатору или генерирует новый, если он не найден в кэше
+    /// </summary>
+    /// <param name="id">Идентификатор проекта</param>
+    /// <param name="cancellationToken">Токен отмены</param>
+    /// <returns>Программный проект</returns>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

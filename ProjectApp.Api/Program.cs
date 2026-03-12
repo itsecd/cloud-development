@@ -16,9 +16,9 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyHeader()
-              .AllowAnyMethod();
+        policy.SetIsOriginAllowed(origin => new Uri(origin).Host == "localhost")
+             .WithMethods("GET")
+             .WithHeaders("Content-Type");
     });
 });
 

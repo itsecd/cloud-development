@@ -8,6 +8,9 @@ using System.Diagnostics;
 
 namespace ProjectApp.Api.Services;
 
+/// <summary>
+/// Сервис получения программного проекта с использованием кэша и генерации при отсутствии данных
+/// </summary>
 public class ProgramProjectGeneratorService(
     IDistributedCache cache,
     ProgramProjectGenerator generator,
@@ -20,6 +23,12 @@ public class ProgramProjectGeneratorService(
     private static readonly Histogram<double> _projectGenerationDuration = _meter.CreateHistogram<double>("project.generation.duration.ms");
     private readonly int _expirationMinutes = cacheSettings.Value.ExpirationMinutes;
 
+    /// <summary>
+    /// Возвращает проект по идентификатору из кэша или генерирует новый и сохраняет его в кэш
+    /// </summary>
+    /// <param name="id">Идентификатор проекта</param>
+    /// <param name="cancellationToken">Токен отмены</param>
+    /// <returns>Программный проект</returns>
     public async Task<ProgramProject> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Attempting to retrieve software project {Id} from cache", id);
