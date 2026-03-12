@@ -20,11 +20,7 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddSingleton<ICourseContractGenerator, CourseContractGenerator>();
 builder.Services.AddSingleton<ICourseContractCacheService, CourseContractCacheService>();
 builder.Services.AddSingleton<ICourseContractsService, CourseContractsService>();
-builder.Services.AddStackExchangeRedisCache(options =>
-{
-    options.Configuration = builder.Configuration.GetConnectionString("redis") ?? "localhost:6379";
-    options.InstanceName = "course-generator:";
-});
+builder.AddRedisDistributedCache(connectionName: "redis");
 
 var app = builder.Build();
 
