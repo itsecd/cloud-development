@@ -3,11 +3,15 @@ using CourseGenerator.Api.Models;
 
 namespace CourseGenerator.Api.Services;
 
+/// <summary>
+/// Прикладной сервис генерации контрактов с использованием кэша.
+/// </summary>
 public sealed class CourseContractsService(
     ICourseContractGenerator generator,
     ICourseContractCacheService cache,
     ILogger<CourseContractsService> logger) : ICourseContractsService
 {
+    /// <inheritdoc />
     public async Task<IReadOnlyList<CourseContract>> GenerateAsync(int count, CancellationToken cancellationToken = default)
     {
         if (count is < 1 or > 100)

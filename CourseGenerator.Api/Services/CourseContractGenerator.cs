@@ -5,6 +5,9 @@ using CourseGenerator.Api.Models;
 
 namespace CourseGenerator.Api.Services;
 
+/// <summary>
+/// Генератор тестовых учебных контрактов на основе Bogus.
+/// </summary>
 public sealed class CourseContractGenerator(ILogger<CourseContractGenerator> logger) : ICourseContractGenerator
 {
     private static readonly string[] CourseDictionary =
@@ -49,6 +52,7 @@ public sealed class CourseContractGenerator(ILogger<CourseContractGenerator> log
         "Николаевна"
     ];
 
+    /// <inheritdoc />
     public IReadOnlyList<CourseContract> Generate(int count)
     {
         logger.LogInformation("Course generation started: {Count}", count);
