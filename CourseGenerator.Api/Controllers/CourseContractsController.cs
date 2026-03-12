@@ -11,7 +11,7 @@ public sealed class CourseContractsController(ICourseContractsService contractsS
     /// <summary>
     /// Генерирует список контрактов курсов с кэшированием результата в Redis.
     /// </summary>
-    /// <param name="query">Параметры генерации. Используйте `count` от 1 до 100.</param>
+    /// <param name="count">Количество контрактов для генерации (от 1 до 100).</param>
     /// <param name="cancellationToken">Токен отмены запроса.</param>
     /// <returns>Список сгенерированных контрактов курсов.</returns>
     /// <response code="200">Контракты успешно получены.</response>
@@ -20,12 +20,12 @@ public sealed class CourseContractsController(ICourseContractsService contractsS
     [ProducesResponseType(typeof(IReadOnlyList<CourseContractDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<IReadOnlyList<CourseContractDto>>> GenerateAsync(
-        [FromQuery] CourseGenerationQueryDto query,
+        [FromQuery] int count,
         CancellationToken cancellationToken)
     {
         try
         {
-            var contracts = await contractsService.GenerateAsync(query.Count, cancellationToken);
+            var contracts = await contractsService.GenerateAsync(count, cancellationToken);
             var dto = contracts
                 .Select(contract => new CourseContractDto(
                     contract.Id,
