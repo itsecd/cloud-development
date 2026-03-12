@@ -3,24 +3,55 @@ namespace CourseGenerator.Api.Models;
 /// <summary>
 /// Контракт на проведение учебного курса.
 /// </summary>
-/// <param name="Id">Идентификатор контракта.</param>
-/// <param name="CourseName">Название курса.</param>
-/// <param name="TeacherFullName">ФИО преподавателя.</param>
-/// <param name="StartDate">Дата начала курса.</param>
-/// <param name="EndDate">Дата окончания курса.</param>
-/// <param name="MaxStudents">Максимальное число студентов.</param>
-/// <param name="CurrentStudents">Текущее число студентов.</param>
-/// <param name="HasCertificate">Признак выдачи сертификата по итогам курса.</param>
-/// <param name="Price">Стоимость курса.</param>
-/// <param name="Rating">Рейтинг курса.</param>
-public sealed record CourseContract(
-    int Id,
-    string CourseName,
-    string TeacherFullName,
-    DateOnly StartDate,
-    DateOnly EndDate,
-    int MaxStudents,
-    int CurrentStudents,
-    bool HasCertificate,
-    decimal Price,
-    int Rating);
+public sealed record CourseContract
+{
+    /// <summary>
+    /// Идентификатор контракта.
+    /// </summary>
+    public int Id { get; init; }
+
+    /// <summary>
+    /// Название курса.
+    /// </summary>
+    public string CourseName { get; init; } = string.Empty;
+
+    /// <summary>
+    /// ФИО преподавателя.
+    /// </summary>
+    public string TeacherFullName { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Дата начала курса.
+    /// </summary>
+    public DateOnly StartDate { get; init; }
+
+    /// <summary>
+    /// Дата окончания курса.
+    /// </summary>
+    public DateOnly EndDate { get; init; }
+
+    /// <summary>
+    /// Максимальное число студентов.
+    /// </summary>
+    public int MaxStudents { get; init; }
+
+    /// <summary>
+    /// Текущее число студентов.
+    /// </summary>
+    public int CurrentStudents { get; init; }
+
+    /// <summary>
+    /// Признак выдачи сертификата по итогам курса.
+    /// </summary>
+    public bool HasCertificate { get; init; }
+
+    /// <summary>
+    /// Стоимость курса.
+    /// </summary>
+    public decimal Price { get; init; }
+
+    /// <summary>
+    /// Рейтинг курса.
+    /// </summary>
+    public int Rating { get; init; }
+}

@@ -65,13 +65,10 @@ public sealed class CourseContractGenerator(ILogger<CourseContractGenerator> log
         var idSeed = 1;
 
         var faker = new Faker<CourseContract>("ru")
-            .CustomInstantiator(f =>
+            .RuleFor(contract => contract.Id, _ => idSeed++)
+            .RuleFor(contract => contract.CourseName, f => f.PickRandom(CourseDictionary))
+            .RuleFor(contract => contract.TeacherFullName, f =>
             {
-                var startDate = DateOnly.FromDateTime(f.Date.Soon(60));
-                var endDate = startDate.AddDays(f.Random.Int(1, 180));
-                var maxStudents = f.Random.Int(10, 200);
-                var currentStudents = f.Random.Int(0, maxStudents);
-                var price = decimal.Round(f.Random.Decimal(1000m, 120000m), 2, MidpointRounding.AwayFromZero);
                 var gender = f.PickRandom<Name.Gender>(Name.Gender.Male, Name.Gender.Female);
                 var firstName = f.Name.FirstName(gender);
                 var lastName = f.Name.LastName(gender);
@@ -79,18 +76,15 @@ public sealed class CourseContractGenerator(ILogger<CourseContractGenerator> log
                     ? f.PickRandom(MalePatronymicDictionary)
                     : f.PickRandom(FemalePatronymicDictionary);
 
-                return new CourseContract(
-                    Id: idSeed++,
-                    CourseName: f.PickRandom(CourseDictionary),
-                    TeacherFullName: $"{lastName} {firstName} {patronymic}",
-                    StartDate: startDate,
-                    EndDate: endDate,
-                    MaxStudents: maxStudents,
-                    CurrentStudents: currentStudents,
-                    HasCertificate: f.Random.Bool(),
-                    Price: price,
-                    Rating: f.Random.Int(1, 5));
-            });
+                return $"{lastName} {firstName} {patronymic}";
+            })
+            .RuleFor(contract => contract.StartDate, f => DateOnly.FromDateTime(f.Date.Soon(60)))
+            .RuleFor(contract => contract.EndDate, (f, contract) => contract.StartDate.AddDays(f.Random.Int(1, 180)))
+            .RuleFor(contract => contract.MaxStudents, f => f.Random.Int(10, 200))
+            .RuleFor(contract => contract.CurrentStudents, (f, contract) => f.Random.Int(0, contract.MaxStudents))
+            .RuleFor(contract => contract.HasCertificate, f => f.Random.Bool())
+            .RuleFor(contract => contract.Price, f => decimal.Round(f.Random.Decimal(1000m, 120000m), 2, MidpointRounding.AwayFromZero))
+            .RuleFor(contract => contract.Rating, f => f.Random.Int(1, 5));
 
         var courses = faker.Generate(count);
         logger.LogInformation("Course generation completed: {Count}", courses.Count);
