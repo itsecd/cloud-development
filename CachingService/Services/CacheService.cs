@@ -1,4 +1,4 @@
-using Domain.Entities;
+п»їusing Domain.Entities;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using System.Text.Json;
@@ -6,7 +6,7 @@ using System.Text.Json;
 namespace CachingService.Services;
 
 /// <summary>
-/// Реализация сервиса кэширования с использованием распределенного кэша (Redis).
+/// Р РµР°Р»РёР·Р°С†РёСЏ СЃРµСЂРІРёСЃР° РєСЌС€РёСЂРѕРІР°РЅРёСЏ СЃ РёСЃРїРѕР»СЊР·РѕРІР°РЅРёРµРј СЂР°СЃРїСЂРµРґРµР»РµРЅРЅРѕРіРѕ РєСЌС€Р° (Redis).
 /// </summary>
 public class CacheService(IDistributedCache cache, IConfiguration configuration) : ICacheService
 {
@@ -14,11 +14,11 @@ public class CacheService(IDistributedCache cache, IConfiguration configuration)
         TimeSpan.FromSeconds(configuration.GetValue<int?>("Cache:CacheTime") ?? 60);
 
     /// <summary>
-    /// Извлекает данные пациента из кэша по идентификатору.
+    /// РР·РІР»РµРєР°РµС‚ РґР°РЅРЅС‹Рµ РїР°С†РёРµРЅС‚Р° РёР· РєСЌС€Р° РїРѕ РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂСѓ.
     /// </summary>
-    /// <param name="id">Идентификатор пациента.</param>
+    /// <param name="id">РРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ РїР°С†РёРµРЅС‚Р°.</param>
     /// <returns>
-    /// Объект <see cref="MedicalPatient"/> если найден в кэше, иначе null.
+    /// РћР±СЉРµРєС‚ <see cref="MedicalPatient"/> РµСЃР»Рё РЅР°Р№РґРµРЅ РІ РєСЌС€Рµ, РёРЅР°С‡Рµ null.
     /// </returns>
     public async Task<MedicalPatient?> RetriveFromCache(int id)
     {
@@ -32,9 +32,9 @@ public class CacheService(IDistributedCache cache, IConfiguration configuration)
     }
 
     /// <summary>
-    /// Сохраняет данные пациента в кэш.
+    /// РЎРѕС…СЂР°РЅСЏРµС‚ РґР°РЅРЅС‹Рµ РїР°С†РёРµРЅС‚Р° РІ РєСЌС€.
     /// </summary>
-    /// <param name="patient">Объект <see cref="MedicalPatient"/> для сохранения.</param>
+    /// <param name="patient">РћР±СЉРµРєС‚ <see cref="MedicalPatient"/> РґР»СЏ СЃРѕС…СЂР°РЅРµРЅРёСЏ.</param>
     public async Task PutInCache(MedicalPatient patient)
     {
         var data = JsonSerializer.Serialize(patient);
