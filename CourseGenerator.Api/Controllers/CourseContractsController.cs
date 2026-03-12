@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using CourseGenerator.Api.Dto;
 using CourseGenerator.Api.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -20,7 +21,7 @@ public sealed class CourseContractsController(ICourseContractsService contractsS
     [ProducesResponseType(typeof(IReadOnlyList<CourseContractDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<IReadOnlyList<CourseContractDto>>> GenerateAsync(
-        [FromQuery] int count,
+        [FromQuery, Range(1, 100)] int count,
         CancellationToken cancellationToken)
     {
         try
