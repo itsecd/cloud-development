@@ -24,7 +24,7 @@ builder.Services.AddSingleton<ILoadBalancerCreator, WeightedRoundRobinCreator>()
 
 var app = builder.Build();
 
-app.UseCors("wasm"); 
+app.UseCors("wasm");
 app.UseHttpsRedirection();
 await app.UseOcelot();
 app.Run();

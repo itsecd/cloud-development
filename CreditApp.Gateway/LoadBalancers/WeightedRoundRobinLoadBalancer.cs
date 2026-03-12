@@ -11,6 +11,7 @@ public class WeightedRoundRobinLoadBalancer : ILoadBalancer
     private int _index = -1;
     private readonly object _lock = new();
 
+
     public string Type => "WeightedRoundRobin";
 
     public WeightedRoundRobinLoadBalancer(List<ServiceHostAndPort> services)

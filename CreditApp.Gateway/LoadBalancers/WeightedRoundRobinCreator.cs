@@ -1,5 +1,4 @@
 ﻿using Ocelot.Configuration;
-using Ocelot.LoadBalancer;
 using Ocelot.LoadBalancer.Interfaces;
 using Ocelot.Responses;
 using Ocelot.ServiceDiscovery.Providers;
@@ -13,13 +12,15 @@ public class WeightedRoundRobinCreator : ILoadBalancerCreator
 
     public Response<ILoadBalancer> Create(
         DownstreamRoute route,
-        IServiceDiscoveryProvider serviceDiscoveryProvider)
+        IServiceDiscoveryProvider serviceProvider)
     {
-        var services = route.DownstreamAddresses
-            .Select(x => new ServiceHostAndPort(x.Host, x.Port))
+        var services = serviceProvider.GetAsync().Result;
+
+        var hostAndPorts = services
+            .Select(s => s.HostAndPort)
             .ToList();
 
-        var balancer = new WeightedRoundRobinLoadBalancer(services);
+        var balancer = new WeightedRoundRobinLoadBalancer(hostAndPorts);
 
         return new OkResponse<ILoadBalancer>(balancer);
     }
