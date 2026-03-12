@@ -11,7 +11,6 @@ var courseGeneratorApi = builder.AddProject<Projects.CourseGenerator_Api>("cours
     .WithExternalHttpEndpoints();
 
 builder.AddProject<Projects.Client_Wasm>("client-wasm")
-    .WithReference(courseGeneratorApi)
     .WaitFor(courseGeneratorApi)
     .WithExternalHttpEndpoints();
 
