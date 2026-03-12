@@ -1,0 +1,12 @@
+C:\Users\admin\Documents\ibas\develop\2\cloud-development-main\EmployeeApp\EmployeeApp.ServiceDefaults\bin\Debug\net8.0\EmployeeApp.ServiceDefaults.deps.json
+C:\Users\admin\Documents\ibas\develop\2\cloud-development-main\EmployeeApp\EmployeeApp.ServiceDefaults\bin\Debug\net8.0\EmployeeApp.ServiceDefaults.dll
+C:\Users\admin\Documents\ibas\develop\2\cloud-development-main\EmployeeApp\EmployeeApp.ServiceDefaults\bin\Debug\net8.0\EmployeeApp.ServiceDefaults.pdb
+C:\Users\admin\Documents\ibas\develop\2\cloud-development-main\EmployeeApp\EmployeeApp.ServiceDefaults\obj\Debug\net8.0\EmployeeApp.ServiceDefaults.csproj.AssemblyReference.cache
+C:\Users\admin\Documents\ibas\develop\2\cloud-development-main\EmployeeApp\EmployeeApp.ServiceDefaults\obj\Debug\net8.0\EmployeeApp.ServiceDefaults.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\admin\Documents\ibas\develop\2\cloud-development-main\EmployeeApp\EmployeeApp.ServiceDefaults\obj\Debug\net8.0\EmployeeApp.ServiceDefaults.AssemblyInfoInputs.cache
+C:\Users\admin\Documents\ibas\develop\2\cloud-development-main\EmployeeApp\EmployeeApp.ServiceDefaults\obj\Debug\net8.0\EmployeeApp.ServiceDefaults.AssemblyInfo.cs
+C:\Users\admin\Documents\ibas\develop\2\cloud-development-main\EmployeeApp\EmployeeApp.ServiceDefaults\obj\Debug\net8.0\EmployeeApp.ServiceDefaults.csproj.CoreCompileInputs.cache
+C:\Users\admin\Documents\ibas\develop\2\cloud-development-main\EmployeeApp\EmployeeApp.ServiceDefaults\obj\Debug\net8.0\EmployeeApp.ServiceDefaults.dll
+C:\Users\admin\Documents\ibas\develop\2\cloud-development-main\EmployeeApp\EmployeeApp.ServiceDefaults\obj\Debug\net8.0\refint\EmployeeApp.ServiceDefaults.dll
+C:\Users\admin\Documents\ibas\develop\2\cloud-development-main\EmployeeApp\EmployeeApp.ServiceDefaults\obj\Debug\net8.0\EmployeeApp.ServiceDefaults.pdb
+C:\Users\admin\Documents\ibas\develop\2\cloud-development-main\EmployeeApp\EmployeeApp.ServiceDefaults\obj\Debug\net8.0\ref\EmployeeApp.ServiceDefaults.dll
