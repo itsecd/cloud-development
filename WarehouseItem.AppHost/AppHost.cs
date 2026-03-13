@@ -8,7 +8,6 @@ var generator = builder.AddProject<Projects.WarehouseItem_Generator>("generator"
     .WaitFor(cache);
 
 builder.AddProject<Projects.Client_Wasm>("client")
-    .WithReference(generator)
     .WaitFor(generator);
 
 builder.Build().Run();

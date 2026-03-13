@@ -1,5 +1,8 @@
 namespace WarehouseItem.Generator.DTO;
 
+/// <summary>
+/// DTO для передачи данных о товаре на складе, включая идентификатор, название, категорию, количество, цену и другие характеристики.
+/// </summary>
 public sealed class WarehouseItemDto
 {
     /// <summary>

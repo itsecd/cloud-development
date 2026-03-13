@@ -19,6 +19,7 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddSingleton<WarehouseItemGenerator>();
+builder.Services.AddSingleton<IWarehouseItemCache, WarehouseItemCache>();
 builder.Services.AddSingleton<IWarehouseItemService, WarehouseItemService>();
 
 builder.Services.AddControllers();
