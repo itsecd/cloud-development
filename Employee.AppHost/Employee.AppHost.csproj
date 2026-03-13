@@ -11,7 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Client.Wasm\Client.Wasm.csproj" />
+    <ProjectReference Include="..\Client.Wasm\Client.Wasm.csproj" />
     <ProjectReference Include="..\Employee.ApiService\Employee.ApiService.csproj" />
   </ItemGroup>
 

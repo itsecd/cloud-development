@@ -17,6 +17,11 @@ public class EmployeeService(
     ILogger<EmployeeService> _logger,
     EmployeeGenerator _generator)
 {
+    /// <summary>
+    /// Время жизни записи в кэше
+    /// </summary>
+    private readonly TimeSpan _cacheExpiration =
+        TimeSpan.FromMinutes(_configuration.GetValue("CacheSettings:ExpirationMinutes", 5));
 
     /// <summary>
     /// Получение сотрудника по id
@@ -57,11 +62,9 @@ public class EmployeeService(
 
         try
         {
-            var expirationMinutes = _configuration.GetValue("CacheSettings:ExpirationMinutes", 5);
-
             var cacheOptions = new DistributedCacheEntryOptions
             {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(expirationMinutes)
+                AbsoluteExpirationRelativeToNow = _cacheExpiration
             };
 
             await _cache.SetStringAsync(

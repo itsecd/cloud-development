@@ -38,25 +38,6 @@ public class EmployeeGenerator
     private const decimal BaseSalary = 100000m;
 
     /// <summary>
-    /// Генерация должности
-    /// </summary>
-    private static string GeneratePosition(Faker f)
-    {
-        var level = f.PickRandom(_positionLevels.Keys.ToArray());
-        var profession = f.PickRandom(_professions);
-
-        return $"{level} {profession}";
-    }
-
-    /// <summary>
-    /// Генерация даты приема
-    /// </summary>
-    private static DateOnly GenerateAdmissionDate(Faker f)
-    {
-        return DateOnly.FromDateTime(f.Date.Past(10));
-    }
-
-    /// <summary>
     /// Генерация зарплаты с учетом коэффициента уровня
     /// </summary>
     private static decimal GenerateSalary(Faker f, string position)
@@ -77,20 +58,6 @@ public class EmployeeGenerator
         return Math.Round(salary, 2);
     }
 
-    /// <summary>
-    /// Генерация даты увольнения
-    /// </summary>
-    private static DateOnly? GenerateDismissalDate(Faker f, EmployeeModel employee)
-    {
-        if (!employee.DismissalIndicator)
-            return null;
-
-        var start = employee.DateAdmission.ToDateTime(TimeOnly.MinValue);
-
-        var dismissal = f.Date.Between(start, DateTime.Now);
-
-        return DateOnly.FromDateTime(dismissal);
-    }
     /// <summary>
     /// Генерация ФИО
     /// </summary>
@@ -116,14 +83,23 @@ public class EmployeeGenerator
     /// </summary>
     private static readonly Faker<EmployeeModel> _faker = new Faker<EmployeeModel>("ru")
         .RuleFor(e => e.Name, f => GenerateFullName(f))
-        .RuleFor(e => e.Position, f => GeneratePosition(f))
+        .RuleFor(e => e.Position, f =>
+        {
+            var level = f.PickRandom(_positionLevels.Keys.ToArray());
+            var profession = f.PickRandom(_professions);
+            return $"{level} {profession}";
+        })
         .RuleFor(e => e.Department, f => f.Commerce.Department())
-        .RuleFor(e => e.DateAdmission, f => GenerateAdmissionDate(f))
+        .RuleFor(e => e.DateAdmission, f => f.Date.PastDateOnly(10))
         .RuleFor(e => e.Salary, (f, e) => GenerateSalary(f, e.Position))
-        .RuleFor(e => e.Email, (f, e) => f.Internet.Email())
+        .RuleFor(e => e.Email, f => f.Internet.Email())
         .RuleFor(e => e.Phone, f => f.Phone.PhoneNumber("+7(###)###-##-##"))
         .RuleFor(e => e.DismissalIndicator, f => f.Random.Bool(0.2f))
-        .RuleFor(e => e.DateDismissal, (f, e) => GenerateDismissalDate(f, e));
+        .RuleFor(e => e.DateDismissal, (f, e) =>
+            e.DismissalIndicator
+                ? f.Date.BetweenDateOnly(e.DateAdmission, DateOnly.FromDateTime(DateTime.Now))
+                : null
+        );
 
     /// <summary>
     /// Генерация сотрудника
