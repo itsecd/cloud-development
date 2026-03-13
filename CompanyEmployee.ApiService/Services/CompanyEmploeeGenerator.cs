@@ -64,12 +64,12 @@ public class CompanyEmployeeGenerator
     /// </summary>
     private static string GenerateFullName(Faker f)
     {
-        var gender = f.PickRandom<Bogus.DataSets.Name.Gender>();
+        var gender = f.PickRandom<Name.Gender>();
 
         var firstName = f.Name.FirstName(gender);
         var lastName = f.Name.LastName(gender);
 
-        var fatherName = f.Name.FirstName(Bogus.DataSets.Name.Gender.Male);
+        var fatherName = f.Name.FirstName(Name.Gender.Male);
 
         string patronymic;
 
@@ -97,8 +97,8 @@ public class CompanyEmployeeGenerator
     /// Преднастроенный генератор
     /// </summary>
     private static readonly Faker<CompanyEmployeeModel> _faker = new Faker<CompanyEmployeeModel>("ru")
-        .RuleFor(e => e.FullName, f => GenerateFullName(f))
-        .RuleFor(e => e.JobTitle, f => GenerateJobTitle(f))
+        .RuleFor(e => e.FullName, GenerateFullName)
+        .RuleFor(e => e.JobTitle, GenerateJobTitle)
         .RuleFor(e => e.Department, f => f.Commerce.Department())
         .RuleFor(e => e.AdmissionDate, f => f.Date.PastDateOnly(10))
         .RuleFor(e => e.Salary, (f, e) => GenerateSalary(f, e.JobTitle))

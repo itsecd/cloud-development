@@ -7,15 +7,21 @@ builder.AddServiceDefaults();
 builder.AddRedisDistributedCache("redis");
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+
+    options.IncludeXmlComments(xmlPath);
+});
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("wasm", policy =>
     {
-        policy.AllowAnyOrigin()
-              .WithMethods("GET")
-              .WithHeaders("Content-Type");
+        policy.WithOrigins("https://localhost:7282")
+              .AllowAnyMethod()
+              .AllowAnyHeader();
     });
 });
 
@@ -34,16 +40,13 @@ app.MapDefaultEndpoints();
 app.UseHttpsRedirection();
 app.UseCors("wasm");
 
-app.MapGet("/api/CompanyEmployee", async (HttpContext context, CompanyEmployeeService service) =>
+app.MapGet("/api/CompanyEmployee", async (HttpContext context, CompanyEmployeeService service, int id) =>
 {
-    var idString = context.Request.Query["id"];
-
-    if (!int.TryParse(idString, out var id))
-        return Results.BadRequest("Invalid id");
-
     var employee = await service.GetEmployeeAsync(id);
 
     return Results.Ok(employee);
-});
+})
+.WithSummary("Получение сотрудника по идентификатору")
+.WithDescription("Возвращает информацию о сотруднике по id");
 
 app.Run();

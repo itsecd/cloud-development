@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using CompanyEmployee.ApiService.Models;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Configuration;
 
 namespace CompanyEmployee.ApiService.Services;
 
@@ -10,8 +11,9 @@ namespace CompanyEmployee.ApiService.Services;
 /// <param name="_cache">кэш Redis</param>
 /// <param name="_generator">генератор сотрудника</param>
 /// <param name="_logger">логгер</param>
-public class CompanyEmployeeService(IDistributedCache _cache, CompanyEmployeeGenerator _generator, ILogger<CompanyEmployeeService> _logger)
+public class CompanyEmployeeService(IDistributedCache _cache, CompanyEmployeeGenerator _generator, ILogger<CompanyEmployeeService> _logger, IConfiguration _configuration)
 {
+    private readonly int _cacheTime = _configuration.GetValue<int>("Constants:CacheTime");
     /// <summary>
     /// Получение данных сотрудника по его id, при отсутствии генерация сотрудника 
     /// </summary>
@@ -25,9 +27,13 @@ public class CompanyEmployeeService(IDistributedCache _cache, CompanyEmployeeGen
 
         if (cachedEmployee != null)
         {
-            _logger.LogInformation("Сотрудник №{Id} получен из кэша", id);
+            var new_employee = JsonSerializer.Deserialize<CompanyEmployeeModel>(cachedEmployee);
 
-            return JsonSerializer.Deserialize<CompanyEmployeeModel>(cachedEmployee)!;
+            if (new_employee != null)
+            {
+                _logger.LogInformation("Сотрудник №{Id} получен из кэша", id);
+                return new_employee;
+            }
         }
 
         _logger.LogInformation("Генерация сотрудника №{Id}", id);
@@ -39,7 +45,7 @@ public class CompanyEmployeeService(IDistributedCache _cache, CompanyEmployeeGen
             JsonSerializer.Serialize(employee),
             new DistributedCacheEntryOptions
             {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(_cacheTime)
             });
 
         return employee;
