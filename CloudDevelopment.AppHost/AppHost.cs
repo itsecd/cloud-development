@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Configuration;
-using Projects;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
@@ -14,14 +13,15 @@ for (var i = 0; i < ports.Length; i++)
 {
     var httpsPort = ports[i];
     var httpPort = ports[i] - 1000;
-    var urls = $"https://localhost:{httpsPort};http://localhost:{httpPort}";
 
-    var geenrator = builder.AddProject<Projects.Generator>($"generator-r{i + 1}")
+
+    var generator = builder.AddProject<Projects.Generator>($"generator-r{i + 1}", launchProfileName: null)
             .WithReference(cache, "RedisCache")
-            .WithEnvironment("ASPNETCORE_URLS", urls)
+            .WithHttpEndpoint(httpPort)
+            .WithHttpsEndpoint(httpsPort)
             .WaitFor(cache);
 
-    gateway.WaitFor(geenrator);
+    gateway.WaitFor(generator);
 }
 
 var client = builder.AddProject<Projects.Client_Wasm>("credit-order-wasm")
