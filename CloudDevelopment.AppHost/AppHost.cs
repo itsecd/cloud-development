@@ -14,7 +14,6 @@ for (var i = 0; i < ports.Length; i++)
     var httpsPort = ports[i];
     var httpPort = ports[i] - 1000;
 
-
     var generator = builder.AddProject<Projects.Generator>($"generator-r{i + 1}", launchProfileName: null)
             .WithReference(cache, "RedisCache")
             .WithHttpEndpoint(httpPort)
