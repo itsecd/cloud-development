@@ -64,3 +64,25 @@
 ### Реализованные фичи
 - Реализован алгоритм балансировки
 - Реализовн ApiGateway и подняты три реплики сервиса генерации
+
+### Скриншоты работащего приложения
+<details>
+  <summary>
+    Поднятые контейнеры
+  </summary>
+  <img width="1920" height="1050" alt="image" src="https://github.com/user-attachments/assets/376f53cf-e495-4357-813b-754ff330aa69" />
+</details>
+
+<details>
+  <summary>
+    Граф
+  </summary>
+  <img width="1920" height="1050" alt="image" src="https://github.com/user-attachments/assets/ce69c521-9d29-4636-b9a5-eba0b28902a0" />
+</details>
+
+<details>
+  <summary>
+    Логи генерации  
+  </summary>
+  <img width="1920" height="1050" alt="image" src="https://github.com/user-attachments/assets/025bbd85-7f05-42c0-8437-700686249e96" />
+</details>
