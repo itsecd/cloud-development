@@ -40,6 +40,8 @@
 
   ![alt text](./images/1/image-2.png)
 
+  При попытке получить пациента с ID = 0 возникает ошибка:
+
   ![alt text](./images/1/image-3.png)
 </details>
 
