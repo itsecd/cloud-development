@@ -1,4 +1,6 @@
+using System;
 using Bogus;
+using Microsoft.Extensions.Logging;
 using Patient.Generator.DTO;
 
 namespace Patient.Generator.Generator;

@@ -1,3 +1,6 @@
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Patient.Generator.Generator;
 using Patient.Generator.Service;
 using Patient.ServiceDefaults;
