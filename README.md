@@ -89,6 +89,26 @@
 [Список вариантов](https://docs.google.com/document/d/1WGmLYwffTTaAj4TgFCk5bUyW3XKbFMiBm-DHZrfFWr4/edit?usp=sharing)  
 [Список предметных областей и алгоритмов балансировки](https://docs.google.com/document/d/1PLn2lKe4swIdJDZhwBYzxqFSu0AbY2MFY1SUPkIKOM4/edit?usp=sharing)  
 
+## Параметры этого варианта
+
+* Предметная область: `Медицинский пациент`
+* Алгоритм балансировки: `Weighted Round Robin`
+* Брокер сообщений: `SQS`
+* Объектное хранилище: `Minio`
+
+Сервис генерации в текущем состоянии возвращает следующие характеристики пациента:
+
+1. Идентификатор в системе (`int`)
+2. ФИО пациента (`string`)
+3. Адрес проживания (`string`)
+4. Дата рождения (`DateOnly`)
+5. Рост (`double`)
+6. Вес (`double`)
+7. Группа крови (`int`)
+8. Резус-фактор (`bool`)
+9. Дата последнего осмотра (`DateOnly`)
+10. Отметка о вакцинации (`bool`)
+
 ## Схема сдачи
 
 На каждую из лабораторных работ необходимо сделать отдельный [Pull Request (PR)](https://docs.github.com/en/pull-requests).
@@ -125,4 +145,3 @@
 
 Чтобы задать вопрос по лабораторной, воспользуйтесь [соответствующим разделом дискуссий](https://github.com/itsecd/cloud-development/discussions/categories/questions) или заведите [ишью](https://github.com/itsecd/cloud-development/issues/new).  
 Если у вас появились идеи/пожелания/прочие полезные мысли по преподаваемой дисциплине, их можно оставить [здесь](https://github.com/itsecd/cloud-development/discussions/categories/ideas).
-
