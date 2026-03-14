@@ -31,6 +31,7 @@ try
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen(o =>
         o.SwaggerDoc("v1", new() { Title = "GeneratorService — Medical Patient", Version = "v1" }));
+    builder.Services.AddCors();
 
     var app = builder.Build();
 
@@ -40,12 +41,14 @@ try
 
     // GET /patient?id=42
     app.MapGet("/patient", async (int id, PatientService svc, CancellationToken ct) =>
-        id <= 0
-            ? Results.BadRequest("id must be > 0")
+        id < 0
+            ? Results.BadRequest("id must be positive")
             : Results.Ok(await svc.GetAsync(id, ct)))
         .WithName("GetPatient")
         .Produces<MedicalPatient>()
         .ProducesProblem(400);
+
+    app.UseCors(policy => policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 
     app.Run();
 }
