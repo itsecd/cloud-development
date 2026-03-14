@@ -1,3 +1,9 @@
+# Запуск проекта
+
+```bash
+dotnet run --project AppHost
+```
+
 # Современные технологии разработки программного обеспечения
 [Таблица с успеваемостью](https://docs.google.com/spreadsheets/d/1an43o-iqlq4V_kDtkr_y7DC221hY9qdhGPrpII27sH8/edit?usp=sharing)
 
