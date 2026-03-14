@@ -7,7 +7,6 @@ public sealed class MedicalPatientGeneratorTests
 {
     public static readonly DateOnly Today = DateOnly.FromDateTime(DateTime.Today);
 
-    // Генерируем 300 штук, чтобы проверить граничные условия статистически
     public static IEnumerable<object[]> Patients() =>
         Enumerable.Range(1, 300).Select(i => new object[] { MedicalPatientGenerator.Generate(i) });
 

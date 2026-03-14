@@ -21,12 +21,18 @@ try
         .Enrich.FromLogContext()
         .Enrich.WithEnvironmentName()
         .Enrich.WithThreadId()
-        .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] tid={ThreadId} | {Message:lj}{NewLine}{Exception}"));
+        .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] tid={ThreadId} | {Message:lj}{NewLine}{Exception}")
+        .WriteTo.OpenTelemetry(options =>
+        {
+            options.Endpoint = ctx.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"] ?? "http://localhost:4317";
+            options.ResourceAttributes = new Dictionary<string, object>
+            {
+                ["service.name"] = "generator-service"
+            };
+        }));
 
-    var redisConnection = builder.Configuration.GetConnectionString("redis")
-        ?? throw new InvalidOperationException("Не задана строка подключения 'redis'");
+    builder.AddRedisDistributedCache("redis");
 
-    builder.Services.AddStackExchangeRedisCache(o => o.Configuration = redisConnection);
     builder.Services.AddScoped<PatientService>();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen(o =>
@@ -38,17 +44,15 @@ try
     app.UseSerilogRequestLogging();
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.UseCors(policy => policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 
-    // GET /patient?id=42
     app.MapGet("/patient", async (int id, PatientService svc, CancellationToken ct) =>
-        id < 0
-            ? Results.BadRequest("id must be positive")
+        id <= 0
+            ? Results.BadRequest("id must be > 0")
             : Results.Ok(await svc.GetAsync(id, ct)))
         .WithName("GetPatient")
         .Produces<MedicalPatient>()
         .ProducesProblem(400);
-
-    app.UseCors(policy => policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 
     app.Run();
 }
