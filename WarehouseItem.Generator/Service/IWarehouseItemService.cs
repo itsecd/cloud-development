@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using WarehouseItem.Generator.DTO;
 
 namespace WarehouseItem.Generator.Service;
