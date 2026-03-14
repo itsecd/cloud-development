@@ -1,29 +1,69 @@
+using MedicalPatient.Generator.Services;
+using MedicalPatient.AppHost.ServiceDefaults;
+using Microsoft.Extensions.Caching.StackExchangeRedis;
+using Serilog;
+
 var builder = WebApplication.CreateBuilder(args);
+
+
+builder.Host.UseSerilog((context, configuration) =>
+{
+    configuration.ReadFrom.Configuration(context.Configuration);
+});
 
 builder.AddServiceDefaults();
 
-// Add services to the container.
-builder.Services.AddRazorPages();
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration.GetConnectionString("redis");
+    options.InstanceName = "medical-patient:";
+});
+
+builder.Services.AddSingleton<MedicalPatientGenerator>();
+builder.Services.AddScoped<MedicalPatientService>();
+
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
 
 var app = builder.Build();
 
+app.UseCors();
+app.UseSerilogRequestLogging();
+
 app.MapDefaultEndpoints();
 
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
+app.MapGet("/medicalpatient-generator", async (
+    int id,
+    MedicalPatientService service,
+    ILogger<Program> logger,
+    CancellationToken cancellationToken) =>
 {
-    app.UseExceptionHandler("/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
-}
+    logger.LogInformation("Получен запрос на сотрудника компании с ID: {Id}", id);
 
-app.UseHttpsRedirection();
-app.UseStaticFiles();
+    if (id <= 0)
+    {
+        logger.LogWarning("Неверный ID: {Id}", id);
+        return Results.BadRequest(new { error = "ID должен быть > 0" });
+    }
 
-app.UseRouting();
-
-app.UseAuthorization();
-
-app.MapRazorPages();
+    try
+    {
+        var application = await service.GetByIdAsync(id, cancellationToken);
+        return Results.Ok(application);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Ошибка при получении данных о медицинском пациенте с {Id}", id);
+        return Results.Problem("При обработке запроса произошла ошибка");
+    }
+})
+.WithName("GetMedicalPatient");
 
 app.Run();
