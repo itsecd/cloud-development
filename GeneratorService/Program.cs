@@ -34,7 +34,7 @@ app.MapGet("/patient", async (
     ILogger<Program> logger,
     CancellationToken cancellationToken) =>
 {
-    logger.LogInformation($"Received request for company employee with ID: {id}");
+    logger.LogInformation($"Received request for patient with ID: {id}");
 
     if (id <= 0)
     {
@@ -49,7 +49,7 @@ app.MapGet("/patient", async (
     }
     catch (Exception ex)
     {
-        logger.LogError(ex, "Error while getting company employee {Id}", id);
+        logger.LogError(ex, $"Error while getting patient {id}");
         return Results.Problem("An error occurred while processing the request");
     }
 })
