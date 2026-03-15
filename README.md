@@ -85,7 +85,6 @@ dotnet test ProjectApp.Tests/ProjectApp.Tests.csproj
 ```
 
 ## Скриншот карточки 
-
-```
-cloud-development-main/image.png
-```
+<p align="center">
+  <img src="screenshots/credit-application-card.png" alt="Карточка кредитной заявки" width="900">
+</p>
