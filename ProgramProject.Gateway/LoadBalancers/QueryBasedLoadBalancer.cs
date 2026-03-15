@@ -13,7 +13,7 @@ public class QueryBasedLoadBalancer : ILoadBalancer
 {
     private readonly ILogger<QueryBasedLoadBalancer> _logger;
     private readonly string _queryParameterName;
-    private readonly Func<Task<List<Service>>> _serviceFactory; // 👈 функция для получения свежих сервисов
+    private readonly Func<Task<List<Service>>> _serviceFactory;
 
     public QueryBasedLoadBalancer(Func<Task<List<Service>>> serviceFactory, ILogger<QueryBasedLoadBalancer> logger,
         string queryParameterName = "id")
