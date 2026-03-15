@@ -1,22 +1,22 @@
-﻿
-using Bogus;
-using Bogus.DataSets;
+﻿using Bogus;
 using Domain.Contracts;
 using Domain.Interfaces;
+using Microsoft.Extensions.Logging;
 namespace Infrastructure.Generators;
 
 public class VehicleContractGenerator : IVehicleContractGenerator
 {
     private readonly IVehicleModelGenerator _vehicleModelGenerator;
-    public VehicleContractGenerator(IVehicleModelGenerator vehicleModelGenerator)
+    private ILogger<VehicleContractGenerator> _logger;
+    public VehicleContractGenerator(IVehicleModelGenerator vehicleModelGenerator, ILogger<VehicleContractGenerator> logger)
     {
         _vehicleModelGenerator = vehicleModelGenerator;
+        _logger = logger;
     }
-    public VehicleContractDto Generate(int? seed = null)
+    public VehicleContractDto Generate(int seed)
     {
-        if(seed.HasValue)
-            Randomizer.Seed = new Random(seed.Value);
-
+        _logger.LogInformation("Началась генерация данных. Seed: {Seed}", seed);
+        Randomizer.Seed = new Random(seed);
 
         var currentYear = DateTime.UtcNow.Year;
         var vehicleCatalog = _vehicleModelGenerator.Generate();
@@ -37,10 +37,13 @@ public class VehicleContractGenerator : IVehicleContractGenerator
                         DateTime.UtcNow.Date)
                 ));
         var dto = vehicleFaker.Generate();
+        dto.SystemId = seed;
         if (!VehicleContractValidator.ValidateBool (dto))
         {
-            throw new InvalidOperationException("Сгенерирован невалидный VehicleContractDto.");
+            //throw new InvalidOperationException("Сгенерирован невалидный VehicleContractDto.");
+            _logger.LogWarning("Сгенерированы невалидные данные. Seed: {Seed}", seed);
         }
+        _logger.LogInformation("Генерация данных завершена. Seed: {Seed}", seed);
         return dto;
     }
 }

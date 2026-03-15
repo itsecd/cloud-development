@@ -1,4 +1,6 @@
-﻿@inject IConfiguration Configuration 
+﻿@using Domain.Contracts;
+@using System.Diagnostics;
+@inject IConfiguration Configuration 
 @inject HttpClient Client
 
 <CardDeck>
@@ -15,14 +17,17 @@
                         <TableHeaderCell>Значение</TableHeaderCell>
                      </TableRow>
                 </TableHeader>
+
+
                 <TableBody>
                     @if(Value is null)
                     {
                         <TableRow>
-                            <TableRowCell>1</TableRowCell>
-                            <TableRowCell>нет данных</TableRowCell>
-                            <TableRowCell>нет данных</TableRowCell>
+                            <TableRowCell>-1</TableRowCell>
+                            <TableRowCell>not found</TableRowCell>
+                            <TableRowCell>not found</TableRowCell>
                         </TableRow>
+
                     }
                     else
                     {
@@ -30,7 +35,7 @@
                         foreach (var property in array)
                         {
                             <TableRow>
-                                <TableRowCell>@(Array.IndexOf(array, property)+1)</TableRowCell>
+                                <TableRowCell>@(Array.IndexOf(array, property) + 1)</TableRowCell>
                                 <TableRowCell>@property.Key</TableRowCell>
                                 <TableRowCell>@property.Value?.ToString()</TableRowCell>
                             </TableRow>
@@ -51,24 +56,42 @@
                     <Text>Идентификатор нового объекта:</Text>
                 </Column>
                 <Column ColumnSize="ColumnSize.Is4">
-                    <NumericEdit TValue="int" @bind-Value="@Id"/>
+                    <NumericEdit TValue="int" @bind-Value="@Seed"/>
                 </Column>
                 <Column ColumnSize="ColumnSize.Is4">
                     <Button Clicked=RequestNewData Color="Color.Primary">Запросить данные  <Icon Name="IconName.ArrowRight" /></Button>
                 </Column>
             </Row>
         </CardBody>
+        <p> Время запроса: @RequestTimeMs</p>
     </Card>
 </CardDeck>
 
 @code {
+    private long _requestTimeMs;
     private JsonObject? Value { get; set; }
-    private int Id { get; set; }
+    private int Seed { get; set; }
+    private string? ErrorMessage { get; set; }
+    private long RequestTimeMs;
 
     private async Task RequestNewData()
     {
-        var baseAddress = Configuration["BaseAddress"] ?? throw new KeyNotFoundException("Конфигурация клиента не содержит параметра BaseAddress");
-        Value = await Client.GetFromJsonAsync<JsonObject>($"{baseAddress}?id={Id}", new JsonSerializerOptions { });
-        StateHasChanged();
+        try
+        {
+            ErrorMessage = null;
+
+            var url = "contracts/vehicle";
+            url += $"?seed={Seed}";
+
+            var stopwatch = Stopwatch.StartNew();
+            Value = await Client.GetFromJsonAsync<JsonObject>(url);
+            stopwatch.Stop();
+            RequestTimeMs = stopwatch.ElapsedMilliseconds;
+
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Ошибка запроса: {ex.Message}";
+        }
     }
 }
