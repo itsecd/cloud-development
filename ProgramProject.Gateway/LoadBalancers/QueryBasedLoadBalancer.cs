@@ -34,8 +34,7 @@ public class QueryBasedLoadBalancer : ILoadBalancer
             if (services == null || services.Count == 0)
             {
                 _logger.LogError("Нет доступных сервисов для балансировки");
-                return new ErrorResponse<ServiceHostAndPort>(
-                    new ServicesAreEmptyError("Нет доступных реплик"));
+                return new ErrorResponse<ServiceHostAndPort>(new ServicesAreEmptyError("Нет доступных реплик"));
             }
 
             var id = ExtractIdFromQuery(httpContext);
@@ -43,8 +42,7 @@ public class QueryBasedLoadBalancer : ILoadBalancer
             var index = Math.Abs(id) % services.Count;
 
             var selectedService = services[index];
-            _logger.LogInformation(
-                "Запрос с id={Id} (индекс={Index}) направлен на реплику {Host}:{Port}",
+            _logger.LogInformation("Запрос с id={Id} (индекс={Index}) направлен на реплику {Host}:{Port}",
                 id, index, selectedService.HostAndPort.DownstreamHost, selectedService.HostAndPort.DownstreamPort);
 
             return new OkResponse<ServiceHostAndPort>(selectedService.HostAndPort);
@@ -52,8 +50,7 @@ public class QueryBasedLoadBalancer : ILoadBalancer
         catch (Exception ex)
         {
             _logger.LogError(ex, "Ошибка при балансировке запроса");
-            return new ErrorResponse<ServiceHostAndPort>(
-                new ServicesAreEmptyError($"Ошибка балансировки: {ex.Message}"));
+            return new ErrorResponse<ServiceHostAndPort>(new ServicesAreEmptyError($"Ошибка балансировки: {ex.Message}"));
         }
     }
 
