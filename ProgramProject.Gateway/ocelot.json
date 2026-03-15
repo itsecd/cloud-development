@@ -1,0 +1,44 @@
+{
+  "Routes": [
+    {
+      "DownstreamPathTemplate": "/api/projects",
+      "DownstreamScheme": "http",
+      "UpstreamPathTemplate": "/api/projects",
+      "UpstreamHttpMethod": [ "GET" ],
+      "HttpHandlerOptions": {
+        "AllowAutoRedirect": false,
+        "UseProxy": true,
+        "UseTracing": true
+      },
+      "LoadBalancerOptions": {
+        "Type": "QueryBasedLoadBalancer",
+        "Key": "id"
+      },
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 6201
+        },
+        {
+          "Host": "localhost",
+          "Port": 6202
+        },
+        {
+          "Host": "localhost",
+          "Port": 6203
+        },
+        {
+          "Host": "localhost",
+          "Port": 6204
+        },
+        {
+          "Host": "localhost",
+          "Port": 6205
+        }
+      ]
+    }
+  ],
+  "GlobalConfiguration": {
+    "BaseUrl": "http://localhost:5232"
+  }
+}
