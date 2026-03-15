@@ -5,17 +5,40 @@
       "DownstreamScheme": "http",
       "UpstreamPathTemplate": "/api/projects",
       "UpstreamHttpMethod": [ "GET" ],
-      "ServiceName": "generation-service",
+      "HttpHandlerOptions": {
+        "AllowAutoRedirect": false,
+        "UseProxy": true,
+        "UseTracing": true
+      },
       "LoadBalancerOptions": {
-        "Type": "QueryBased",
+        "Type": "QueryBasedLoadBalancer",
         "Key": "id"
-      }
+      },
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 6201
+        },
+        {
+          "Host": "localhost",
+          "Port": 6202
+        },
+        {
+          "Host": "localhost",
+          "Port": 6203
+        },
+        {
+          "Host": "localhost",
+          "Port": 6204
+        },
+        {
+          "Host": "localhost",
+          "Port": 6205
+        }
+      ]
     }
   ],
   "GlobalConfiguration": {
-    "BaseUrl": "http://localhost:5232",
-    "ServiceDiscoveryProvider": {
-      "Type": "AppHost"
-    }
+    "BaseUrl": "http://localhost:5232"
   }
 }

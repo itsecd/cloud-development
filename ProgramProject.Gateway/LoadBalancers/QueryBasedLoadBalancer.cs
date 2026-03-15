@@ -7,39 +7,54 @@ namespace ProgramProject.Gateway.LoadBalancers;
 
 /// <summary>
 /// Балансировщик для алгоритма Query Based
+/// Распределяет запросы на основе query-параметра id
 /// </summary>
 public class QueryBasedLoadBalancer : ILoadBalancer
 {
-    private readonly List<Service> _services;
     private readonly ILogger<QueryBasedLoadBalancer> _logger;
     private readonly string _queryParameterName;
+    private readonly Func<Task<List<Service>>> _serviceFactory; // 👈 функция для получения свежих сервисов
 
-    public QueryBasedLoadBalancer(List<Service> services, ILogger<QueryBasedLoadBalancer> logger, string queryParameterName = "id")
+    public QueryBasedLoadBalancer(Func<Task<List<Service>>> serviceFactory, ILogger<QueryBasedLoadBalancer> logger,
+        string queryParameterName = "id")
     {
-        _services = services;
-        _logger = logger;
+        _serviceFactory = serviceFactory ?? throw new ArgumentNullException(nameof(serviceFactory));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _queryParameterName = queryParameterName;
     }
 
-    public string Type => nameof(QueryBasedLoadBalancer);
+    public string Type => "QueryBased";
 
     public async Task<Response<ServiceHostAndPort>> LeaseAsync(HttpContext httpContext)
     {
-        if (_services == null || _services.Count == 0)
+        try
         {
-            _logger.LogError("Нет доступных сервисов для балансировки");
-            return new ErrorResponse<ServiceHostAndPort>(new ServicesAreEmptyError("Нет доступных реплик"));
+            var services = await _serviceFactory();
+
+            if (services == null || services.Count == 0)
+            {
+                _logger.LogError("Нет доступных сервисов для балансировки");
+                return new ErrorResponse<ServiceHostAndPort>(
+                    new ServicesAreEmptyError("Нет доступных реплик"));
+            }
+
+            var id = ExtractIdFromQuery(httpContext);
+
+            var index = Math.Abs(id) % services.Count;
+
+            var selectedService = services[index];
+            _logger.LogInformation(
+                "Запрос с id={Id} (индекс={Index}) направлен на реплику {Host}:{Port}",
+                id, index, selectedService.HostAndPort.DownstreamHost, selectedService.HostAndPort.DownstreamPort);
+
+            return new OkResponse<ServiceHostAndPort>(selectedService.HostAndPort);
         }
-
-        var idValue = ExtractIdFromQuery(httpContext);
-        var replicaIndex = Math.Abs(idValue) % _services.Count;
-        var selectedService = _services[replicaIndex];
-
-        _logger.LogInformation("Запрос с id={Id} направлен на реплику {Index} ({HostAndPort})",
-            idValue, replicaIndex, selectedService.HostAndPort);
-
-        await Task.CompletedTask;
-        return new OkResponse<ServiceHostAndPort>(selectedService.HostAndPort);
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка при балансировке запроса");
+            return new ErrorResponse<ServiceHostAndPort>(
+                new ServicesAreEmptyError($"Ошибка балансировки: {ex.Message}"));
+        }
     }
 
     private int ExtractIdFromQuery(HttpContext context)
@@ -47,10 +62,22 @@ public class QueryBasedLoadBalancer : ILoadBalancer
         if (context.Request.Query.TryGetValue(_queryParameterName, out var idString))
         {
             if (int.TryParse(idString, out var id))
+            {
+                _logger.LogDebug("Извлечён id={Id} из запроса", id);
                 return id;
+            }
+
+            _logger.LogWarning("Параметр {Param} содержит не число: {Value}",
+                _queryParameterName, idString);
         }
+        else
+        {
+            _logger.LogDebug("Параметр {Param} отсутствует в запросе", _queryParameterName);
+        }
+
         return 0;
     }
 
-    public void Release(ServiceHostAndPort hostAndPort) { }
+    public void Release(ServiceHostAndPort hostAndPort)
+    { }
 }

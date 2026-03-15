@@ -5,26 +5,25 @@ using ProgramProject.Gateway.LoadBalancers;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Добавляем конфигурацию с Ocelot
 builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
 
-// Регистрируем балансировщик
+builder.Services.Configure<HttpClientHandler>(options =>
+{
+    options.AllowAutoRedirect = false;
+});
+
 builder.Services.AddOcelot()
     .AddKubernetes()
-    .AddCustomLoadBalancer((serviceProvider, route, serviceDiscoveryProvider) =>
+    .AddCustomLoadBalancer((sp, route, discoveryProvider) =>
     {
-        var logger = serviceProvider.GetRequiredService<ILogger<QueryBasedLoadBalancer>>();
-        var services = serviceDiscoveryProvider.GetAsync().GetAwaiter().GetResult().ToList();
-
-        return new QueryBasedLoadBalancer(services, logger);
+        var logger = sp.GetRequiredService<ILogger<QueryBasedLoadBalancer>>();
+        return new QueryBasedLoadBalancer(async () => (await discoveryProvider.GetAsync()).ToList(), logger,
+            route.LoadBalancerOptions?.Key ?? "id");
     });
 
-// Добавляем Service Discovery 
 builder.Services.AddServiceDiscovery();
 
 var app = builder.Build();
 
-// Обрабатываем все входящие запросы с помощью Ocelot
 await app.UseOcelot();
-
 app.Run();
