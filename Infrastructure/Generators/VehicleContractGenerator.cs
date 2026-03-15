@@ -1,4 +1,4 @@
-﻿using Bogus;
+using Bogus;
 using Domain.Contracts;
 using Domain.Interfaces;
 using Microsoft.Extensions.Logging;
@@ -15,7 +15,7 @@ public class VehicleContractGenerator : IVehicleContractGenerator
     }
     public VehicleContractDto Generate(int seed)
     {
-        _logger.LogInformation("Началась генерация данных. Seed: {Seed}", seed);
+        _logger.LogInformation("Data generation started. Seed: {Seed}", seed);
         Randomizer.Seed = new Random(seed);
 
         var currentYear = DateTime.UtcNow.Year;
@@ -41,9 +41,9 @@ public class VehicleContractGenerator : IVehicleContractGenerator
         if (!VehicleContractValidator.ValidateBool (dto))
         {
             //throw new InvalidOperationException("Сгенерирован невалидный VehicleContractDto.");
-            _logger.LogWarning("Сгенерированы невалидные данные. Seed: {Seed}", seed);
+            _logger.LogWarning("Invalid data generated. Seed: {Seed}", seed);
         }
-        _logger.LogInformation("Генерация данных завершена. Seed: {Seed}", seed);
+        _logger.LogInformation("Data generation completed. Seed: {Seed}", seed);
         return dto;
     }
 }
