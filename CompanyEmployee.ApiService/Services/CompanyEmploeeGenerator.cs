@@ -7,7 +7,7 @@ namespace CompanyEmployee.ApiService.Services;
 /// <summary>
 /// Генератор сотрудника
 /// </summary>
-public class CompanyEmployeeGenerator
+public static class CompanyEmployeeGenerator
 {
 
     /// <summary>
@@ -110,7 +110,7 @@ public class CompanyEmployeeGenerator
     /// <summary>
     /// Генерация сотрудника
     /// </summary>
-    public CompanyEmployeeModel Generate(int id)
+    public static CompanyEmployeeModel Generate(int id)
     {
         var emploee = _faker.Generate();
         emploee.Id = id;

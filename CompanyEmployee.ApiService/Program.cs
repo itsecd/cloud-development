@@ -25,7 +25,6 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.Services.AddSingleton<CompanyEmployeeGenerator>();
 builder.Services.AddScoped<CompanyEmployeeService>();
 
 var app = builder.Build();

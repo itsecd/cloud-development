@@ -8,12 +8,13 @@ namespace CompanyEmployee.ApiService.Services;
 /// <summary>
 /// Сервис для получения данных сотрудника
 /// </summary>
-/// <param name="_cache">кэш Redis</param>
-/// <param name="_generator">генератор сотрудника</param>
-/// <param name="_logger">логгер</param>
-public class CompanyEmployeeService(IDistributedCache _cache, CompanyEmployeeGenerator _generator, ILogger<CompanyEmployeeService> _logger, IConfiguration _configuration)
+/// <param name="cache">кэш Redis</param>
+/// <param name="logger">логгер</param>
+/// <param name="configuration">конфигурация</param>
+public class CompanyEmployeeService(IDistributedCache cache, ILogger<CompanyEmployeeService> logger, IConfiguration configuration)
 {
-    private readonly int _cacheTime = _configuration.GetValue<int>("Constants:CacheTime");
+    private readonly int _cacheTime = configuration.GetValue<int>("Constants:CacheTime");
+
     /// <summary>
     /// Получение данных сотрудника по его id, при отсутствии генерация сотрудника 
     /// </summary>
@@ -23,24 +24,24 @@ public class CompanyEmployeeService(IDistributedCache _cache, CompanyEmployeeGen
     {
         var cacheKey = $"employee:{id}";
 
-        var cachedEmployee = await _cache.GetStringAsync(cacheKey);
+        var cachedEmployee = await cache.GetStringAsync(cacheKey);
 
         if (cachedEmployee != null)
         {
-            var new_employee = JsonSerializer.Deserialize<CompanyEmployeeModel>(cachedEmployee);
+            var employeeModel = JsonSerializer.Deserialize<CompanyEmployeeModel>(cachedEmployee);
 
-            if (new_employee != null)
+            if (employeeModel != null)
             {
-                _logger.LogInformation("Сотрудник №{Id} получен из кэша", id);
-                return new_employee;
+                logger.LogInformation("Сотрудник №{Id} получен из кэша", id);
+                return employeeModel;
             }
         }
 
-        _logger.LogInformation("Генерация сотрудника №{Id}", id);
+        logger.LogInformation("Генерация сотрудника №{Id}", id);
 
-        var employee = _generator.Generate(id);
+        var employee = CompanyEmployeeGenerator.Generate(id);
 
-        await _cache.SetStringAsync(
+        await cache.SetStringAsync(
             cacheKey,
             JsonSerializer.Serialize(employee),
             new DistributedCacheEntryOptions
