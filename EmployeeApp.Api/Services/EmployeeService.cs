@@ -1,6 +1,6 @@
-using System.Text.Json;
 using EmployeeApp.Api.Entities;
 using Microsoft.Extensions.Caching.Distributed;
+using System.Text.Json;
 
 namespace EmployeeApp.Api.Services;
 
@@ -17,42 +17,58 @@ public class EmployeeService(IDistributedCache cache, ILogger<EmployeeService> l
     /// <inheritdoc/>
     public async Task<Employee> GetEmployeeById(int id)
     {
-        var cacheKey = $"employee:{id}";
-
         logger.LogInformation("Requesting employee with Id {Id}", id);
 
-        try
-        {
-            var cached = await cache.GetStringAsync(cacheKey);
-            if (cached is not null)
-            {
-                var cachedEmployee = JsonSerializer.Deserialize<Employee>(cached);
-                if (cachedEmployee is not null)
-                {
-                    logger.LogInformation("Cache hit for employee {Id}", id);
-                    return cachedEmployee;
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error reading cache for employee {Id}", id);
-        }
+        var cached = await GetFromCache(id);
+        if (cached is not null)
+            return cached;
 
         logger.LogInformation("Cache miss for employee {Id}", id);
 
         var employee = EmployeeGenerator.Generate(id);
 
+        await SetToCache(id, employee);
+
+        return employee;
+    }
+
+    /// <summary>
+    /// Получение сотрудника из кэша по идентификатору
+    /// </summary>
+    private async Task<Employee?> GetFromCache(int id)
+    {
         try
         {
-            await cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(employee), _cacheOptions);
+            var cached = await cache.GetStringAsync($"employee:{id}");
+            if (cached is null)
+                return null;
+
+            var employee = JsonSerializer.Deserialize<Employee>(cached);
+            if (employee is not null)
+                logger.LogInformation("Cache hit for employee {Id}", id);
+
+            return employee;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error reading cache for employee {Id}", id);
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Сохранение сотрудника в кэш
+    /// </summary>
+    private async Task SetToCache(int id, Employee employee)
+    {
+        try
+        {
+            await cache.SetStringAsync($"employee:{id}", JsonSerializer.Serialize(employee), _cacheOptions);
             logger.LogInformation("Generated and cached employee {Id}", id);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error writing cache for employee {Id}", id);
         }
-
-        return employee;
     }
 }

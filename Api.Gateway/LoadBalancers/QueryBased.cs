@@ -11,13 +11,11 @@ namespace Api.Gateway.LoadBalancers;
 /// <param name="services">Делегат для получения списка доступных реплик</param>
 public class QueryBased(Func<Task<List<Service>>> services) : ILoadBalancer
 {
-    private readonly Func<Task<List<Service>>> _services = services;
-
     public string Type => nameof(QueryBased);
 
     public async Task<Response<ServiceHostAndPort>> LeaseAsync(HttpContext httpContext)
     {
-        var availableServices = await _services.Invoke();
+        var availableServices = await services.Invoke();
         var replicaCount = availableServices.Count;
 
         var replicaIndex = 0;

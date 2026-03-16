@@ -12,16 +12,13 @@ public static class EmployeeGenerator
     private static readonly string[] _positions =
         ["Developer", "Manager", "Analyst", "Designer", "Tester", "DevOps Engineer", "Architect", "Consultant"];
 
-    private static readonly string[] _suffixes =
-        ["Junior", "Middle", "Senior", "Lead", "Principal"];
-
     private static readonly Dictionary<string, (decimal Min, decimal Max)> _salaryRanges = new()
     {
         ["Junior"] = (30_000m, 100_000m),
         ["Middle"] = (100_000m, 250_000m),
         ["Senior"] = (250_000m, 300_000m),
         ["Lead"] = (300_000m, 500_000m),
-        ["Principal"] = (180_000m, 250_000m)
+        ["Principal"] = (280_000m, 850_000m)
     };
 
     /// <summary>
@@ -50,25 +47,17 @@ public static class EmployeeGenerator
         .RuleFor(e => e.FullName, f =>
         {
             var gender = f.PickRandom<Name.Gender>();
-            var lastName = GenerateLastName(f, gender);
-            var firstName = f.Name.FirstName(gender);
-            var patronymic = GeneratePatronymic(f, gender);
-            return $"{lastName} {firstName} {patronymic}";
+            return $"{GenerateLastName(f, gender)} {f.Name.FirstName(gender)} {GeneratePatronymic(f, gender)}";
         })
         .RuleFor(e => e.Position, (f, _) =>
-        {
-            var suffix = f.PickRandom(_suffixes);
-            var position = f.PickRandom(_positions);
-            return $"{suffix} {position}";
-        })
+            $"{f.PickRandom(_salaryRanges.Keys.ToArray())} {f.PickRandom(_positions)}")
         .RuleFor(e => e.Department, f => f.Commerce.Department())
         .RuleFor(e => e.HireDate, f =>
             DateOnly.FromDateTime(f.Date.Past(10)))
         .RuleFor(e => e.Salary, (f, e) =>
         {
-            var suffix = e.Position.Split(' ')[0];
-            var (min, max) = _salaryRanges.GetValueOrDefault(suffix, (30_000m, 60_000m));
-            return Math.Round(f.Random.Decimal(min, max), 2);
+            var range = _salaryRanges.GetValueOrDefault(e.Position.Split(' ')[0], (30_000m, 60_000m));
+            return Math.Round(f.Random.Decimal(range.Item1, range.Item2), 2);
         })
         .RuleFor(e => e.Email, f => f.Internet.Email())
         .RuleFor(e => e.PhoneNumber, f =>
