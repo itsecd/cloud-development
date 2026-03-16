@@ -10,5 +10,4 @@ var softwareProjectsApi = builder.AddProject<Projects.SoftwareProjects_Api>("sof
 builder.AddProject<Projects.Client_Wasm>("client-wasm")
     .WaitFor(softwareProjectsApi);
 
-
 builder.Build().Run();

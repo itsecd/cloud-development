@@ -5,6 +5,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
 builder.AddRedisDistributedCache("cache");
 
+builder.Services.AddScoped<ISoftwareProjectCacheService, SoftwareProjectCacheService>();
 builder.Services.AddScoped<ISoftwareProjectService, SoftwareProjectService>();
 
 var trustedOrigins = builder.Configuration

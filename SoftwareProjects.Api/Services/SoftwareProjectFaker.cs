@@ -18,10 +18,7 @@ public static class SoftwareProjectFaker
         .RuleFor(p => p.ProjectManager, f =>
         {
             var gender = f.PickRandom<Name.Gender>();
-            var lastName = f.Name.LastName(gender);
-            var firstName = f.Name.FirstName(gender);
-            var patronymic = GeneratePatronymic(f, gender);
-            return $"{lastName} {firstName} {patronymic}";
+            return $"{f.Name.LastName(gender)} {f.Name.FirstName(gender)} {GeneratePatronymic(f, gender)}";
         })
         .RuleFor(p => p.StartDate, f =>
             DateOnly.FromDateTime(f.Date.Past(2)))
