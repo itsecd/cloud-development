@@ -6,33 +6,14 @@ namespace ProjectApp.Api.Services;
 /// <summary>
 /// Генерирует случайный программный проект
 /// </summary>
-public class ProgramProjectGenerator
+public static class ProgramProjectGenerator
 {
-    private readonly Faker<ProgramProject> _faker;
-
-    private static readonly string[] _patronymics = new[]
-        {
-            "Иванович", "Петрович", "Сидорович", "Александрович", "Дмитриевич",
-            "Андреевич", "Сергеевич", "Алексеевич", "Николаевич", "Владимирович",
-            "Ивановна", "Петровна", "Сидоровна", "Александровна", "Дмитриевна",
-            "Андреевна", "Сергеевна", "Алексеевна", "Николаевна", "Владимировна"
-        };
-    public ProgramProjectGenerator()
-    {
-        
-    _faker = new Faker<ProgramProject>("ru")
-            .RuleFor(p => p.Id, f => f.IndexFaker + 1)
+    private static readonly Faker<ProgramProject> _faker = new Faker<ProgramProject>("ru")
             .RuleFor(p => p.ProjectName, f =>
                 $"{f.Commerce.ProductName()} {f.Hacker.Noun()} {f.Finance.AccountName()} {f.Lorem.Word()}")
             .RuleFor(p => p.Customer, f =>
                 f.Company.CompanyName())
-            .RuleFor(p => p.ProjectManager, f =>
-            {
-                var lastName = f.Name.LastName();
-                var firstName = f.Name.FirstName();
-                var patronymic = f.PickRandom(_patronymics);
-                return $"{lastName} {firstName} {patronymic}";
-            })
+            .RuleFor(p => p.ProjectManager, f => f.Name.FullName())
             .RuleFor(p => p.StartDate,
                 f => f.Date.PastDateOnly(3))
             .RuleFor(p => p.PlannedEndDate,
@@ -67,9 +48,8 @@ public class ProgramProjectGenerator
 
                 return Math.Round(p.Budget * factor, 2);
             });
-    }
 
-    public ProgramProject Generate()
+    public static ProgramProject Generate()
     {
         return _faker.Generate();
     }

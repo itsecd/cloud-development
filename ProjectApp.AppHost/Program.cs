@@ -11,6 +11,4 @@ builder.AddProject<Projects.Client_Wasm>("client")
     .WithReference(api)
     .WaitFor(api);
 
-builder.Configuration["ASPIRE_ALLOW_UNSECURED_TRANSPORT"] = "true";
-
 builder.Build().Run();

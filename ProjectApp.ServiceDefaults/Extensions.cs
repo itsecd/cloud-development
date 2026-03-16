@@ -68,7 +68,9 @@ public static class Extensions
 
         if (useOtlpExporter)
         {
-            builder.Services.AddOpenTelemetry().UseOtlpExporter();
+            builder.Services.AddOpenTelemetry()
+                .WithMetrics(m => m.AddMeter("ProjectApp.Api"))
+                .UseOtlpExporter();
         }
 
         return builder;

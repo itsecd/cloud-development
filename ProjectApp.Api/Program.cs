@@ -4,6 +4,8 @@ using ProjectApp.Api.Options;
 using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
+var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
+
 
 builder.AddServiceDefaults();
 
@@ -16,13 +18,12 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.SetIsOriginAllowed(origin => new Uri(origin).Host == "localhost")
-             .WithMethods("GET")
-             .WithHeaders("Content-Type");
+        policy.WithOrigins(allowedOrigins)
+              .WithMethods("GET")
+              .WithHeaders("Content-Type");
     });
 });
 
-builder.Services.AddScoped<ProgramProjectGenerator>();
 builder.Services.AddScoped<ProgramProjectGeneratorService>();
 
 builder.Services.AddControllers();

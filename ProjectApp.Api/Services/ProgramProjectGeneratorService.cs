@@ -13,7 +13,6 @@ namespace ProjectApp.Api.Services;
 /// </summary>
 public class ProgramProjectGeneratorService(
     IDistributedCache cache,
-    ProgramProjectGenerator generator,
     IOptions<CacheSettings> cacheSettings,
     JsonSerializerOptions jsonSerializerOptions,
     ILogger<ProgramProjectGeneratorService> logger)
@@ -35,19 +34,18 @@ public class ProgramProjectGeneratorService(
 
         var cacheKey = $"software-project-{id}";
 
-        ProgramProject? project = null;
         try
         {
             var cachedData = await cache.GetStringAsync(cacheKey, cancellationToken);
 
             if (!string.IsNullOrEmpty(cachedData))
             {
-                project = JsonSerializer.Deserialize<ProgramProject>(cachedData, jsonSerializerOptions);
+                var cashedProject = JsonSerializer.Deserialize<ProgramProject>(cachedData, jsonSerializerOptions);
 
-                if (project != null)
+                if (cashedProject != null)
                 {
                     logger.LogInformation("Software project {Id} found in cache", id);
-                    return project;
+                    return cashedProject;
                 }
 
                 logger.LogWarning("Project {Id} was found in cache but could not be deserialized. Generating a new one", id);
@@ -61,7 +59,7 @@ public class ProgramProjectGeneratorService(
 
         logger.LogInformation("Project {Id} not found in cache or cache unavailable, generating a new one", id);
         var stopwatch = Stopwatch.StartNew();
-        project = generator.Generate();
+        var project = ProgramProjectGenerator.Generate();
         stopwatch.Stop();
         _projectGenerationDuration.Record(stopwatch.Elapsed.TotalMilliseconds);
         project.Id = id;
