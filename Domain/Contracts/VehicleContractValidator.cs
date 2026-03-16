@@ -1,7 +1,19 @@
 ﻿namespace Domain.Contracts;
 
+/// <summary>
+/// Класс Для валидации данных 
+/// </summary>
 public class VehicleContractValidator
 {
+    /// <summary>
+    /// Валидация данных 
+    /// Год выпуска не может быть позже текущего
+    /// Пробег не может быть меньше нуля
+    /// Дата последнего техобслуживания не может быть раньше года выпуска
+    /// Не пустые поля 
+    /// </summary>
+    /// <param name="dto"></param>
+    /// <exception cref="ArgumentException"></exception>
     public static void Validate(VehicleContractDto dto)
     {
         if (dto.Year > DateTime.UtcNow.Year)
@@ -33,6 +45,14 @@ public class VehicleContractValidator
         if (string.IsNullOrWhiteSpace(dto.Color))
             throw new ArgumentException("Color is required.");
     }
+    /// <summary>
+    /// Валидация данных 
+    /// Год выпуска не может быть позже текущего
+    /// Пробег не может быть меньше нуля
+    /// Дата последнего техобслуживания не может быть раньше года выпуска
+    /// </summary>
+    /// <param name="dto"></param>
+    /// <returns></returns>
     public static bool ValidateBool(VehicleContractDto dto)
     {
         var minServiceDate = new DateOnly(dto.Year, 1, 1);

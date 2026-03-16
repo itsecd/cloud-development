@@ -1,15 +1,48 @@
 ﻿namespace Domain;
 
+/// <summary>
+/// Траспортное средство
+/// </summary>
 public class Vehicle
 {
-    public int Id { get; set; }
-    public string VinNumber { get; set; }
-    public string Maker { get; set; }
-    public string Model { get; set; }
-    public int Year { get; set; }
-    public string TypeBodyCar { get; set; }
-    public string TypeFuel { get; set; }
-    public string Сolor { get; set; }
-    public double Mileage { get; set; }
-    public DateOnly LastMaintenance {get; set; }
+    /// <summary>
+    /// ID объекта
+    /// </summary>
+    public required int Id { get; set; }
+    /// <summary>
+    /// Вин номер транспортного средства 
+    /// </summary>
+    public required string VinNumber { get; set; }
+    /// <summary>
+    /// Производитель(компания)
+    /// </summary>
+    public required string Maker { get; set; }
+    /// <summary>
+    /// Модель транспортного средства
+    /// </summary>
+    public required string Model { get; set; }
+    /// <summary>
+    /// Год выпуска
+    /// </summary>
+    public required int Year { get; set; }
+    /// <summary>
+    /// Тип кузова
+    /// </summary>
+    public required string TypeBodyCar { get; set; }
+    /// <summary>
+    /// Тип топлива
+    /// </summary>
+    public required string TypeFuel { get; set; }
+    /// <summary>
+    /// Цвет транспортного средства
+    /// </summary>
+    public required string Сolor { get; set; }
+    /// <summary>
+    /// Пробег траспортного средства
+    /// </summary>
+    public required double Mileage { get; set; }
+    /// <summary>
+    /// Дата последнего обслуживания 
+    /// </summary>
+    public required DateOnly LastMaintenance {get; set; }
 }

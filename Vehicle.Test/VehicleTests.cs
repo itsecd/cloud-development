@@ -4,6 +4,9 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Vehicle.Test;
 
+/// <summary>
+///   Класс для тестирования валидатора(VehicleContractValidator) и генератора(VehicleContractGenerator) 
+/// </summary>
 public class VehicleTests
 {
     private readonly VehicleData _data;

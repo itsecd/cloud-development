@@ -4,7 +4,9 @@ using Domain.Interfaces;
 using Microsoft.Extensions.Logging;
 namespace Infrastructure.Generators;
 
-
+/// <summary>
+/// Класс для генерации данных
+/// </summary>
 public class VehicleContractGenerator : IVehicleContractGenerator
 {
     private readonly IVehicleModelGenerator _vehicleModelGenerator;
@@ -14,6 +16,9 @@ public class VehicleContractGenerator : IVehicleContractGenerator
         _vehicleModelGenerator = vehicleModelGenerator;
         _logger = logger;
     }
+    /// <summary>
+    /// Функуция для генерации данных через Bogus
+    /// </summary>
     public VehicleContractDto Generate(int seed)
     {
         _logger.LogInformation("Data generation started. Seed: {Seed}", seed);

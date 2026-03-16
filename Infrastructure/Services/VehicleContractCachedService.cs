@@ -7,11 +7,17 @@ using Microsoft.Extensions.Caching.Distributed;
 
 namespace Infrastructure.Services;
 
+/// <summary>
+/// Сервис для получения данных 
+/// </summary>
 public class VehicleContractCachedService : IVehicleContractCachedService
 {
     private readonly IVehicleContractGenerator _generator;
     private readonly IDistributedCache _cache;
     private ILogger<VehicleContractCachedService> _logger;
+    /// <summary>
+    /// Функция для получения данных либо через Redis если там есть запись, либо генерация нового объекта
+    /// </summary>
     public VehicleContractCachedService(
         IVehicleContractGenerator generator,
         IDistributedCache cache,

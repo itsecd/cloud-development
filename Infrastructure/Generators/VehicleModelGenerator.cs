@@ -7,13 +7,18 @@ using System.Text.Json;
 
 namespace Infrastructure.Generators;
 
+/// <summary>
+/// Класс для хранения производителя и всех его моделей
+/// </summary>
 public class VehicleModelJsonItem
 {
     public string Make { get; set; } = string.Empty;
     public List<string> Models { get; set; } = new();
 }
 
-
+/// <summary>
+///  Класс для генерации правильных данных производитель + модель 
+/// </summary>
 public class VehicleModelGenerator : IVehicleModelGenerator
 {
     private readonly string _filePath;

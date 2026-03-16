@@ -3,6 +3,9 @@ using Domain.Interfaces;
 
 namespace Vehicle.Test;
 
+/// <summary>
+/// Класс для получения данных
+/// </summary>
 public class VehicleData
 {
     private IVehicleContractGenerator _generator;
@@ -10,6 +13,10 @@ public class VehicleData
     public List<VehicleContractDto> InvalidVehicleContracts { get; set; } = new();
     public List<VehicleContractDto> VehicleContracts { get; set; } = new();
     public List<VehicleContractDto> ManualInvalidVehicleContracts { get; set; } = new();
+    /// <summary>
+    /// Генерация моковых данных
+    /// </summary>
+    /// <param name="generator"></param>
     public VehicleData(IVehicleContractGenerator generator) {
         _generator = generator;
 
