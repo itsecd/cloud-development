@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Domain.Catalog;
+﻿using Domain.Catalog;
 
 namespace Domain.Interfaces;
 

@@ -1,10 +1,6 @@
-using Bogus;
 using Domain.Contracts;
 using Domain.Interfaces;
-using Infrastructure.Services;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 
 [ApiController]
 [Route("contracts")]

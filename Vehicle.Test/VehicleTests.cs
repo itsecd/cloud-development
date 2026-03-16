@@ -1,7 +1,6 @@
 using Domain.Contracts;
 using Infrastructure.Generators;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Logging;
 
 namespace Vehicle.Test;
 
