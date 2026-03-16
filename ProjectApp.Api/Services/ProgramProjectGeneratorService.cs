@@ -9,7 +9,7 @@ using System.Diagnostics;
 namespace ProjectApp.Api.Services;
 
 /// <summary>
-/// Сервис получения программного проекта с использованием кэша и генерации при отсутствии данны
+/// Сервис получения программного проекта с использованием кэша и генерации при отсутствии данных
 /// </summary>
 public class ProgramProjectGeneratorService(
     IDistributedCache cache,
