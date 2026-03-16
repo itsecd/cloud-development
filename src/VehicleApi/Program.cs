@@ -5,13 +5,10 @@ using VehicleApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add ServiceDefaults (OpenTelemetry, health checks, service discovery)
 builder.AddServiceDefaults();
 
-// Add Redis distributed caching
 builder.AddRedisDistributedCache("cache");
 
-// Add CORS for Blazor client
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
@@ -24,13 +21,10 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Enable CORS
 app.UseCors();
 
-// Map health checks
 app.MapDefaultEndpoints();
 
-// API endpoint for vehicle data
 app.MapGet("/api/vehicles", async (int id, IDistributedCache cache, ILogger<Program> logger) =>
 {
     if (id <= 0)

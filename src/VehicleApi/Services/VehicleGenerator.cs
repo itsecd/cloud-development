@@ -7,7 +7,6 @@ public static class VehicleGenerator
 {
     public static Vehicle Generate(int id)
     {
-        // Seed per-instance (NOT global Randomizer.Seed)
         var faker = new Faker<Vehicle>()
             .UseSeed(id)
             .RuleFor(v => v.Id, id)

@@ -11,11 +11,9 @@ public class VehicleGeneratorTests
     [Fact]
     public void Generate_SameId_ReturnsSameData()
     {
-        // Arrange & Act
         var vehicle1 = VehicleGenerator.Generate(42);
         var vehicle2 = VehicleGenerator.Generate(42);
 
-        // Assert
         Assert.Equal(vehicle1.Id, vehicle2.Id);
         Assert.Equal(vehicle1.Vin, vehicle2.Vin);
         Assert.Equal(vehicle1.Manufacturer, vehicle2.Manufacturer);
@@ -34,23 +32,19 @@ public class VehicleGeneratorTests
     [InlineData(42, 100)]
     public void Generate_DifferentIds_ReturnsDifferentData(int id1, int id2)
     {
-        // Arrange & Act
         var vehicle1 = VehicleGenerator.Generate(id1);
         var vehicle2 = VehicleGenerator.Generate(id2);
 
-        // Assert
         Assert.NotEqual(vehicle1.Vin, vehicle2.Vin);
     }
 
     [Fact]
     public void Generate_YearConstraint_IsValid()
     {
-        // Arrange & Act
         for (int i = 1; i <= 100; i++)
         {
             var vehicle = VehicleGenerator.Generate(i);
 
-            // Assert
             Assert.True(vehicle.Year >= 1990, $"Vehicle {i} has Year {vehicle.Year} which is less than 1990");
             Assert.True(vehicle.Year <= DateTime.Now.Year, $"Vehicle {i} has Year {vehicle.Year} which exceeds current year {DateTime.Now.Year}");
         }
@@ -59,12 +53,10 @@ public class VehicleGeneratorTests
     [Fact]
     public void Generate_MileageConstraint_IsValid()
     {
-        // Arrange & Act
         for (int i = 1; i <= 100; i++)
         {
             var vehicle = VehicleGenerator.Generate(i);
 
-            // Assert
             Assert.True(vehicle.Mileage >= 0, $"Vehicle {i} has Mileage {vehicle.Mileage} which is less than 0");
             Assert.True(vehicle.Mileage <= 500000, $"Vehicle {i} has Mileage {vehicle.Mileage} which exceeds 500,000");
         }
@@ -73,12 +65,10 @@ public class VehicleGeneratorTests
     [Fact]
     public void Generate_LastServiceDateConstraint_IsValid()
     {
-        // Arrange & Act
         for (int i = 1; i <= 100; i++)
         {
             var vehicle = VehicleGenerator.Generate(i);
 
-            // Assert
             Assert.True(vehicle.LastServiceDate.Year >= vehicle.Year,
                 $"Vehicle {i} has LastServiceDate year {vehicle.LastServiceDate.Year} which is before the vehicle's manufacturing year {vehicle.Year}");
             Assert.True(vehicle.LastServiceDate <= DateOnly.FromDateTime(DateTime.Now),
