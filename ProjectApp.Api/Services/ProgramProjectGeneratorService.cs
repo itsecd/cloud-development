@@ -1,4 +1,4 @@
-using ProjectApp.Domain.Entities;
+п»їusing ProjectApp.Domain.Entities;
 using Microsoft.Extensions.Caching.Distributed;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
@@ -9,7 +9,7 @@ using System.Diagnostics;
 namespace ProjectApp.Api.Services;
 
 /// <summary>
-/// Сервис получения программного проекта с использованием кэша и генерации при отсутствии данных
+/// РЎРµСЂРІРёСЃ РїРѕР»СѓС‡РµРЅРёСЏ РїСЂРѕРіСЂР°РјРјРЅРѕРіРѕ РїСЂРѕРµРєС‚Р° СЃ РёСЃРїРѕР»СЊР·РѕРІР°РЅРёРµРј РєСЌС€Р° Рё РіРµРЅРµСЂР°С†РёРё РїСЂРё РѕС‚СЃСѓС‚СЃС‚РІРёРё РґР°РЅРЅС‹
 /// </summary>
 public class ProgramProjectGeneratorService(
     IDistributedCache cache,
@@ -24,11 +24,11 @@ public class ProgramProjectGeneratorService(
     private readonly int _expirationMinutes = cacheSettings.Value.ExpirationMinutes;
 
     /// <summary>
-    /// Возвращает проект по идентификатору из кэша или генерирует новый и сохраняет его в кэш
+    /// Р’РѕР·РІСЂР°С‰Р°РµС‚ РїСЂРѕРµРєС‚ РїРѕ РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂСѓ РёР· РєСЌС€Р° РёР»Рё РіРµРЅРµСЂРёСЂСѓРµС‚ РЅРѕРІС‹Р№ Рё СЃРѕС…СЂР°РЅСЏРµС‚ РµРіРѕ РІ РєСЌС€
     /// </summary>
-    /// <param name="id">Идентификатор проекта</param>
-    /// <param name="cancellationToken">Токен отмены</param>
-    /// <returns>Программный проект</returns>
+    /// <param name="id">РРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ РїСЂРѕРµРєС‚Р°</param>
+    /// <param name="cancellationToken">РўРѕРєРµРЅ РѕС‚РјРµРЅС‹</param>
+    /// <returns>РџСЂРѕРіСЂР°РјРјРЅС‹Р№ РїСЂРѕРµРєС‚</returns>
     public async Task<ProgramProject> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Attempting to retrieve software project {Id} from cache", id);
