@@ -4,6 +4,7 @@ using Domain.Interfaces;
 using Microsoft.Extensions.Logging;
 namespace Infrastructure.Generators;
 
+
 public class VehicleContractGenerator : IVehicleContractGenerator
 {
     private readonly IVehicleModelGenerator _vehicleModelGenerator;
