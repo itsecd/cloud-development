@@ -22,13 +22,12 @@ public class CreditApplicationGenerator
         .RuleFor(x => x.RequestedAmount, f => Math.Round(f.Random.Decimal(50_000m, 10_000_000m), 2))
         .RuleFor(x => x.TermMonths, f => f.Random.Int(6, 360))
         .RuleFor(x => x.InterestRate, f => Math.Round(f.Random.Double(15.5, 21.5), 2))
-        .RuleFor(x => x.ApplicationDate, f =>
-            DateOnly.FromDateTime(f.Date.Between(DateTime.Today.AddYears(-2), DateTime.Today)))
+        .RuleFor(x => x.ApplicationDate, f => f.Date.PastDateOnly(2))
         .RuleFor(x => x.InsuranceRequired, f => f.Random.Bool())
         .RuleFor(x => x.Status, f => f.PickRandom(_statuses))
         .RuleFor(x => x.DecisionDate, (f, app) =>
             _terminalStatuses.Contains(app.Status)
-                ? DateOnly.FromDateTime(f.Date.Between(app.ApplicationDate.ToDateTime(TimeOnly.MinValue), DateTime.Today))
+                ? f.Date.BetweenDateOnly(app.ApplicationDate, DateOnly.FromDateTime(DateTime.Today))
                 : null)
         .RuleFor(x => x.ApprovedAmount, (f, app) =>
             app.Status == "Одобрена"

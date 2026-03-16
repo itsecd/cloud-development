@@ -13,11 +13,8 @@ public class CreditApplicationService(
     IConfiguration configuration,
     ILogger<CreditApplicationService> logger) : ICreditApplicationService
 {
-    private readonly DistributedCacheEntryOptions _cacheOptions = new()
-    {
-        AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(
-            configuration.GetValue<int>("CacheSettings:ExpirationMinutes"))
-    };
+    private readonly int _cacheExpirationMinutes =
+        configuration.GetValue("CacheSettings:ExpirationMinutes", 5);
 
     /// <inheritdoc />
     public async Task<CreditApplication> GetOrGenerate(int id)
@@ -31,8 +28,12 @@ public class CreditApplicationService(
             var cached = await cache.GetStringAsync(key);
             if (cached is not null)
             {
-                logger.LogInformation("Cache hit for credit application {Id}", id);
-                return JsonSerializer.Deserialize<CreditApplication>(cached)!;
+                var deserialized = JsonSerializer.Deserialize<CreditApplication>(cached);
+                if (deserialized is not null)
+                {
+                    logger.LogInformation("Cache hit for credit application {Id}", id);
+                    return deserialized;
+                }
             }
 
             logger.LogInformation("Cache miss for credit application {Id}", id);
@@ -53,7 +54,11 @@ public class CreditApplicationService(
             try
             {
                 var json = JsonSerializer.Serialize(application);
-                await cache.SetStringAsync(key, json, _cacheOptions);
+                var cacheOptions = new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(_cacheExpirationMinutes)
+                };
+                await cache.SetStringAsync(key, json, cacheOptions);
                 logger.LogInformation("Cached credit application {Id}", id);
             }
             catch (Exception ex)
