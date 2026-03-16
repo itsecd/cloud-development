@@ -1,4 +1,4 @@
-using ProjectApp.Domain.Entities;
+п»їusing ProjectApp.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 using ProjectApp.Api.Services;
 
@@ -9,11 +9,11 @@ namespace ProjectApp.Api.Controllers;
 public class ProjectController(ProgramProjectGeneratorService generatorService, ILogger<ProjectController> logger) : ControllerBase
 {
     /// <summary>
-    /// Возвращает проект по идентификатору или генерирует новый, если он не найден в кэше
+    /// Р’РѕР·РІСЂР°С‰Р°РµС‚ РїСЂРѕРµРєС‚ РїРѕ РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂСѓ РёР»Рё РіРµРЅРµСЂРёСЂСѓРµС‚ РЅРѕРІС‹Р№, РµСЃР»Рё РѕРЅ РЅРµ РЅР°Р№РґРµРЅ РІ РєСЌС€Рµ
     /// </summary>
-    /// <param name="id">Идентификатор проекта</param>
-    /// <param name="cancellationToken">Токен отмены</param>
-    /// <returns>Программный проект</returns>
+    /// <param name="id">РРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ РїСЂРѕРµРєС‚Р°</param>
+    /// <param name="cancellationToken">РўРѕРєРµРЅ РѕС‚РјРµРЅС‹</param>
+    /// <returns>РџСЂРѕРіСЂР°РјРјРЅС‹Р№ РїСЂРѕРµРєС‚</returns>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
