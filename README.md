@@ -1,7 +1,7 @@
 # Запуск проекта
 
 ```bash
-docker compose up
+dotnet run --project AppHost
 ```
 
 # Современные технологии разработки программного обеспечения
