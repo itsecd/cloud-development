@@ -12,8 +12,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Client.Wasm\Client.Wasm.csproj" />
-    <ProjectReference Include="..\..\Service.ApiGateway\Service.ApiGateway.csproj" />
     <ProjectReference Include="..\..\Service.Api\Service.Api.csproj" />
+    <ProjectReference Include="..\..\Service.Gateway\Service.Gateway.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -25,30 +25,9 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
 builder.Services.AddScoped<RedisService>();
 builder.Services.AddScoped<ProgramProjectCacheService>();
 
-builder.Services.AddCors(options =>
-{
-    options.AddDefaultPolicy(policy =>
-        policy.SetIsOriginAllowed(origin =>
-                {
-                    try
-                    {
-                        var uri = new Uri(origin);
-                        return uri.Host == "localhost";
-                    }
-                    catch
-                    {
-                        return false;
-                    }
-                })
-              .WithMethods("GET")
-              .AllowAnyHeader());
-});
-
 var app = builder.Build();
 
 app.MapHealthChecks("health");
-
-app.UseCors();
 
 app.MapDefaultEndpoints();
 

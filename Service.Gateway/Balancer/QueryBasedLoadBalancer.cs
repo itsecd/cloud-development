@@ -4,7 +4,7 @@ using Ocelot.Responses;
 using Ocelot.DownstreamRouteFinder.Finder;
 using Ocelot.Errors;
 
-namespace Service.ApiGateway.balancer;
+namespace Service.Gateway.Balancer;
 /// <summary>
 /// Ocelot load balancer that selects a downstream service based on the value of id parametr in query.
 /// </summary>
