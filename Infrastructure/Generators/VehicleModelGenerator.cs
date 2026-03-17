@@ -24,12 +24,13 @@ public class VehicleModelGenerator : IVehicleModelGenerator
     private readonly string _filePath;
     private List<VehicleModelJsonItem>? _items;
     private ILogger<VehicleModelGenerator> _logger;
+    private readonly Faker _faker;
 
-
-    public VehicleModelGenerator(ILogger<VehicleModelGenerator> logger)
+    public VehicleModelGenerator(ILogger<VehicleModelGenerator> logger, Faker? faker = null)
     {
         _filePath = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Domain", "Catalog", "vehicleModels.json"); ;
         _logger = logger;
+        _faker = faker ?? new Faker();
     }
 
 
@@ -42,10 +43,9 @@ public class VehicleModelGenerator : IVehicleModelGenerator
 
         var items = LoadData();
 
-        var faker = new Faker();
 
-        var makeItem = faker.PickRandom(items);
-        var model = faker.PickRandom(makeItem.Models);
+        var makeItem = _faker.PickRandom(items);
+        var model = _faker.PickRandom(makeItem.Models);
         _logger.LogInformation("Make + model data generated successfully. Seed: {Seed}, Manufacture: {Make}, Model: {Model}", seed, makeItem.Make, model); ;
         return new VehicleCatalog
         {
