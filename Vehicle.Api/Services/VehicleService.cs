@@ -103,9 +103,4 @@ public class VehicleService(VehicleGenerator generator, IVehicleCache vehicleCac
             logger.LogWarning(ex, warningMessage, cacheKey);
         }
     }
-    
 }
-
-
-
-
