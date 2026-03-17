@@ -10,8 +10,8 @@ var minio = builder.AddContainer("minio", "minio/minio")
     .WithEnvironment("MINIO_ROOT_USER", minioAccessKey)
     .WithEnvironment("MINIO_ROOT_PASSWORD", minioSecretKey)
     .WithArgs("server", "/data", "--console-address", ":9001")
-    .WithEndpoint(port: 9000, targetPort: 9000, name: "api")
-    .WithEndpoint(port: 9001, targetPort: 9001, name: "console")
+    .WithHttpEndpoint(port: 9000, targetPort: 9000, name: "api")
+    .WithHttpEndpoint(port: 9001, targetPort: 9001, name: "console")
     .WithBindMount("minio-data", "/data");
 
 var localstack = builder.AddContainer("localstack", "localstack/localstack")
@@ -20,7 +20,7 @@ var localstack = builder.AddContainer("localstack", "localstack/localstack")
     .WithEnvironment("AWS_ACCESS_KEY_ID", "test")
     .WithEnvironment("AWS_SECRET_ACCESS_KEY", "test")
     .WithEnvironment("AWS_DEFAULT_REGION", "us-east-1")
-    .WithEndpoint(port: 4566, targetPort: 4566, name: "gateway")
+    .WithHttpEndpoint(port: 4566, targetPort: 4566, name: "gateway")
     .WithBindMount("localstack-data", "/var/lib/localstack")
     .WithBindMount(Path.Combine(builder.AppHostDirectory, "localstack-init.sh"), "/etc/localstack/init/ready.d/init-aws.sh");
 
