@@ -13,11 +13,12 @@ public class WeightedRoundRobinLoadBalancer : ILoadBalancer
     private readonly List<ServiceHostAndPort> _sequence;
     private int _index = -1;
     private readonly object _lock = new();
-
-
-    public string Type => "WeightedRoundRobin";
+    private readonly string _type;
+    public string Type => _type;
     public WeightedRoundRobinLoadBalancer(List<ServiceHostAndPort> services)
     {
+        _type = nameof(WeightedRoundRobinLoadBalancer).Replace("LoadBalancer", "");
+
         var weights = new[] { 3, 2, 1, 1, 1 };
         _sequence = [];
 
@@ -30,7 +31,6 @@ public class WeightedRoundRobinLoadBalancer : ILoadBalancer
             }
         }
     }
-
     public Task<Response<ServiceHostAndPort>> LeaseAsync(HttpContext context)
     {
         lock (_lock)
@@ -40,7 +40,6 @@ public class WeightedRoundRobinLoadBalancer : ILoadBalancer
                 new OkResponse<ServiceHostAndPort>(_sequence[_index]));
         }
     }
-
     public void Release(ServiceHostAndPort hostAndPort)
     {
     }

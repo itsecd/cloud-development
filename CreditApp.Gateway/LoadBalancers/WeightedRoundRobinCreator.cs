@@ -9,11 +9,9 @@ namespace CreditApp.Gateway.LoadBalancers;
 /// <summary>
 /// Создатель балансировщика нагрузки WeightedRoundRobin для Ocelot
 /// </summary>
-
 public class WeightedRoundRobinCreator : ILoadBalancerCreator
 {
-    public string Type => "WeightedRoundRobin";
-
+    public string Type => nameof(WeightedRoundRobinCreator).Replace("Creator", "");
     public Response<ILoadBalancer> Create(
         DownstreamRoute route,
         IServiceDiscoveryProvider serviceProvider)

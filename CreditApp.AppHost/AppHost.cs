@@ -3,56 +3,6 @@ var builder = DistributedApplication.CreateBuilder(args);
 var redis = builder.AddRedis("redis")
     .WithRedisCommander(containerName: "redis-commander");
 
-var api1 = builder.AddProject<Projects.CreditApp_Api>("api1")
-    .WithEndpoint("https", e =>
-    {
-        e.Port = 7401;
-        e.IsProxied = false;
-        e.UriScheme = "https";
-    })
-    .WithReference(redis)
-    .WaitFor(redis);
-
-var api2 = builder.AddProject<Projects.CreditApp_Api>("api2")
-    .WithEndpoint("https", e =>
-    {
-        e.Port = 7402;
-        e.IsProxied = false;
-        e.UriScheme = "https";
-    })
-    .WithReference(redis)
-    .WaitFor(redis);
-
-var api3 = builder.AddProject<Projects.CreditApp_Api>("api3")
-    .WithEndpoint("https", e =>
-    {
-        e.Port = 7403;
-        e.IsProxied = false;
-        e.UriScheme = "https";
-    })
-    .WithReference(redis)
-    .WaitFor(redis);
-
-var api4 = builder.AddProject<Projects.CreditApp_Api>("api4")
-    .WithEndpoint("https", e =>
-    {
-        e.Port = 7404;
-        e.IsProxied = false;
-        e.UriScheme = "https";
-    })
-    .WithReference(redis)
-    .WaitFor(redis);
-
-var api5 = builder.AddProject<Projects.CreditApp_Api>("api5")
-    .WithEndpoint("https", e =>
-    {
-        e.Port = 7405;
-        e.IsProxied = false;
-        e.UriScheme = "https";
-    })
-    .WithReference(redis)
-    .WaitFor(redis);
-
 var gateway = builder.AddProject<Projects.CreditApp_Gateway>("gateway")
     .WithEndpoint("https", e =>
     {
@@ -60,14 +10,28 @@ var gateway = builder.AddProject<Projects.CreditApp_Gateway>("gateway")
         e.IsProxied = false;
         e.UriScheme = "https";
     })
-    .WithReference(api1)
-    .WithReference(api2)
-    .WithReference(api3)
-    .WithReference(api4)
-    .WithReference(api5)
     .WithExternalHttpEndpoints();
 
-builder.AddProject<Projects.Client_Wasm>("client")
+const int startApiPort = 7401;
+const int replicaCount = 5;
+
+for (var i = 0; i < replicaCount; i++)
+{
+    var port = startApiPort + i;
+    var api = builder.AddProject<Projects.CreditApp_Api>($"api{i + 1}")
+        .WithEndpoint("https", e =>
+        {
+            e.Port = port;
+            e.IsProxied = false;
+            e.UriScheme = "https";
+        })
+        .WithReference(redis)
+        .WaitFor(redis);
+
+    gateway.WaitFor(api);
+}
+
+var client = builder.AddProject<Projects.Client_Wasm>("client")
     .WithReference(gateway)
     .WithExternalHttpEndpoints();
 
