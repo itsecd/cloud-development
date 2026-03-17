@@ -3,7 +3,7 @@ using Amazon.SimpleNotificationService.Model;
 using CreditApp.Domain.Entities;
 using System.Text.Json;
 
-namespace CreditApp.Api.Services.SnsPublisherService;
+namespace CreditApp.Api.Services.SnsPublisher;
 
 public class SnsPublisherService(IAmazonSimpleNotificationService snsClient, ILogger<SnsPublisherService> logger, IConfiguration configuration)
 {

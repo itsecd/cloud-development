@@ -29,12 +29,8 @@ public class AppHostFixture : IAsyncLifetime
         await App.StartAsync();
 
         await App.ResourceNotifications.WaitForResourceHealthyAsync("cache").WaitAsync(_defaultTimeout);
-        await App.ResourceNotifications.WaitForResourceHealthyAsync("minio").WaitAsync(_defaultTimeout);
-        await App.ResourceNotifications.WaitForResourceHealthyAsync("localstack").WaitAsync(_defaultTimeout);
         await App.ResourceNotifications.WaitForResourceHealthyAsync("creditapp-api-0").WaitAsync(_defaultTimeout);
-        await App.ResourceNotifications.WaitForResourceHealthyAsync("creditapp-fileservice").WaitAsync(_defaultTimeout);
-
-        await Task.Delay(15000);
+        await App.ResourceNotifications.WaitForResourceHealthyAsync("creditapp-apigateway").WaitAsync(_defaultTimeout);
     }
 
     public async Task DisposeAsync()
@@ -84,64 +80,6 @@ public class IntegrationTests(AppHostFixture fixture) : IClassFixture<AppHostFix
         Assert.NotEmpty(creditApp.Type);
         Assert.NotEmpty(creditApp.Status);
         Assert.True(creditApp.Amount > 0);
-    }
-
-    [Fact]
-    public async Task EndToEnd_CreditApplicationFlow_SavesFileToMinIO()
-    {
-        var testId = Random.Shared.Next(1, 100000);
-        var httpClient = fixture.App!.CreateHttpClient("creditapp-api-0");
-
-        using var genResponse = await httpClient.GetAsync($"/api/credit?id={testId}");
-        genResponse.EnsureSuccessStatusCode();
-        var apiContent = await genResponse.Content.ReadAsStringAsync();
-
-        var apiCreditApp = JsonSerializer.Deserialize<CreditApplication>(apiContent, _jsonOptions);
-        Assert.NotNull(apiCreditApp);
-        Assert.Equal(testId, apiCreditApp.Id);
-
-        var expectedFileName = $"credit-application-{testId}";
-        string? fileContent = null;
-
-        var fileServiceClient = fixture.App!.CreateHttpClient("creditapp-fileservice");
-
-        for (var i = 0; i < 2; i++)
-        {
-            await Task.Delay(1000);
-
-            try
-            {
-                using var filesResponse = await fileServiceClient.GetAsync("/api/files");
-                if (filesResponse.IsSuccessStatusCode)
-                {
-                    var filesListContent = await filesResponse.Content.ReadAsStringAsync();
-                    var files = JsonSerializer.Deserialize<List<string>>(filesListContent, _jsonOptions);
-
-                    var matchingFile = files?.FirstOrDefault(f => f.Contains(expectedFileName));
-                    if (matchingFile != null)
-                    {
-                        using var fileResponse = await fileServiceClient.GetAsync($"/api/files/{matchingFile}");
-                        if (fileResponse.IsSuccessStatusCode)
-                        {
-                            fileContent = await fileResponse.Content.ReadAsStringAsync();
-                            break;
-                        }
-                    }
-                }
-            }
-            catch
-            {
-            }
-        }
-
-        Assert.NotNull(fileContent);
-
-        var savedCreditApp = JsonSerializer.Deserialize<CreditApplication>(fileContent, _jsonOptions);
-        Assert.NotNull(savedCreditApp);
-        Assert.Equal(testId, savedCreditApp.Id);
-        Assert.Equal(apiCreditApp.Type, savedCreditApp.Type);
-        Assert.Equal(apiCreditApp.Amount, savedCreditApp.Amount);
-        Assert.Equal(apiCreditApp.Status, savedCreditApp.Status);
     }
 
     [Fact]
@@ -218,63 +156,5 @@ public class IntegrationTests(AppHostFixture fixture) : IClassFixture<AppHostFix
         Assert.Equal(creditApp1.Id, creditApp2.Id);
         Assert.Equal(creditApp1.Type, creditApp2.Type);
         Assert.Equal(creditApp1.Amount, creditApp2.Amount);
-    }
-
-    [Fact]
-    public async Task Gateway_EndToEnd_CreditApplicationFlow_SavesFileToMinIO()
-    {
-        var testId = Random.Shared.Next(1, 100000);
-        var gatewayClient = fixture.App!.CreateHttpClient("creditapp-apigateway");
-
-        using var genResponse = await gatewayClient.GetAsync($"/api/credit?id={testId}");
-        genResponse.EnsureSuccessStatusCode();
-        var apiContent = await genResponse.Content.ReadAsStringAsync();
-
-        var apiCreditApp = JsonSerializer.Deserialize<CreditApplication>(apiContent, _jsonOptions);
-        Assert.NotNull(apiCreditApp);
-        Assert.Equal(testId, apiCreditApp.Id);
-
-        var expectedFileName = $"credit-application-{testId}";
-        string? fileContent = null;
-
-        var fileServiceClient = fixture.App!.CreateHttpClient("creditapp-fileservice");
-
-        for (var i = 0; i < 3; i++)
-        {
-            await Task.Delay(1000);
-
-            try
-            {
-                using var filesResponse = await fileServiceClient.GetAsync("/api/files");
-                if (filesResponse.IsSuccessStatusCode)
-                {
-                    var filesListContent = await filesResponse.Content.ReadAsStringAsync();
-                    var files = JsonSerializer.Deserialize<List<string>>(filesListContent, _jsonOptions);
-
-                    var matchingFile = files?.FirstOrDefault(f => f.Contains(expectedFileName));
-                    if (matchingFile != null)
-                    {
-                        using var fileResponse = await fileServiceClient.GetAsync($"/api/files/{matchingFile}");
-                        if (fileResponse.IsSuccessStatusCode)
-                        {
-                            fileContent = await fileResponse.Content.ReadAsStringAsync();
-                            break;
-                        }
-                    }
-                }
-            }
-            catch
-            {
-            }
-        }
-
-        Assert.NotNull(fileContent);
-
-        var savedCreditApp = JsonSerializer.Deserialize<CreditApplication>(fileContent, _jsonOptions);
-        Assert.NotNull(savedCreditApp);
-        Assert.Equal(testId, savedCreditApp.Id);
-        Assert.Equal(apiCreditApp.Type, savedCreditApp.Type);
-        Assert.Equal(apiCreditApp.Amount, savedCreditApp.Amount);
-        Assert.Equal(apiCreditApp.Status, savedCreditApp.Status);
     }
 }

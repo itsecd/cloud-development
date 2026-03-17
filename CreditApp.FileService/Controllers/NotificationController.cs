@@ -5,15 +5,36 @@ using System.Text.Json;
 
 namespace CreditApp.FileService.Controllers;
 
+/// <summary>
+/// Контроллер для приёма уведомлений от AWS SNS о новых кредитных заявках
+/// </summary>
 [Route("api/[controller]")]
 [ApiController]
+[Produces("application/json")]
 public class NotificationController(MinioStorageService minioStorage, IHttpClientFactory httpClientFactory, JsonSerializerOptions jsonOptions, ILogger<NotificationController> logger) : ControllerBase
 {
+    /// <summary>
+    /// Webhook для приёма SNS уведомлений и сохранения кредитных заявок в MinIO
+    /// </summary>
+    /// <param name="cancellationToken">Токен отмены операции</param>
+    /// <returns>Результат обработки уведомления</returns>
+    /// <remarks>
+    /// Обрабатывает два типа SNS сообщений:
+    /// - SubscriptionConfirmation: подтверждение подписки на топик
+    /// - Notification: новая кредитная заявка для сохранения
+    /// </remarks>
+    /// <response code="200">Уведомление успешно обработано</response>
+    /// <response code="400">Некорректный формат данных</response>
+    /// <response code="500">Внутренняя ошибка сервера</response>
     [HttpPost]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> ReceiveSnsNotification(CancellationToken cancellationToken)
     {
         try
         {
+            // Читаем тело запроса от SNS
             using var reader = new StreamReader(Request.Body);
             var bodyContent = await reader.ReadToEndAsync(cancellationToken);
 
@@ -25,10 +46,12 @@ public class NotificationController(MinioStorageService minioStorage, IHttpClien
             {
                 var messageType = typeElement.GetString();
 
+                // Обработка подтверждения подписки (происходит один раз при первом запуске)
                 if (messageType == "SubscriptionConfirmation")
                 {
                     logger.LogInformation("Получено подтверждение подписки SNS");
 
+                    // SNS требует перейти по специальному URL для подтверждения подписки
                     if (body.TryGetProperty("SubscribeURL", out var subscribeUrlElement))
                     {
                         var subscribeUrl = subscribeUrlElement.GetString();
@@ -37,6 +60,7 @@ public class NotificationController(MinioStorageService minioStorage, IHttpClien
                         {
                             logger.LogInformation("Подтверждение подписки через URL: {Url}", subscribeUrl);
 
+                            // Выполняем HTTP GET запрос для подтверждения подписки
                             using var httpClient = httpClientFactory.CreateClient();
                             var response = await httpClient.GetAsync(subscribeUrl, cancellationToken);
 
@@ -54,6 +78,7 @@ public class NotificationController(MinioStorageService minioStorage, IHttpClien
                     return Ok(new { message = "Subscription confirmed" });
                 }
 
+                // Обработка уведомления о новой кредитной заявке
                 if (messageType == "Notification")
                 {
                     if (body.TryGetProperty("Message", out var messageElement))
@@ -66,6 +91,7 @@ public class NotificationController(MinioStorageService minioStorage, IHttpClien
                             return BadRequest("Empty message");
                         }
 
+                        // Десериализуем кредитную заявку из сообщения
                         var creditApplication = JsonSerializer.Deserialize<CreditApplication>(messageJson);
 
                         if (creditApplication == null)
@@ -78,18 +104,23 @@ public class NotificationController(MinioStorageService minioStorage, IHttpClien
                             "Получена кредитная заявка {Id} через SNS",
                             creditApplication.Id);
 
-                        await minioStorage.EnsureBucketExistsAsync(cancellationToken);
+                        // Убеждаемся, что bucket существует в MinIO
+                        // Используем CancellationToken.None чтобы операция завершилась даже если HTTP запрос отменен
+                        await minioStorage.EnsureBucketExistsAsync(CancellationToken.None);
 
+                        // Формируем уникальное имя файла с временной меткой
                         var fileName = $"credit-application-{creditApplication.Id}-{DateTime.UtcNow:yyyyMMdd-HHmmss}.json";
                         var jsonContent = JsonSerializer.Serialize(creditApplication, jsonOptions);
 
                         using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(jsonContent));
 
+                        // Сохраняем заявку в MinIO для долговременного хранения
+                        // Используем CancellationToken.None чтобы файл точно был сохранен
                         var uploadedPath = await minioStorage.UploadFileAsync(
                             fileName,
                             stream,
                             "application/json",
-                            cancellationToken);
+                            CancellationToken.None);
 
                         logger.LogInformation(
                             "Кредитная заявка {Id} сохранена в MinIO: {Path}",

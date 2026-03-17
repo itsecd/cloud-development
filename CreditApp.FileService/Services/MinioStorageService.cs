@@ -66,18 +66,28 @@ public class MinioStorageService(IMinioClient minioClient, MinioSettings setting
     {
         try
         {
+            await EnsureBucketExistsAsync(cancellationToken);
+            
             var files = new List<string>();
             var listArgs = new ListObjectsArgs()
                 .WithBucket(settings.BucketName)
                 .WithRecursive(true);
 
-            await foreach (var item in minioClient.ListObjectsEnumAsync(listArgs, cancellationToken))
+            await foreach (var item in minioClient.ListObjectsEnumAsync(listArgs, cancellationToken).ConfigureAwait(false))
             {
-                files.Add(item.Key);
+                if (!string.IsNullOrEmpty(item.Key))
+                {
+                    files.Add(item.Key);
+                }
             }
 
             logger.LogInformation("Получен список из {Count} файлов из bucket {BucketName}", files.Count, settings.BucketName);
             return files;
+        }
+        catch (OperationCanceledException)
+        {
+            logger.LogWarning("Операция получения списка файлов была отменена");
+            return [];
         }
         catch (Exception ex)
         {

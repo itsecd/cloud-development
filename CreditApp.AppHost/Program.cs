@@ -24,20 +24,54 @@ var localstack = builder.AddContainer("localstack", "localstack/localstack")
     .WithBindMount("localstack-data", "/var/lib/localstack")
     .WithBindMount(Path.Combine(builder.AppHostDirectory, "localstack-init.sh"), "/etc/localstack/init/ready.d/init-aws.sh");
 
+
+var fileService = builder.AddProject<Projects.CreditApp_FileService>("creditapp-fileservice")
+    .WithEnvironment(ctx =>
+    {
+        var minioEndpoint = minio.GetEndpoint("api");
+        ctx.EnvironmentVariables["MinIO__Endpoint"] = $"{minioEndpoint.Host}:{minioEndpoint.Port}";
+    })
+    .WithEnvironment("MinIO__AccessKey", minioAccessKey)
+    .WithEnvironment("MinIO__SecretKey", minioSecretKey)
+    .WithEndpoint("http", endpoint => endpoint.Port = 5100)
+    .WithEndpoint("https", endpoint => endpoint.Port = 7143)
+    .WaitFor(minio);
+
 var api0 = builder.AddProject<Projects.CreditApp_Api>("creditapp-api-0")
     .WithReference(redis)
+    .WithReference(fileService)
+    .WithEnvironment(ctx =>
+    {
+        var localstackEndpoint = localstack.GetEndpoint("gateway");
+        ctx.EnvironmentVariables["AWS__ServiceURL"] = $"http://{localstackEndpoint.Host}:{localstackEndpoint.Port}";
+    })
+    .WithEndpoint("http", endpoint => endpoint.Port = 5179)
     .WithEndpoint("https", endpoint => endpoint.Port = 7170)
     .WaitFor(redis)
     .WaitFor(localstack);
 
 var api1 = builder.AddProject<Projects.CreditApp_Api>("creditapp-api-1")
     .WithReference(redis)
+    .WithReference(fileService)
+    .WithEnvironment(ctx =>
+    {
+        var localstackEndpoint = localstack.GetEndpoint("gateway");
+        ctx.EnvironmentVariables["AWS__ServiceURL"] = $"http://{localstackEndpoint.Host}:{localstackEndpoint.Port}";
+    })
+    .WithEndpoint("http", endpoint => endpoint.Port = 5180)
     .WithEndpoint("https", endpoint => endpoint.Port = 7171)
     .WaitFor(redis)
     .WaitFor(localstack);
 
 var api2 = builder.AddProject<Projects.CreditApp_Api>("creditapp-api-2")
     .WithReference(redis)
+    .WithReference(fileService)
+    .WithEnvironment(ctx =>
+    {
+        var localstackEndpoint = localstack.GetEndpoint("gateway");
+        ctx.EnvironmentVariables["AWS__ServiceURL"] = $"http://{localstackEndpoint.Host}:{localstackEndpoint.Port}";
+    })
+    .WithEndpoint("http", endpoint => endpoint.Port = 5181)
     .WithEndpoint("https", endpoint => endpoint.Port = 7172)
     .WaitFor(redis)
     .WaitFor(localstack);
@@ -46,16 +80,16 @@ var gateway = builder.AddProject<Projects.CreditApp_ApiGateway>("creditapp-apiga
     .WithReference(api0)
     .WithReference(api1)
     .WithReference(api2)
+    .WithEndpoint("http", endpoint => endpoint.Port = 5062)
+    .WithEndpoint("https", endpoint => endpoint.Port = 7138)
     .WaitFor(api0)
     .WaitFor(api1)
     .WaitFor(api2);
 
-var fileService = builder.AddProject<Projects.CreditApp_FileService>("creditapp-fileservice")
-    .WithEndpoint("http", endpoint => endpoint.Port = 5100)
-    .WaitFor(minio);
-
 builder.AddProject<Projects.Client_Wasm>("client")
     .WithReference(gateway)
+    .WithEndpoint("http", endpoint => endpoint.Port = 5080)
+    .WithEndpoint("https", endpoint => endpoint.Port = 7080)
     .WaitFor(gateway);
 
 builder.Build().Run();

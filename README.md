@@ -1,4 +1,4 @@
-# Лабораторная работа №3 - "Интеграционное тестирование"
+# Лабораторная работа №2 - "Балансировка нагрузки"
 
 **Вариант**: №9 - "Кредитная заявка"  
 **Алгоритм балансировки**: Weighted Round Robin
@@ -126,6 +126,6 @@ cloud-development/
 
 ## 📸 Скриншоты!
 
-
+![aspire](https://github.com/user-attachments/assets/c49d5de0-0afb-4105-b9da-bbc5fe76c9da)
 ![client](https://github.com/user-attachments/assets/8d4dd124-9589-4562-b421-d0e914a0cc8a)
-
+![logs](https://github.com/user-attachments/assets/120d9b27-d140-429a-b574-31c1c3c0e092)

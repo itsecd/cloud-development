@@ -1,6 +1,6 @@
 using Amazon.SimpleNotificationService;
-using CreditApp.Api.Services.CreditGeneratorService;
-using CreditApp.Api.Services.SnsPublisherService;
+using CreditApp.Api.Services.CreditApplicationService;
+using CreditApp.Api.Services.SnsPublisher;
 using CreditApp.ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,7 +22,6 @@ builder.Services.AddAWSService<IAmazonSimpleNotificationService>();
 
 builder.Services.AddScoped<SnsPublisherService>();
 
-
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowBlazorWasm", policy =>
@@ -33,7 +32,17 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.Services.AddScoped<CreditApplicationGeneratorService>();
+builder.Services.AddHttpClient();
+
+builder.Services.AddHttpClient("creditapp-fileservice", client =>
+{
+    client.BaseAddress = new Uri("http://creditapp-fileservice");
+}).AddServiceDiscovery();
+
+builder.Services.AddScoped<CreditApplicationGenerator>();
+builder.Services.AddScoped<CreditApplicationCacheService>();
+builder.Services.AddScoped<CreditApplicationStorageService>();
+builder.Services.AddScoped<CreditApplicationService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

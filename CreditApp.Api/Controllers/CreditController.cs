@@ -1,5 +1,4 @@
-using CreditApp.Api.Services.CreditGeneratorService;
-using CreditApp.Api.Services.SnsPublisherService;
+using CreditApp.Api.Services.CreditApplicationService;
 using CreditApp.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,7 +6,7 @@ namespace CreditApp.Api.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class CreditController(CreditApplicationGeneratorService generatorService, SnsPublisherService snsPublisher, ILogger<CreditController> logger) : ControllerBase
+public class CreditController(CreditApplicationService applicationService, ILogger<CreditController> logger) : ControllerBase
 {
     /// <summary>
     /// Получить кредитную заявку по ID, если не найдена в кэше генерируем новую
@@ -20,16 +19,7 @@ public class CreditController(CreditApplicationGeneratorService generatorService
     {
         logger.LogInformation("Получен запрос на получение/генерацию заявки {Id}", id);
 
-        var (application, isNew) = await generatorService.GetByIdAsync(id, cancellationToken);
-
-        if (isNew)
-        {
-            await snsPublisher.PublishCreditApplicationAsync(application, cancellationToken);
-        }
-        else
-        {
-            logger.LogInformation("Заявка {Id} получена из кэша, публикация в SNS пропущена", id);
-        }
+        var application = await applicationService.GetByIdAsync(id, cancellationToken);
 
         return Ok(application);
     }
