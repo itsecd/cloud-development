@@ -6,7 +6,7 @@ namespace VehicleApi.Services;
 
 public class VehicleService(IDistributedCache cache, ILogger<VehicleService> logger)
 {
-    private static readonly DistributedCacheEntryOptions CacheOptions = new()
+    private static readonly DistributedCacheEntryOptions _cacheOptions = new()
     {
         AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
     };
@@ -26,7 +26,7 @@ public class VehicleService(IDistributedCache cache, ILogger<VehicleService> log
         var vehicle = VehicleGenerator.Generate(id);
 
         var serialized = JsonSerializer.SerializeToUtf8Bytes(vehicle);
-        await cache.SetAsync(cacheKey, serialized, CacheOptions);
+        await cache.SetAsync(cacheKey, serialized, _cacheOptions);
         logger.LogInformation("Vehicle {Id} cached for 10 minutes", id);
 
         return vehicle;
