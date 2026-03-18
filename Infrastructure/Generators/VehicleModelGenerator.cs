@@ -17,6 +17,10 @@ public class VehicleModelGenerator : IVehicleModelGenerator
     private  List<VehicleModelJsonItem>? _items;
     private readonly ILogger<VehicleModelGenerator> _logger;
     private readonly Faker _faker;
+    private static readonly JsonSerializerOptions _jsonSerializerOptions = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
 
     public VehicleModelGenerator(ILogger<VehicleModelGenerator> logger, Faker? faker = null)
     {
@@ -39,12 +43,8 @@ public class VehicleModelGenerator : IVehicleModelGenerator
 
         var json = File.ReadAllText(_filePath);
 
-        var options = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        };
 
-        var data = JsonSerializer.Deserialize<List<VehicleModelJsonItem>>(json, options);
+        var data = JsonSerializer.Deserialize<List<VehicleModelJsonItem>>(json, _jsonSerializerOptions);
 
         if (data is null || data.Count == 0)
             _logger.LogWarning("File is empty or corrupted. FilePath: {FilePath}", _filePath);
