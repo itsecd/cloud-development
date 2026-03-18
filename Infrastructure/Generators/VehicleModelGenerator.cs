@@ -14,13 +14,13 @@ namespace Infrastructure.Generators;
 public class VehicleModelGenerator : IVehicleModelGenerator
 {
     private readonly string _filePath;
-    private List<VehicleModelJsonItem>? _items;
-    private ILogger<VehicleModelGenerator> _logger;
+    private  List<VehicleModelJsonItem>? _items;
+    private readonly ILogger<VehicleModelGenerator> _logger;
     private readonly Faker _faker;
 
     public VehicleModelGenerator(ILogger<VehicleModelGenerator> logger, Faker? faker = null)
     {
-        _filePath = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Domain", "Catalog", "vehicleModels.json"); ;
+        _filePath = Path.Combine(AppContext.BaseDirectory, "Catalog", "vehicleModels.json"); ;
         _logger = logger;
         _faker = faker ?? new Faker();
     }
