@@ -43,11 +43,6 @@ public class VehicleContractGenerator(IVehicleModelGenerator vehicleModelGenerat
 
         var dto = vehicleFaker.Generate();
         dto.SystemId = id;
-        if (!VehicleContractValidator.ValidateBool (dto))
-        {
-            //throw new InvalidOperationException("Сгенерирован невалидный VehicleContractDto.");
-            _logger.LogWarning("Invalid data generated. id: {id}", id);
-        }
         _logger.LogInformation("Data generation completed. id: {id}", id);
         return dto;
     }

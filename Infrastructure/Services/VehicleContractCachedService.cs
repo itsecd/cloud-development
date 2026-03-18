@@ -42,7 +42,6 @@ public class VehicleContractCachedService(
         _logger.LogWarning("Cache not found. CacheKey: {CacheKey}", cacheKey);
 
         var contract = _generator.Generate(id);
-        VehicleContractValidator.Validate(contract);
 
         var options = new DistributedCacheEntryOptions
         {
