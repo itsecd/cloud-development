@@ -14,7 +14,7 @@ namespace Infrastructure.Generators;
 public class VehicleModelGenerator : IVehicleModelGenerator
 {
     private readonly string _filePath;
-    private  List<VehicleModelJsonItem>? _items;
+    private List<VehicleModelJsonItem>? _items;
     private readonly ILogger<VehicleModelGenerator> _logger;
     private readonly Faker _faker;
     private static readonly JsonSerializerOptions _jsonSerializerOptions = new()
@@ -47,7 +47,7 @@ public class VehicleModelGenerator : IVehicleModelGenerator
         var data = JsonSerializer.Deserialize<List<VehicleModelJsonItem>>(json, _jsonSerializerOptions);
 
         if (data is null || data.Count == 0)
-            _logger.LogWarning("File is empty or corrupted. FilePath: {FilePath}", _filePath);
+            throw new InvalidOperationException(string.Format("Couldn't deserialize datafile: {0}", _filePath));
 
         data = data
             .Where(x => !string.IsNullOrWhiteSpace(x.Make) && x.Models is not null && x.Models.Count > 0)
