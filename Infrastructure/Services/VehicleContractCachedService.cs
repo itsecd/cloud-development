@@ -5,36 +5,25 @@ using Domain.Interfaces;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 
-
-
 namespace Infrastructure.Services;
 
 /// <summary>
 /// Сервис для получения данных 
 /// </summary>
-public class VehicleContractCachedService : IVehicleContractCachedService
-{
-    private readonly IVehicleContractGenerator _generator;
-    private readonly IDistributedCache _cache;
-    private ILogger<VehicleContractCachedService> _logger;
-    private readonly int _cacheExpirationMinutes;
-    /// <summary>
-    /// Функция для получения данных либо через Redis если там есть запись, либо генерация нового объекта
-    /// </summary>
-    public VehicleContractCachedService(
+public class VehicleContractCachedService(
         IVehicleContractGenerator generator,
         IDistributedCache cache,
         ILogger<VehicleContractCachedService> logger,
-        IConfiguration configuration)
-    {
-        _generator = generator;
-        _cache = cache;
-        _logger = logger;
-        _cacheExpirationMinutes = configuration.GetValue<int>(
+        IConfiguration configuration) : IVehicleContractCachedService
+{
+    private readonly IVehicleContractGenerator _generator = generator;
+    private readonly IDistributedCache _cache = cache;
+    private ILogger<VehicleContractCachedService> _logger = logger;
+    private readonly int _cacheExpirationMinutes = configuration.GetValue<int>(
             "CacheSettings:VehicleContractExpirationMinutes");
-    }
-
-
+    /// <summary>
+    /// Функция для получения данных либо через Redis если там есть запись, либо генерация нового объекта
+    /// </summary>
     public async Task<VehicleContractDto> GetVehicleContractAsync(int id)
     {
         var cacheKey = $"vehicle_contract_{id}";
