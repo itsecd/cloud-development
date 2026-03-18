@@ -11,6 +11,7 @@ public class VehicleContractGenerator(IVehicleModelGenerator vehicleModelGenerat
 {
     private readonly IVehicleModelGenerator _vehicleModelGenerator = vehicleModelGenerator;
     private ILogger<VehicleContractGenerator> _logger = logger;
+    private readonly Faker _faker = new();
     /// <summary>
     /// Функуция для генерации данных через Bogus
     /// </summary>
@@ -21,13 +22,15 @@ public class VehicleContractGenerator(IVehicleModelGenerator vehicleModelGenerat
 
         var currentYear = DateTime.UtcNow.Year;
         var vehicleCatalog = _vehicleModelGenerator.Generate();
+        var makeItem = _faker.PickRandom(vehicleCatalog);
+        var model = _faker.PickRandom(makeItem.Models);
 
         var vehicleFaker = new Faker<VehicleContractDto>()
             .RuleFor(x => x.Year, f => f.Random.Int(1976, currentYear))
             .RuleFor(x => x.Mileage, f => f.Random.Double(0, 500000))
             .RuleFor(x => x.Vin, f => f.Vehicle.Vin())
-            .RuleFor(x => x.Manufacturer, _ => vehicleCatalog.Manufacturer)
-            .RuleFor(x => x.Model, _ => vehicleCatalog.Model)
+            .RuleFor(x => x.Manufacturer, _ => makeItem.Make)
+            .RuleFor(x => x.Model, _ => model)
             .RuleFor(x => x.BodyType, f => f.Vehicle.Type())
             .RuleFor(x => x.FuelType, f => f.Vehicle.Fuel())
             .RuleFor(x => x.Color, f => f.Commerce.Color())
@@ -37,6 +40,7 @@ public class VehicleContractGenerator(IVehicleModelGenerator vehicleModelGenerat
                         new DateTime(x.Year, 1, 1),
                         DateTime.UtcNow.Date)
                 ));
+
         var dto = vehicleFaker.Generate();
         dto.SystemId = id;
         if (!VehicleContractValidator.ValidateBool (dto))
