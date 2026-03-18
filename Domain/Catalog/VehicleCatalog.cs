@@ -1,7 +1,16 @@
 ﻿namespace Domain.Catalog;
 
+/// <summary>
+/// Класс Модель + производитель
+/// </summary>
 public class VehicleCatalog
 {
-    public string Manufacturer { get; set; } = string.Empty; 
-    public string Model { get; set; } = string.Empty;
+    /// <summary>
+    /// Поле отвечающее за Производителя 
+    /// </summary>
+    public required string Manufacturer { get; set; }
+    /// <summary>
+    /// Поле отвечающее за модель
+    /// </summary>
+    public required string Model { get; set; } 
 }

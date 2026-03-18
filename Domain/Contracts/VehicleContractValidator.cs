@@ -12,8 +12,8 @@ public class VehicleContractValidator
     /// Дата последнего техобслуживания не может быть раньше года выпуска
     /// Не пустые поля 
     /// </summary>
-    /// <param name="dto"></param>
-    /// <exception cref="ArgumentException"></exception>
+    /// <param name="dto">Контракт который нужно проверить на соответсвия</param>
+    /// <exception cref="ArgumentException">Исключение выбрасывается если объект не прошел валидацию</exception>
     public static void Validate(VehicleContractDto dto)
     {
         if (dto.Year > DateTime.UtcNow.Year)
@@ -51,8 +51,8 @@ public class VehicleContractValidator
     /// Пробег не может быть меньше нуля
     /// Дата последнего техобслуживания не может быть раньше года выпуска
     /// </summary>
-    /// <param name="dto"></param>
-    /// <returns></returns>
+    /// <param name="dto">Контракт который нужно проверить на соответсвия</param>
+    /// <returns>True - контракт прошел валидацию, False - контракт НЕ прошел валидацию</returns>
     public static bool ValidateBool(VehicleContractDto dto)
     {
         var minServiceDate = new DateOnly(dto.Year, 1, 1);

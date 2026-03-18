@@ -12,15 +12,15 @@ public class VehicleContractDto
     /// <summary>
     /// Вин номер транспортного средства 
     /// </summary>
-    public required string Vin { get; set; } = string.Empty;
+    public required string Vin { get; set; } 
     /// <summary>
     /// Производитель(компания)
     /// </summary>
-    public required string Manufacturer { get; set; } = string.Empty;
+    public required string Manufacturer { get; set; } 
     /// <summary>
     /// Модель транспортного средства
     /// </summary>
-    public required string Model { get; set; } = string.Empty;
+    public required string Model { get; set; }
     /// <summary>
     /// Год выпуска
     /// </summary>
@@ -28,15 +28,15 @@ public class VehicleContractDto
     /// <summary>
     /// Тип кузова
     /// </summary>
-    public required string BodyType { get; set; } = string.Empty;
+    public required string BodyType { get; set; }
     /// <summary>
     /// Тип топлива
     /// </summary>
-    public required string FuelType { get; set; } = string.Empty;
+    public required string FuelType { get; set; }
     /// <summary>
     /// Цвет транспортного средства
     /// </summary>
-    public required string Color { get; set; } = string.Empty;
+    public required string Color { get; set; }
     /// <summary>
     /// Пробег траспортного средства
     /// </summary>

@@ -12,7 +12,7 @@ namespace Infrastructure.Generators;
 /// </summary>
 public class VehicleModelJsonItem
 {
-    public string Make { get; set; } = string.Empty;
+    public required string Make { get; set; }
     public List<string> Models { get; set; } = new();
 }
 
