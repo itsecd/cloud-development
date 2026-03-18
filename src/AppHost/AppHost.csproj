@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\VehicleApi\VehicleApi.csproj" />
+    <ProjectReference Include="..\ApiGateway\ApiGateway.csproj" />
     <ProjectReference Include="..\..\Client.Wasm\Client.Wasm.csproj" />
   </ItemGroup>
 
