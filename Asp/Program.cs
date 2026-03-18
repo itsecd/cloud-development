@@ -25,13 +25,15 @@ builder.Services.AddStackExchangeRedisCache(options =>
 
 builder.Services.AddScoped<IVehicleContractCachedService, VehicleContractCachedService>();
 
+var clientAddress = builder.Configuration["ClientAddress"]
+    ?? throw new InvalidOperationException("ClientAddress is not configured.");
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("ClientPolicy", policy =>
     {
         policy
-            .WithOrigins("https://localhost:7282") // адрес клиента
+            .WithOrigins(clientAddress) // адрес клиента
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
