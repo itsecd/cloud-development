@@ -53,9 +53,6 @@ public class VehicleModelGenerator : IVehicleModelGenerator
             .Where(x => !string.IsNullOrWhiteSpace(x.Make) && x.Models is not null && x.Models.Count > 0)
             .ToList();
 
-        if (data.Count == 0)
-            _logger.LogWarning("No valid makes and models in file. FilePath: {FilePath}", _filePath);
-
         _items = data;
         _logger.LogInformation("Make and model data from file loaded successfully. FilePath: {FilePath}", _filePath);
         return _items;
