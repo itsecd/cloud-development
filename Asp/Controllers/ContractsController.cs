@@ -4,17 +4,10 @@ using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
 [Route("contracts")]
-public class ContractsController : ControllerBase
+public class ContractsController(IVehicleContractCachedService service, ILogger<ContractsController> logger) : ControllerBase
 {
-    private readonly IVehicleContractCachedService _service;
-    private ILogger<ContractsController> _logger;
-
-
-    public ContractsController(IVehicleContractCachedService service, ILogger<ContractsController> logger)
-    {
-        _service = service;
-        _logger = logger;
-    }
+    private readonly IVehicleContractCachedService _service = service;
+    private ILogger<ContractsController> _logger = logger;
 
 
     [HttpGet("vehicle")]
@@ -22,7 +15,6 @@ public class ContractsController : ControllerBase
     {
         var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
         var actualid = id ?? Random.Shared.Next();
-
 
        _logger.LogInformation(
        "Starting generation of vehicle contract. Ip: {IpAddress}, idFromQuery: {idFromQuery}, Actualid: {Actualid}",
