@@ -7,15 +7,10 @@ namespace Infrastructure.Generators;
 /// <summary>
 /// Класс для генерации данных
 /// </summary>
-public class VehicleContractGenerator : IVehicleContractGenerator
+public class VehicleContractGenerator(IVehicleModelGenerator vehicleModelGenerator, ILogger<VehicleContractGenerator> logger) : IVehicleContractGenerator
 {
-    private readonly IVehicleModelGenerator _vehicleModelGenerator;
-    private ILogger<VehicleContractGenerator> _logger;
-    public VehicleContractGenerator(IVehicleModelGenerator vehicleModelGenerator, ILogger<VehicleContractGenerator> logger)
-    {
-        _vehicleModelGenerator = vehicleModelGenerator;
-        _logger = logger;
-    }
+    private readonly IVehicleModelGenerator _vehicleModelGenerator = vehicleModelGenerator;
+    private ILogger<VehicleContractGenerator> _logger = logger;
     /// <summary>
     /// Функуция для генерации данных через Bogus
     /// </summary>
