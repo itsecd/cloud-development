@@ -32,10 +32,7 @@ public class VehicleModelGenerator : IVehicleModelGenerator
         if (id.HasValue)
             Randomizer.Seed = new Random(id.Value);
 
-
         var items = LoadData();
-
-
         var makeItem = _faker.PickRandom(items);
         var model = _faker.PickRandom(makeItem.Models);
         _logger.LogInformation("Make + model data generated successfully. id: {id}, Manufacture: {Make}, Model: {Model}", id, makeItem.Make, model); ;
