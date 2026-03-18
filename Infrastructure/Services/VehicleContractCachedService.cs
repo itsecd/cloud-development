@@ -35,9 +35,9 @@ public class VehicleContractCachedService : IVehicleContractCachedService
     }
 
 
-    public async Task<VehicleContractDto> GetVehicleContractAsync(int seed)
+    public async Task<VehicleContractDto> GetVehicleContractAsync(int id)
     {
-        var cacheKey = $"vehicle_contract_{seed}";
+        var cacheKey = $"vehicle_contract_{id}";
 
         _logger.LogInformation("Cache search started. CacheKey: {CacheKey}", cacheKey);
         var cachedValue = await _cache.GetStringAsync(cacheKey);
@@ -52,7 +52,7 @@ public class VehicleContractCachedService : IVehicleContractCachedService
         }
         _logger.LogWarning("Cache not found. CacheKey: {CacheKey}", cacheKey);
 
-        var contract = _generator.Generate(seed);
+        var contract = _generator.Generate(id);
         VehicleContractValidator.Validate(contract);
 
         var options = new DistributedCacheEntryOptions

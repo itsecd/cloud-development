@@ -56,23 +56,22 @@
                     <Text>Идентификатор нового объекта:</Text>
                 </Column>
                 <Column ColumnSize="ColumnSize.Is4">
-                    <NumericEdit TValue="int" @bind-Value="@Seed"/>
+                    <NumericEdit TValue="int" @bind-Value="@Id"/>
                 </Column>
                 <Column ColumnSize="ColumnSize.Is4">
                     <Button Clicked=RequestNewData Color="Color.Primary">Запросить данные  <Icon Name="IconName.ArrowRight" /></Button>
                 </Column>
             </Row>
         </CardBody>
-        <p> Время запроса: @RequestTimeMs</p>
+        <p> Время запроса: @_requestTimeMs</p>
     </Card>
 </CardDeck>
 
 @code {
     private long _requestTimeMs;
     private JsonObject? Value { get; set; }
-    private int Seed { get; set; }
+    private int Id { get; set; }
     private string? ErrorMessage { get; set; }
-    private long RequestTimeMs;
 
     private async Task RequestNewData()
     {
@@ -81,12 +80,12 @@
             ErrorMessage = null;
 
             var url = "contracts/vehicle";
-            url += $"?seed={Seed}";
+            url += $"?id={Id}";
 
             var stopwatch = Stopwatch.StartNew();
             Value = await Client.GetFromJsonAsync<JsonObject>(url);
             stopwatch.Stop();
-            RequestTimeMs = stopwatch.ElapsedMilliseconds;
+            _requestTimeMs = stopwatch.ElapsedMilliseconds;
 
         }
         catch (Exception ex)

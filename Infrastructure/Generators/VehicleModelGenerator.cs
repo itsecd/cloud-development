@@ -34,11 +34,11 @@ public class VehicleModelGenerator : IVehicleModelGenerator
     }
 
 
-    public VehicleCatalog Generate(int? seed = null)
+    public VehicleCatalog Generate(int? id = null)
     {
-        _logger.LogInformation("Generation of make + model started. Seed: {Seed}", seed);
-        if (seed.HasValue)
-            Randomizer.Seed = new Random(seed.Value);
+        _logger.LogInformation("Generation of make + model started. id: {id}", id);
+        if (id.HasValue)
+            Randomizer.Seed = new Random(id.Value);
 
 
         var items = LoadData();
@@ -46,7 +46,7 @@ public class VehicleModelGenerator : IVehicleModelGenerator
 
         var makeItem = _faker.PickRandom(items);
         var model = _faker.PickRandom(makeItem.Models);
-        _logger.LogInformation("Make + model data generated successfully. Seed: {Seed}, Manufacture: {Make}, Model: {Model}", seed, makeItem.Make, model); ;
+        _logger.LogInformation("Make + model data generated successfully. id: {id}, Manufacture: {Make}, Model: {Model}", id, makeItem.Make, model); ;
         return new VehicleCatalog
         {
             Manufacturer = makeItem.Make,

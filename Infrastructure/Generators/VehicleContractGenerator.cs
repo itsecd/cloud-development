@@ -14,10 +14,10 @@ public class VehicleContractGenerator(IVehicleModelGenerator vehicleModelGenerat
     /// <summary>
     /// Функуция для генерации данных через Bogus
     /// </summary>
-    public VehicleContractDto Generate(int seed)
+    public VehicleContractDto Generate(int id)
     {
-        _logger.LogInformation("Data generation started. Seed: {Seed}", seed);
-        Randomizer.Seed = new Random(seed);
+        _logger.LogInformation("Data generation started. id: {id}", id);
+        Randomizer.Seed = new Random(id);
 
         var currentYear = DateTime.UtcNow.Year;
         var vehicleCatalog = _vehicleModelGenerator.Generate();
@@ -38,13 +38,13 @@ public class VehicleContractGenerator(IVehicleModelGenerator vehicleModelGenerat
                         DateTime.UtcNow.Date)
                 ));
         var dto = vehicleFaker.Generate();
-        dto.SystemId = seed;
+        dto.SystemId = id;
         if (!VehicleContractValidator.ValidateBool (dto))
         {
             //throw new InvalidOperationException("Сгенерирован невалидный VehicleContractDto.");
-            _logger.LogWarning("Invalid data generated. Seed: {Seed}", seed);
+            _logger.LogWarning("Invalid data generated. id: {id}", id);
         }
-        _logger.LogInformation("Data generation completed. Seed: {Seed}", seed);
+        _logger.LogInformation("Data generation completed. id: {id}", id);
         return dto;
     }
 }

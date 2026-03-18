@@ -4,5 +4,5 @@ namespace Domain.Interfaces;
 
 public interface IVehicleModelGenerator
 {
-    public VehicleCatalog Generate(int? seed = null);
+    public VehicleCatalog Generate(int? id = null);
 }

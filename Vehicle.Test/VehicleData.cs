@@ -29,8 +29,8 @@ public class VehicleData
 
         for (var i = 0; i < 4; i++)
         {
-            var seed = Random.Shared.Next();
-            VehicleContracts.Add(_generator.Generate(seed));
+            var id = Random.Shared.Next();
+            VehicleContracts.Add(_generator.Generate(id));
         }
 
 

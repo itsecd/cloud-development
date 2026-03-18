@@ -18,19 +18,19 @@ public class ContractsController : ControllerBase
 
 
     [HttpGet("vehicle")]
-    public async Task<ActionResult<VehicleContractDto>> GenerateVehicle([FromQuery] int? seed = null)
+    public async Task<ActionResult<VehicleContractDto>> GenerateVehicle([FromQuery] int? id = null)
     {
         var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
-        var actualSeed = seed ?? Random.Shared.Next();
+        var actualid = id ?? Random.Shared.Next();
 
 
        _logger.LogInformation(
-       "Starting generation of vehicle contract. Ip: {IpAddress}, SeedFromQuery: {SeedFromQuery}, ActualSeed: {ActualSeed}",
+       "Starting generation of vehicle contract. Ip: {IpAddress}, idFromQuery: {idFromQuery}, Actualid: {Actualid}",
        ip,
-       seed,
-       actualSeed);
+       id,
+       actualid);
 
-        var contract = await _service.GetVehicleContractAsync(actualSeed);
+        var contract = await _service.GetVehicleContractAsync(actualid);
         VehicleContractValidator.Validate(contract);
         _logger.LogInformation(
         "Vehicle contract generated successfully. Ip: {IpAddress}, Manufacturer: {Manufacturer}, Model: {Model}, Year: {Year}",

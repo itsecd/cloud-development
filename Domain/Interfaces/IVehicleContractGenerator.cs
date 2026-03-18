@@ -4,5 +4,5 @@ namespace Domain.Interfaces;
 
 public interface IVehicleContractGenerator
 {
-    public VehicleContractDto Generate(int seed);
+    public VehicleContractDto Generate(int id);
 }
