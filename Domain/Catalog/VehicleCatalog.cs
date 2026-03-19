@@ -12,5 +12,5 @@ public class VehicleCatalog
     /// <summary>
     /// Поле отвечающее за модель
     /// </summary>
-    public required string Model { get; set; } 
+    public required string Model { get; set; }
 }

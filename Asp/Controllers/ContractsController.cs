@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 /// </summary>
 [ApiController]
 [Route("contracts")]
-public class ContractsController(IVehicleContractCachedService service, 
+public class ContractsController(IVehicleContractCachedService service,
     ILogger<ContractsController> logger) : ControllerBase
 {
     private readonly IVehicleContractCachedService _service = service;
@@ -24,15 +24,15 @@ public class ContractsController(IVehicleContractCachedService service,
         var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
         var actualid = id ?? Random.Shared.Next();
 
-       _logger.LogInformation(
-           "Starting generation of vehicle contract. Ip: {IpAddress}," +
-           " idFromQuery: {idFromQuery}, Actualid: {Actualid}",ip,id,actualid);
+        _logger.LogInformation(
+            "Starting generation of vehicle contract. Ip: {IpAddress}," +
+            " idFromQuery: {idFromQuery}, Actualid: {Actualid}", ip, id, actualid);
 
         var contract = await _service.GetVehicleContractAsync(actualid);
         VehicleContractValidator.Validate(contract);
         _logger.LogInformation(
         "Vehicle contract generated successfully. Ip: {IpAddress}, Manufacturer: {Manufacturer}, " +
-        "Model: {Model}, Year: {Year}",ip,contract.Manufacturer,contract.Model,contract.Year);
+        "Model: {Model}, Year: {Year}", ip, contract.Manufacturer, contract.Model, contract.Year);
 
         return Ok(contract);
     }

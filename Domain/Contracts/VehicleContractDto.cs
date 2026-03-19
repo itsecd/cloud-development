@@ -12,11 +12,11 @@ public class VehicleContractDto
     /// <summary>
     /// Вин номер транспортного средства 
     /// </summary>
-    public required string Vin { get; set; } 
+    public required string Vin { get; set; }
     /// <summary>
     /// Производитель(компания)
     /// </summary>
-    public required string Manufacturer { get; set; } 
+    public required string Manufacturer { get; set; }
     /// <summary>
     /// Модель транспортного средства
     /// </summary>

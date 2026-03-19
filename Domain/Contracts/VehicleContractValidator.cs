@@ -59,7 +59,7 @@ public class VehicleContractValidator
         if (dto.Year > DateTime.UtcNow.Year || dto.Mileage < 0 || dto.LastServiceDate < minServiceDate)
             return false;
 
-        if (string.IsNullOrWhiteSpace(dto.Vin) || string.IsNullOrWhiteSpace(dto.Manufacturer) || 
+        if (string.IsNullOrWhiteSpace(dto.Vin) || string.IsNullOrWhiteSpace(dto.Manufacturer) ||
             string.IsNullOrWhiteSpace(dto.Model) || string.IsNullOrWhiteSpace(dto.BodyType) ||
             string.IsNullOrWhiteSpace(dto.FuelType) || string.IsNullOrWhiteSpace(dto.Color))
             return false;

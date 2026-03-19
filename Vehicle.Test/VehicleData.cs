@@ -16,8 +16,9 @@ public class VehicleData
     /// <summary>
     /// Генерация моковых данных
     /// </summary>
-    /// <param name="generator"></param>
-    public VehicleData(IVehicleContractGenerator generator) {
+    /// <param name="generator">Генератор контракта</param>
+    public VehicleData(IVehicleContractGenerator generator)
+    {
         _generator = generator;
 
         for (var i = 1; i < 4; i++)

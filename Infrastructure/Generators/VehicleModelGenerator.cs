@@ -1,6 +1,4 @@
 using Bogus;
-using Domain.Catalog;
-using Domain.Interfaces;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
