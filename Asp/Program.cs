@@ -2,8 +2,6 @@ using Domain.Interfaces;
 using Infrastructure.Generators;
 using Infrastructure.Services;
 
-
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
@@ -17,11 +15,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IVehicleModelGenerator, VehicleModelGenerator>();
 builder.Services.AddScoped<IVehicleContractGenerator, VehicleContractGenerator>();
 
-
-builder.Services.AddStackExchangeRedisCache(options =>
-{
-    options.Configuration = builder.Configuration.GetConnectionString("cache");
-});
+builder.AddRedisDistributedCache("cache");
 
 builder.Services.AddScoped<IVehicleContractCachedService, VehicleContractCachedService>();
 
