@@ -1,4 +1,4 @@
-
+﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.36811.4
@@ -10,6 +10,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeneratorService", "GeneratorService\GeneratorService.csproj", "{139BD442-54A6-9109-CF9A-53DA218D46F2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeneratorService.Tests", "GeneratorService.Tests\GeneratorService.Tests.csproj", "{EBCA1829-1CB1-773B-8241-CE00EBFBCF9C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceDefaults", "ServiceDefaults\ServiceDefaults.csproj", "{9F0B1437-6E39-4706-8A9D-89BCE4B31AA0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{EBCA1829-1CB1-773B-8241-CE00EBFBCF9C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EBCA1829-1CB1-773B-8241-CE00EBFBCF9C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EBCA1829-1CB1-773B-8241-CE00EBFBCF9C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9F0B1437-6E39-4706-8A9D-89BCE4B31AA0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9F0B1437-6E39-4706-8A9D-89BCE4B31AA0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9F0B1437-6E39-4706-8A9D-89BCE4B31AA0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9F0B1437-6E39-4706-8A9D-89BCE4B31AA0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

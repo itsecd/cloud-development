@@ -17,6 +17,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\GeneratorService\GeneratorService.csproj" />
 		<ProjectReference Include="..\Client.Wasm\Client.Wasm.csproj" />
+		<ProjectReference Include="..\ServiceDefaults\ServiceDefaults.csproj" />
 	</ItemGroup>
 
 </Project>

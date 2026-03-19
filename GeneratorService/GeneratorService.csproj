@@ -18,4 +18,7 @@
     <PackageReference Include="Serilog.Sinks.OpenTelemetry" Version="4.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ServiceDefaults\ServiceDefaults.csproj" />
+  </ItemGroup>
 </Project>
