@@ -36,15 +36,28 @@ try
     builder.Services.AddScoped<PatientService>();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen(o =>
-        o.SwaggerDoc("v1", new() { Title = "GeneratorService — Medical Patient", Version = "v1" }));
+    {
+        o.SwaggerDoc("v1", new() { Title = "GeneratorService — Medical Patient", Version = "v1" });
+
+        var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+        var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+        if (File.Exists(xmlPath))
+            o.IncludeXmlComments(xmlPath);
+    });
     builder.Services.AddCors();
 
     var app = builder.Build();
 
+    var allowedOrigin = builder.Configuration["Cors:AllowedOrigin"]
+        ?? throw new InvalidOperationException("Cors:AllowedOrigin is not configured");
+
     app.UseSerilogRequestLogging();
     app.UseSwagger();
     app.UseSwaggerUI();
-    app.UseCors(policy => policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+    app.UseCors(policy => policy
+        .WithOrigins(allowedOrigin)
+        .AllowAnyMethod()
+        .AllowAnyHeader());
 
     app.MapGet("/patient", async (int id, PatientService svc, CancellationToken ct) =>
         id <= 0
@@ -53,6 +66,9 @@ try
         .WithName("GetPatient")
         .Produces<MedicalPatient>()
         .ProducesProblem(400);
+
+    app.Logger.LogInformation("CORS AllowedOrigin = {Origin}",
+    builder.Configuration["Cors:AllowedOrigin"] ?? "NOT SET");
 
     app.Run();
 }
