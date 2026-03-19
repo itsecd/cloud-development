@@ -33,7 +33,7 @@ public class MedicalPatientModel
     /// <summary>
     /// Вес - округляется до двух знаков после запятой
     /// </summary>
-    public required double Width { get; set; }
+    public required double Weight { get; set; }
 
     /// <summary>
     /// Группа крови (на рукаве) - это число от 1 до 4

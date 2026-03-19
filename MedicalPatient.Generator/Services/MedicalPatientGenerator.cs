@@ -1,8 +1,6 @@
 ﻿using Bogus;
 using Bogus.DataSets;
 using MedicalPatient.Generator.Models;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.Extensions.Logging;
 
 namespace MedicalPatient.Generator.Services;
 
@@ -18,7 +16,7 @@ public class MedicalPatientGenerator(ILogger<MedicalPatientGenerator> logger)
                     )
             .RuleFor(x => x.BirthDate, f => f.Date.PastDateOnly(100))
             .RuleFor(x => x.Height, (f, x) => GenerateHeight(f, x.BirthDate))
-            .RuleFor(x => x.Width, (f, x) => GenerateWidth(f, x.Height))
+            .RuleFor(x => x.Weight, (f, x) => GenerateWeight(f, x.Height))
             .RuleFor(m => m.BloodType, f => f.Random.Int(1, 4))
             .RuleFor(m => m.RhFactor, f => f.Random.Bool())
             .RuleFor(m => m.LastInspectionDate, (f, m) => f.Date.BetweenDateOnly(m.BirthDate, DateOnly.FromDateTime(DateTime.Now)))
@@ -31,7 +29,7 @@ public class MedicalPatientGenerator(ILogger<MedicalPatientGenerator> logger)
     /// <returns>Сгенерированный объект <see cref="MedicalPatientModel"/> с заполненными полями.</returns>
     public MedicalPatientModel Generate(int id)
     {
-        logger.LogInformation("Начало генерации медицинского пациента с ID: {Id}", id);
+        logger.LogInformation("Starting the generation of a medical patient with an ID: {Id}", id);
         var patient = _faker.Generate();
         patient.Id = id;
 
@@ -98,9 +96,9 @@ public class MedicalPatientGenerator(ILogger<MedicalPatientGenerator> logger)
     /// <param name="faker">Генератор случайных данных</param>
     /// <param name="height">Рост</param>
     /// <returns>Вес пациента, округленный до 2х знаков после запятой</returns>
-    private static double GenerateWidth(Faker faker, double height)
+    private static double GenerateWeight(Faker faker, double height)
     {
         var bmi = faker.Random.Double(15, 40);
-        return (int)(bmi * height * height);
+        return Math.Round((bmi * height * height), 2);
     }
 }

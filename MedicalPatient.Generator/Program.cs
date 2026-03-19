@@ -5,19 +5,9 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
-builder.Host.UseSerilog((context, configuration) =>
-{
-    configuration.ReadFrom.Configuration(context.Configuration);
-});
-
 builder.AddServiceDefaults();
 
-builder.Services.AddStackExchangeRedisCache(options =>
-{
-    options.Configuration = builder.Configuration.GetConnectionString("redis");
-    options.InstanceName = "medical-patient:";
-});
+builder.AddRedisDistributedCache("redis");
 
 builder.Services.AddSingleton<MedicalPatientGenerator>();
 builder.Services.AddScoped<MedicalPatientService>();
@@ -39,18 +29,19 @@ app.UseSerilogRequestLogging();
 
 app.MapDefaultEndpoints();
 
+
 app.MapGet("/medicalpatient-generator", async (
     int id,
     MedicalPatientService service,
     ILogger<Program> logger,
     CancellationToken cancellationToken) =>
 {
-    logger.LogInformation("Получен запрос на сотрудника компании с ID: {Id}", id);
+    logger.LogInformation("A request was received for a company employee with the ID: {Id}", id);
 
     if (id <= 0)
     {
-        logger.LogWarning("Неверный ID: {Id}", id);
-        return Results.BadRequest(new { error = "ID должен быть > 0" });
+        logger.LogWarning("Invalid ID: {Id}", id);
+        return Results.BadRequest(new { error = "ID must be > 0" });
     }
 
     try
@@ -60,8 +51,8 @@ app.MapGet("/medicalpatient-generator", async (
     }
     catch (Exception ex)
     {
-        logger.LogError(ex, "Ошибка при получении данных о медицинском пациенте с {Id}", id);
-        return Results.Problem("При обработке запроса произошла ошибка");
+        logger.LogError(ex, "Error when receiving data about a medical patient with {Id}", id);
+        return Results.Problem("An error occurred while processing the request");
     }
 })
 .WithName("GetMedicalPatient");

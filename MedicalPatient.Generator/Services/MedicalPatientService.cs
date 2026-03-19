@@ -37,13 +37,13 @@ public class MedicalPatientService(
 
         var cacheKey = $"{CacheKeyPrefix}{id}";
 
-        logger.LogInformation("Запрос данных о пациенте с ID: {Id}", id);
+        logger.LogInformation("Requesting data about a patient with an ID: {Id}", id);
 
         var cachedData = await cache.GetStringAsync(cacheKey, cancellationToken);
 
         if (!string.IsNullOrEmpty(cachedData))
         {
-            logger.LogInformation("Медициенский пациент с {Id} найден в кеше", id);
+            logger.LogInformation("Medical patient with {Id} found in cache", id);
             try
             {
                 var cachedPatient = JsonSerializer.Deserialize<MedicalPatientModel>(cachedData);
@@ -51,11 +51,11 @@ public class MedicalPatientService(
             }
             catch (JsonException ex)
             {
-                logger.LogWarning(ex, "Неверная структура JSON у пациента с ID {Id}", id);
+                logger.LogWarning(ex, "Invalid JSON structure for patient with ID {Id}", id);
             }
         }
 
-        logger.LogInformation("Медициенский пациент с {Id} не найден в кеше, будет сгенерирован новый", id);
+        logger.LogInformation("The medical patient with {Id} was not found in the cache, a new one will be generated", id);
 
         var patient = generator.Generate(id);
 
@@ -68,7 +68,7 @@ public class MedicalPatientService(
         await cache.SetStringAsync(cacheKey, serializedData, cacheOptions, cancellationToken);
 
         logger.LogInformation(
-            "Медициенский пациент с {Id} сохранен в кеш с TTL {CacheExpiration} м.",
+            "A medical patient with {Id} is stored in a cache with TTL {CacheExpiration} m.",
             id,
             _cacheExpiration.TotalMinutes);
 
