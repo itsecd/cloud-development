@@ -1,8 +1,5 @@
-using VehicleApi.Models;
 using VehicleApi.Services;
 using Xunit;
-using VehicleApi.Models;
-using VehicleApi.Services;
 
 namespace VehicleApi.Tests;
 
