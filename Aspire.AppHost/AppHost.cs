@@ -1,7 +1,7 @@
 var builder = DistributedApplication.CreateBuilder(args);
 var redis = builder.AddRedis("cache").WithRedisInsight();
 
-var back = builder.AddProject<Projects.Asp>("back")
+var back = builder.AddProject<Projects.Server>("back")
     .WithReference(redis)
     .WaitFor(redis);
 
