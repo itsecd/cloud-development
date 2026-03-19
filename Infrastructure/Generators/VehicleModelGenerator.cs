@@ -9,35 +9,26 @@ namespace Infrastructure.Generators;
 /// <summary>
 ///  Класс для генерации правильных данных производитель + модель 
 /// </summary>
-public class VehicleModelGenerator : IVehicleModelGenerator
+public class VehicleModelGenerator(ILogger<VehicleModelGenerator> logger) : IVehicleModelGenerator
 {
-    private readonly string _filePath;
+    private readonly string _filePath = Path.Combine(AppContext.BaseDirectory, "Catalog", "vehicleModels.json");
     private List<VehicleModelJsonItem>? _items;
-    private readonly ILogger<VehicleModelGenerator> _logger;
-    private readonly Faker _faker;
     private static readonly JsonSerializerOptions _jsonSerializerOptions = new()
     {
         PropertyNameCaseInsensitive = true
     };
 
-    public VehicleModelGenerator(ILogger<VehicleModelGenerator> logger, Faker? faker = null)
-    {
-        _filePath = Path.Combine(AppContext.BaseDirectory, "Catalog", "vehicleModels.json"); ;
-        _logger = logger;
-        _faker = faker ?? new Faker();
-    }
-
     public List<VehicleModelJsonItem> Generate()
     {
-        _logger.LogInformation("Loading of make + model dataset started. FilePath: {FilePath}", _filePath);
+        logger.LogInformation("Loading of make + model dataset started. FilePath: {FilePath}", _filePath);
         if (_items is not null)
         {
-            _logger.LogInformation("Dataset already loaded. FilePath: {FilePath}", _filePath);
+            logger.LogInformation("Dataset already loaded. FilePath: {FilePath}", _filePath);
             return _items;
         }
 
         if (!File.Exists(_filePath))
-            _logger.LogWarning("Dataset file not found. FilePath: {FilePath}", _filePath);
+            logger.LogWarning("Dataset file not found. FilePath: {FilePath}", _filePath);
 
         var json = File.ReadAllText(_filePath);
 
@@ -52,7 +43,7 @@ public class VehicleModelGenerator : IVehicleModelGenerator
             .ToList();
 
         _items = data;
-        _logger.LogInformation("Make and model data from file loaded successfully. FilePath: {FilePath}", _filePath);
+        logger.LogInformation("Make and model data from file loaded successfully. FilePath: {FilePath}", _filePath);
         return _items;
     }
 }

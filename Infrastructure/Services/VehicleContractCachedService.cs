@@ -16,9 +16,6 @@ public class VehicleContractCachedService(
         ILogger<VehicleContractCachedService> logger,
         IConfiguration configuration) : IVehicleContractCachedService
 {
-    private readonly IVehicleContractGenerator _generator = generator;
-    private readonly IDistributedCache _cache = cache;
-    private ILogger<VehicleContractCachedService> _logger = logger;
     private readonly int _cacheExpirationMinutes = configuration.GetValue<int>(
             "CacheSettings:VehicleContractExpirationMinutes");
     /// <summary>
@@ -28,20 +25,20 @@ public class VehicleContractCachedService(
     {
         var cacheKey = $"vehicle_contract_{id}";
 
-        _logger.LogInformation("Cache search started. CacheKey: {CacheKey}", cacheKey);
-        var cachedValue = await _cache.GetStringAsync(cacheKey);
+        logger.LogInformation("Cache search started. CacheKey: {CacheKey}", cacheKey);
+        var cachedValue = await cache.GetStringAsync(cacheKey);
 
         if (!string.IsNullOrWhiteSpace(cachedValue))
         {
-            _logger.LogInformation("Cache found. CacheKey: {CacheKey}", cachedValue);
+            logger.LogInformation("Cache found. CacheKey: {CacheKey}", cachedValue);
             var cachedContract = JsonSerializer.Deserialize<VehicleContractDto>(cachedValue);
 
             if (cachedContract is not null)
                 return cachedContract;
         }
-        _logger.LogWarning("Cache not found. CacheKey: {CacheKey}", cacheKey);
+        logger.LogWarning("Cache not found. CacheKey: {CacheKey}", cacheKey);
 
-        var contract = _generator.Generate(id);
+        var contract = generator.Generate(id);
 
         var options = new DistributedCacheEntryOptions
         {
@@ -50,8 +47,8 @@ public class VehicleContractCachedService(
 
         var json = JsonSerializer.Serialize(contract);
 
-        await _cache.SetStringAsync(cacheKey, json, options);
-        _logger.LogWarning("Entry added to cache. CacheKey: {CacheKey}", cacheKey);
+        await cache.SetStringAsync(cacheKey, json, options);
+        logger.LogWarning("Entry added to cache. CacheKey: {CacheKey}", cacheKey);
         return contract;
     }
 }

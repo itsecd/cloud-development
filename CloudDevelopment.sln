@@ -9,7 +9,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domain", "Domain\Domain.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infrastructure", "Infrastructure\Infrastructure.csproj", "{3A4E53A1-8D84-492D-BCD3-7E59921266EF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server", "Asp\Server.csproj", "{5A7C0854-7B0C-4A14-9FFC-84A3EF229BB2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server", "Server\Server.csproj", "{5A7C0854-7B0C-4A14-9FFC-84A3EF229BB2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.AppHost", "Aspire.AppHost\Aspire.AppHost.csproj", "{F10BC4D5-2B2F-4A83-BD63-B66DAA372139}"
 EndProject
