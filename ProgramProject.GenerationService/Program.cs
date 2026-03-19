@@ -11,28 +11,6 @@ builder.AddServiceDefaults();
 
 builder.AddRedisDistributedCache("cache");
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowClient", policy =>
-    {
-        policy.SetIsOriginAllowed(origin =>
-        {
-            try
-            {
-                var uri = new Uri(origin);
-                return uri.Host == "localhost";
-            }
-            catch
-            {
-                return false;
-            }
-        })
-        .WithMethods("GET")
-        .AllowAnyHeader()
-        .AllowCredentials();
-    });
-});
-
 builder.Services.AddSingleton<IProgramProjectFaker, ProgramProjectFaker>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 

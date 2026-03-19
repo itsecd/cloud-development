@@ -6,9 +6,7 @@
       "UpstreamPathTemplate": "/api/projects",
       "UpstreamHttpMethod": [ "GET" ],
       "HttpHandlerOptions": {
-        "AllowAutoRedirect": false,
-        "UseProxy": true,
-        "UseTracing": true
+        "AllowAutoRedirect": false
       },
       "LoadBalancerOptions": {
         "Type": "QueryBasedLoadBalancer",

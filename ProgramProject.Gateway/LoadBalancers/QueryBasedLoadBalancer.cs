@@ -9,21 +9,14 @@ namespace ProgramProject.Gateway.LoadBalancers;
 /// Балансировщик для алгоритма Query Based
 /// Распределяет запросы на основе query-параметра id
 /// </summary>
-public class QueryBasedLoadBalancer : ILoadBalancer
+public class QueryBasedLoadBalancer(Func<Task<List<Service>>> serviceFactory, ILogger<QueryBasedLoadBalancer> logger, 
+    string queryParameterName = "id") : ILoadBalancer
 {
-    private readonly ILogger<QueryBasedLoadBalancer> _logger;
-    private readonly string _queryParameterName;
-    private readonly Func<Task<List<Service>>> _serviceFactory;
+    private readonly Func<Task<List<Service>>> _serviceFactory = serviceFactory ?? throw new ArgumentNullException(nameof(serviceFactory));
+    private readonly ILogger<QueryBasedLoadBalancer> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly string _queryParameterName = queryParameterName;
 
-    public QueryBasedLoadBalancer(Func<Task<List<Service>>> serviceFactory, ILogger<QueryBasedLoadBalancer> logger,
-        string queryParameterName = "id")
-    {
-        _serviceFactory = serviceFactory ?? throw new ArgumentNullException(nameof(serviceFactory));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _queryParameterName = queryParameterName;
-    }
-
-    public string Type => "QueryBased";
+    public string Type => nameof(QueryBasedLoadBalancer);
 
     public async Task<Response<ServiceHostAndPort>> LeaseAsync(HttpContext httpContext)
     {
@@ -31,7 +24,7 @@ public class QueryBasedLoadBalancer : ILoadBalancer
         {
             var services = await _serviceFactory();
 
-            if (services == null || services.Count == 0)
+            if (services.Count == 0)
             {
                 _logger.LogError("Нет доступных сервисов для балансировки");
                 return new ErrorResponse<ServiceHostAndPort>(new ServicesAreEmptyError("Нет доступных реплик"));
