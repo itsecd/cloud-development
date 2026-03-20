@@ -14,7 +14,6 @@ public class QueryBasedLoadBalancer(Func<Task<List<Service>>> serviceFactory, IL
 {
     private readonly Func<Task<List<Service>>> _serviceFactory = serviceFactory ?? throw new ArgumentNullException(nameof(serviceFactory));
     private readonly ILogger<QueryBasedLoadBalancer> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    private readonly string _queryParameterName = queryParameterName;
 
     public string Type => nameof(QueryBasedLoadBalancer);
 
@@ -49,7 +48,7 @@ public class QueryBasedLoadBalancer(Func<Task<List<Service>>> serviceFactory, IL
 
     private int ExtractIdFromQuery(HttpContext context)
     {
-        if (context.Request.Query.TryGetValue(_queryParameterName, out var idString))
+        if (context.Request.Query.TryGetValue(queryParameterName, out var idString))
         {
             if (int.TryParse(idString, out var id))
             {
@@ -58,11 +57,11 @@ public class QueryBasedLoadBalancer(Func<Task<List<Service>>> serviceFactory, IL
             }
 
             _logger.LogWarning("Параметр {Param} содержит не число: {Value}",
-                _queryParameterName, idString);
+                queryParameterName, idString);
         }
         else
         {
-            _logger.LogDebug("Параметр {Param} отсутствует в запросе", _queryParameterName);
+            _logger.LogDebug("Параметр {Param} отсутствует в запросе", queryParameterName);
         }
 
         return 0;
