@@ -1,8 +1,11 @@
+using Amazon.SimpleNotificationService;
+using Amazon.SQS;
 using CreditApp.Application.Interfaces;
 using CreditApp.ServiceDefaults;
 using CreditApp.Application.Options;
 using CreditApp.Application.Services;
 using CreditApp.Infrastructure.Generators;
+using MassTransit;
 using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,6 +19,27 @@ builder.Services.Configure<CacheOptions>(
     builder.Configuration.GetSection(CacheOptions.SectionName));
 
 builder.Services.AddScoped<ICreditService, CreditService>();
+
+var awsServiceUrl = builder.Configuration["Aws:ServiceUrl"] ?? "http://localhost:4566";
+var awsRegion = builder.Configuration["Aws:Region"] ?? "us-east-1";
+var awsAccessKey = builder.Configuration["Aws:AccessKey"] ?? "test";
+var awsSecretKey = builder.Configuration["Aws:SecretKey"] ?? "test";
+
+builder.Services.AddMassTransit(x =>
+{
+    x.UsingAmazonSqs((context, cfg) =>
+    {
+        cfg.Host(awsRegion, h =>
+        {
+            h.Config(new AmazonSQSConfig { ServiceURL = awsServiceUrl });
+            h.Config(new AmazonSimpleNotificationServiceConfig { ServiceURL = awsServiceUrl });
+            h.AccessKey(awsAccessKey);
+            h.SecretKey(awsSecretKey);
+        });
+
+        cfg.ConfigureEndpoints(context);
+    });
+});
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

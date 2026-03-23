@@ -4,21 +4,15 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-	<GenerateDocumentationFile>true</GenerateDocumentationFile>
-	<NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.StackExchange.Redis" Version="13.1.1" />
-    <PackageReference Include="Aspire.StackExchange.Redis.DistributedCaching" Version="13.1.1" />
+    <PackageReference Include="AWSSDK.S3" Version="3.*" />
     <PackageReference Include="MassTransit.AmazonSQS" Version="8.3.6" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.3" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\CreditApp.Application\CreditApp.Application.csproj" />
-    <ProjectReference Include="..\CreditApp.Domain\CreditApp.Domain.csproj" />
-    <ProjectReference Include="..\CreditApp.Infrastructure\CreditApp.Infrastructure.csproj" />
     <ProjectReference Include="..\CreditApp\CreditApp.ServiceDefaults\CreditApp.ServiceDefaults.csproj" />
   </ItemGroup>
 

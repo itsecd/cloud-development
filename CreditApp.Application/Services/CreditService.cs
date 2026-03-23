@@ -1,7 +1,9 @@
 ﻿using System.Text.Json;
 using CreditApp.Application.Interfaces;
+using CreditApp.Application.Messages;
 using CreditApp.Application.Options;
 using CreditApp.Domain.Entities;
+using MassTransit;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -10,6 +12,7 @@ namespace CreditApp.Application.Services;
 
 public class CreditService(IDistributedCache distributedCache,
     ICreditApplicationGenerator generator,
+    IPublishEndpoint publishEndpoint,
     IOptions<CacheOptions> cacheOptions,
     ILogger<CreditService> logger)
     : ICreditService
@@ -58,6 +61,9 @@ public class CreditService(IDistributedCache distributedCache,
         {
             logger.LogWarning(ex, "Cache write failed for {CacheKey}", cacheKey);
         }
+
+        await publishEndpoint.Publish(new CreditApplicationCreated(credit), ct);
+        logger.LogInformation("Published CreditApplicationCreated for {CreditId}", id);
 
         return credit;
     }

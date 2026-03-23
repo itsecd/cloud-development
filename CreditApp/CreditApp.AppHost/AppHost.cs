@@ -3,12 +3,24 @@ var builder = DistributedApplication.CreateBuilder(args);
 var redis = builder.AddRedis("credit-cache")
                    .WithRedisInsight(containerName: "credit-redis-insight");
 
+var localstack = builder.AddContainer("localstack", "localstack/localstack")
+    .WithEndpoint(port: 4566, targetPort: 4566, name: "localstack", scheme: "http")
+    .WithEnvironment("SERVICES", "s3,sns,sqs")
+    .WithEnvironment("DEFAULT_REGION", "us-east-1")
+    .WithEnvironment("AWS_DEFAULT_REGION", "us-east-1")
+    .WithHttpHealthCheck(path: "/_localstack/health", endpointName: "localstack");
+
 var replicaPorts = new Dictionary<string, (int Http, int Https)>
 {
     ["credit-api-1"] = (7001, 7081),
     ["credit-api-2"] = (7002, 7082),
     ["credit-api-3"] = (7003, 7083),
 };
+
+var fileService = builder.AddProject<Projects.CreditApp_FileService>("creditapp-fileservice")
+    .WithReference(localstack.GetEndpoint("localstack"))
+    .WaitFor(localstack)
+    .WithEnvironment("Aws__ServiceUrl", localstack.GetEndpoint("localstack"));
 
 var apiReplicas = new List<IResourceBuilder<ProjectResource>>();
 
@@ -18,7 +30,11 @@ foreach (var (name, (httpPort, httpsPort)) in replicaPorts)
         .WithEndpoint("http", endpoint => endpoint.Port = httpPort)
         .WithEndpoint("https", endpoint => endpoint.Port = httpsPort)
         .WithReference(redis)
-        .WaitFor(redis);
+        .WaitFor(redis)
+        .WithReference(localstack.GetEndpoint("localstack"))
+        .WaitFor(localstack)
+        .WaitFor(fileService)
+        .WithEnvironment("Aws__ServiceUrl", localstack.GetEndpoint("localstack"));
 
     apiReplicas.Add(replica);
 }

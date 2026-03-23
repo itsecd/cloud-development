@@ -19,6 +19,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CreditApp.Infrastructure", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CreditApp.Gateway", "CreditApp.Gateway\CreditApp.Gateway.csproj", "{3BA8A38C-6AFF-C134-67A1-BC28FDD7ACF1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CreditApp.FileService", "CreditApp.FileService\CreditApp.FileService.csproj", "{9FB93C0A-039C-9B30-1599-38D087B50EBF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CreditApp.IntegrationTests", "CreditApp.IntegrationTests\CreditApp.IntegrationTests.csproj", "{A43154C5-BAD4-438C-BF07-DFCA7F60C1B4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -57,6 +61,14 @@ Global
 		{3BA8A38C-6AFF-C134-67A1-BC28FDD7ACF1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3BA8A38C-6AFF-C134-67A1-BC28FDD7ACF1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3BA8A38C-6AFF-C134-67A1-BC28FDD7ACF1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9FB93C0A-039C-9B30-1599-38D087B50EBF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9FB93C0A-039C-9B30-1599-38D087B50EBF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9FB93C0A-039C-9B30-1599-38D087B50EBF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9FB93C0A-039C-9B30-1599-38D087B50EBF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A43154C5-BAD4-438C-BF07-DFCA7F60C1B4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A43154C5-BAD4-438C-BF07-DFCA7F60C1B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A43154C5-BAD4-438C-BF07-DFCA7F60C1B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A43154C5-BAD4-438C-BF07-DFCA7F60C1B4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
