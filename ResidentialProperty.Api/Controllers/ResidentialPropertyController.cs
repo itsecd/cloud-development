@@ -17,6 +17,10 @@ public class ResidentialPropertyController(
     /// <param name="cancellationToken">Токен отмены операции</param>
     /// <returns>Объект жилого строительства</returns>
     [HttpGet]
+    [ProducesResponseType(typeof(ResidentialPropertyEntity), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<ResidentialPropertyEntity>> GetById([FromQuery] int id, CancellationToken cancellationToken)
     {
         logger.LogInformation("Received request to retrieve/generate property {Id}", id);

@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Caching.Distributed;
-using ResidentialProperty.Api.Services.ResidentialPropertyGeneratorService;
 using ResidentialProperty.Domain.Entities;
 using System.Text.Json;
 
@@ -30,14 +29,33 @@ public class ResidentialPropertyGeneratorService(
         var cacheKey = $"residential-property-{id}";
 
         // Получаем объект из кэша
-        ResidentialPropertyEntity? property = null;
+        var property = await GetFromCacheAsync(cacheKey, id, cancellationToken);
+
+        if (property != null)
+        {
+            return property;
+        }
+
+        // Если в кэше нет или ошибка — генерируем новый объект
+        logger.LogInformation("Property {Id} not found in cache or cache unavailable, generating a new one", id);
+        property = generator.Generate();
+        property.Id = id;
+
+        // Попытка сохранить в кэш
+        await SaveToCacheAsync(cacheKey, property, cancellationToken);
+
+        return property;
+    }
+
+    private async Task<ResidentialPropertyEntity?> GetFromCacheAsync(string cacheKey, int id, CancellationToken cancellationToken)
+    {
         try
         {
             var cachedData = await cache.GetStringAsync(cacheKey, cancellationToken);
 
             if (!string.IsNullOrEmpty(cachedData))
             {
-                property = JsonSerializer.Deserialize<ResidentialPropertyEntity>(cachedData);
+                var property = JsonSerializer.Deserialize<ResidentialPropertyEntity>(cachedData);
 
                 if (property != null)
                 {
@@ -53,15 +71,14 @@ public class ResidentialPropertyGeneratorService(
             logger.LogWarning(ex, "Failed to retrieve property {Id} from cache (error ignored)", id);
         }
 
-        // Если в кэше нет или ошибка — генерируем новый объект
-        logger.LogInformation("Property {Id} not found in cache or cache unavailable, generating a new one", id);
-        property = generator.Generate();
-        property.Id = id;
+        return null;
+    }
 
-        // Попытка сохранить в кэш
+    private async Task SaveToCacheAsync(string cacheKey, ResidentialPropertyEntity property, CancellationToken cancellationToken)
+    {
         try
         {
-            logger.LogInformation("Saving property {Id} to cache", id);
+            logger.LogInformation("Saving property {Id} to cache", property.Id);
 
             var cacheOptions = new DistributedCacheEntryOptions
             {
@@ -84,9 +101,7 @@ public class ResidentialPropertyGeneratorService(
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "Failed to save property {Id} to cache (error ignored)", id);
+            logger.LogWarning(ex, "Failed to save property {Id} to cache (error ignored)", property.Id);
         }
-
-        return property;
     }
 }

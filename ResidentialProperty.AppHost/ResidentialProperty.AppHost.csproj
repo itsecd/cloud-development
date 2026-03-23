@@ -1,20 +1,24 @@
-﻿<Project Sdk="Aspire.AppHost.Sdk/13.1.0">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <UserSecretsId>c0442ce5-33ff-46f9-8634-132dc4b6abb8</UserSecretsId>
-  </PropertyGroup>
+	<Sdk Name="Aspire.AppHost.Sdk" Version="9.5.2" />
 
-  <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.Redis" Version="13.1.2" />
-  </ItemGroup>
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<IsAspireHost>true</IsAspireHost>
+		<UserSecretsId>c0442ce5-33ff-46f9-8634-132dc4b6abb8</UserSecretsId>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Client.Wasm\Client.Wasm.csproj" />
-    <ProjectReference Include="..\ResidentialProperty.Api\ResidentialProperty.Api.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Aspire.Hosting.AppHost" Version="9.5.2" />
+		<PackageReference Include="Aspire.Hosting.Redis" Version="9.5.2" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Client.Wasm\Client.Wasm.csproj" />
+		<ProjectReference Include="..\ResidentialProperty.Api\ResidentialProperty.Api.csproj" />
+	</ItemGroup>
 
 </Project>
