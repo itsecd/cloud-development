@@ -5,6 +5,12 @@ VisualStudioVersion = 17.14.36811.4
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client.Wasm", "Client.Wasm\Client.Wasm.csproj", "{AE7EEA74-2FE0-136F-D797-854FD87E022A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VehicleVault.AppHost", "VehicleVault\VehicleVault.AppHost\VehicleVault.AppHost.csproj", "{675E2979-6231-45C9-A79D-E8D1BE095D7E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VehicleVault.ServiceDefaults", "VehicleVault\VehicleVault.ServiceDefaults\VehicleVault.ServiceDefaults.csproj", "{2691D15C-C371-2A92-5FA1-3FA8EDE4BFA9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VehicleVault.Api", "VehicleVault.Api\VehicleVault.Api.csproj", "{EEC635D9-1FAB-BCC6-17E0-3EE52C2D262C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +21,18 @@ Global
 		{AE7EEA74-2FE0-136F-D797-854FD87E022A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AE7EEA74-2FE0-136F-D797-854FD87E022A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AE7EEA74-2FE0-136F-D797-854FD87E022A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{675E2979-6231-45C9-A79D-E8D1BE095D7E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{675E2979-6231-45C9-A79D-E8D1BE095D7E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{675E2979-6231-45C9-A79D-E8D1BE095D7E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{675E2979-6231-45C9-A79D-E8D1BE095D7E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2691D15C-C371-2A92-5FA1-3FA8EDE4BFA9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2691D15C-C371-2A92-5FA1-3FA8EDE4BFA9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2691D15C-C371-2A92-5FA1-3FA8EDE4BFA9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2691D15C-C371-2A92-5FA1-3FA8EDE4BFA9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EEC635D9-1FAB-BCC6-17E0-3EE52C2D262C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EEC635D9-1FAB-BCC6-17E0-3EE52C2D262C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EEC635D9-1FAB-BCC6-17E0-3EE52C2D262C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EEC635D9-1FAB-BCC6-17E0-3EE52C2D262C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
