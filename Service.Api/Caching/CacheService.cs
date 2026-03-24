@@ -7,8 +7,8 @@ namespace Service.Api.Caching;
 /// <summary>
 /// Служба для с кэшем сотрудников компании
 /// </summary>
-/// <param name="cache"></param>
-/// <param name="logger"></param>
+/// <param name="cache">Кэш</param>
+/// <param name="logger">Логгер</param>
 public class CacheService(IDistributedCache cache, ILogger<CacheService> logger) : ICacheService
 {
     /// <summary>
