@@ -1,0 +1,25 @@
+{
+  "Routes": [
+    {
+      "DownstreamPathTemplate": "/api/vehicles",
+      "DownstreamScheme": "https",
+      "UpstreamPathTemplate": "/vehicles",
+      "UpstreamHttpMethod": [ "GET" ],
+      "LoadBalancerOptions": {
+        "Type": "QueryBased"
+      },
+      "DownstreamHostAndPorts": [
+        { "Host": "localhost", "Port": 5000 },
+        { "Host": "localhost", "Port": 5001 },
+        { "Host": "localhost", "Port": 5002 },
+        { "Host": "localhost", "Port": 5003 },
+        { "Host": "localhost", "Port": 5004 },
+        { "Host": "localhost", "Port": 5005 },
+        { "Host": "localhost", "Port": 5006 }
+      ]
+    }
+  ],
+  "GlobalConfiguration": {
+    "BaseUrl": "https://localhost:7163"
+  }
+}
