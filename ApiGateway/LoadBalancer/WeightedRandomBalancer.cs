@@ -9,14 +9,11 @@ namespace ApiGateway.LoadBalancer;
 /// Балансировщик с взвешенным случайным выбором реплики сервиса.
 /// </summary>
 /// <param name="services">Все доступные экземпляры сервиса из service discovery.</param>
-/// <param name="weights">Набор весов для эндпоинтов в формате key:"host_port" value:"weight".
+/// <param name="weights">Набор весов для эндпоинтов в формате name:"service-name-{i}" value:"weight".
 /// </param>
 public class WeightedRandomBalancer(Func<Task<List<Service>>> services, Dictionary<string, double> weights) : ILoadBalancer
 {
     public string Type => nameof(WeightedRandomBalancer);
-
-    private readonly Func<Task<List<Service>>> _services = services;
-    private readonly Dictionary<string, double> _weights = weights;
 
     /// <summary>
     /// Выбирает реплику сервиса по алгоритму weighted random.
@@ -24,10 +21,10 @@ public class WeightedRandomBalancer(Func<Task<List<Service>>> services, Dictiona
     /// <param name="services">Список доступных сервисов.</param>
     /// <param name="weights">Словарь весов для всех сервисов.</param>
     /// <returns>Выбранная реплика сервиса.</returns>
-    private Service GetServiceByWeight(List<Service> services, Dictionary<string, double> weights)
+    private static Service GetServiceByWeight(List<Service> services, Dictionary<string, double> weights)
     {
         var cumulativeWeights = new double[services.Count];
-        double sum = 0;
+        var sum = 0.0;
         for (var i = 0; i < services.Count; ++i)
         {
             var service = services[i];
@@ -43,7 +40,7 @@ public class WeightedRandomBalancer(Func<Task<List<Service>>> services, Dictiona
             return services[Random.Shared.Next(services.Count)];
         }
 
-        var randomValue = Random.Shared.NextDouble();
+        var randomValue = Random.Shared.NextDouble() * sum;
 
         var index = Array.BinarySearch(cumulativeWeights, randomValue);
         if (index < 0)
@@ -62,15 +59,15 @@ public class WeightedRandomBalancer(Func<Task<List<Service>>> services, Dictiona
     /// <returns>Выбранный адрес сервиса или ошибка, если сервисы недоступны.</returns>
     public async Task<Response<ServiceHostAndPort>> LeaseAsync(HttpContext httpContext)
     {
-        var services = await _services.Invoke();
-        if (services == null || services.Count == 0)
+        var allServices = await services.Invoke();
+        if (allServices == null || allServices.Count == 0)
         {
             return new ErrorResponse<ServiceHostAndPort>(
                 new ServicesAreNullError("No services available")
             );
         }
 
-        var selectedService = GetServiceByWeight(services, _weights);
+        var selectedService = GetServiceByWeight(allServices, weights);
 
         return new OkResponse<ServiceHostAndPort>(selectedService.HostAndPort);
     }

@@ -12,7 +12,9 @@ for (var i = 0; i < 5; ++i)
         .WithReference(cache, "RedisCache")
         .WaitFor(cache)
         .WithHttpHealthCheck("/health");
-    gateway.WaitFor(generationService);
+    gateway
+        .WithReference(generationService)
+        .WaitFor(generationService);
 }
 
 builder.AddProject<Projects.Client_Wasm>("client")
