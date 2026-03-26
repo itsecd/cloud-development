@@ -1,0 +1,20 @@
+{
+  "Routes": [
+    {
+      "UpstreamPathTemplate": "/software-projects",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DownstreamPathTemplate": "/api/software-projects",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        { "Host": "localhost", "Port": 5200 },
+        { "Host": "localhost", "Port": 5201 },
+        { "Host": "localhost", "Port": 5202 },
+        { "Host": "localhost", "Port": 5203 },
+        { "Host": "localhost", "Port": 5204 }
+      ],
+      "LoadBalancerOptions": {
+        "Type": "WeightedRandomLoadBalancer"
+      }
+    }
+  ]
+}

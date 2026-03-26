@@ -1,6 +1,6 @@
-using System.Text.Json;
 using Microsoft.Extensions.Caching.Distributed;
 using SoftwareProjects.Api.Entities;
+using System.Text.Json;
 
 namespace SoftwareProjects.Api.Services;
 
@@ -12,7 +12,7 @@ public class SoftwareProjectCacheService(
     IConfiguration configuration,
     ILogger<SoftwareProjectCacheService> logger) : ISoftwareProjectCacheService
 {
-    private readonly int _cacheExpirationMinutes = configuration.GetValue<int>("CacheExpirationMinutes", 5);
+    private readonly int _cacheExpirationMinutes = configuration.GetValue("CacheExpirationMinutes", 5);
 
     /// <summary>
     /// Получает программный проект из кэша по идентификатору
