@@ -24,7 +24,7 @@ public class ResidentialPropertyGenerator
             .RuleFor(p => p.TotalFloors, f => f.Random.Number(1, 25))
             .RuleFor(p => p.Floor, (f, p) =>
                 p.PropertyType == "ИЖС" ? null : f.Random.Number(1, p.TotalFloors))
-            .RuleFor(p => p.CadastralNumber, f => f.Random.ReplaceNumbers("##.##.##.######.####"))
+            .RuleFor(p => p.CadastralNumber, f => f.Random.ReplaceNumbers("##:##:#######:####"))
             .RuleFor(p => p.CadastralValue, (f, p) =>
                 Math.Round((decimal)(p.TotalArea * f.Random.Double(50000, 150000)), 2));
     }
