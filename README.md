@@ -1,4 +1,4 @@
-﻿# Лабораторная работа №1 — «Кэширование»
+﻿# Лабораторная работа №2 — «Балансировщик»
 
 ## Вариант 16 — «Учебный курс»
 
@@ -13,6 +13,7 @@
 - Структурное логирование сервиса генерации
 - Оркестрация всех компонентов через .NET Aspire
 - Blazor WebAssembly клиент для отображения данных
+- Кастомный балансировщик нагрузки Weighted Round Robin для API Gateway
 
 ## Стек технологий
 
@@ -22,6 +23,7 @@
 - Redis (v9.3.1) — распределённое кэширование
 - RedisInsight — визуализация данных в Redis
 - Blazor WebAssembly — клиентское приложение
+- Ocelot — API Gateway
 
 
 ## Структура проекта
@@ -32,6 +34,7 @@
 | `TrainingCourse.AppHost` | Aspire-оркестратор |
 | `TrainingCourse.ServiceDefaults` | Общие настройки сервисов |
 | `Client.Wasm` | Клиент |
+| `TrainingCourseApp.Gateway` | API Gateway с кастомным балансировщиком |
 
 ## Характеристики создаваемых курсов
 
@@ -48,13 +51,22 @@
 | 9 | Стоимость курса | decimal | Math.Round(Random.Decimal(5000, 50000), 2) |
 | 10 | Рейтинг курса | int | Random.Int(1, 5) |
 
+## Балансировка нагрузки
+
+Используется балансировщик нагрузки **Weighted Round Robin** для API Gateway, который обеспечивает распределение запросов между несколькими экземплярами сервиса `TrainingCourse.Api` с учётом их весовых коэффициентов. Чем выше вес указан у сервера, тем чаще он будет получаться запросы.
+
 ## Скриншоты
 
 ### Aspire Dashboard
-![Aspire Dashboard](AspireWork.png)
+![Aspire Dashboard](Images/AspireWork_withGateway.png)
 
 ### Клиент
-![Client](WorkApp.png)
+![Client](Images/WorkApp.png)
 
 ### Кэширование
-![Cache](WorkCaсhe.png)
+![Cache](Images/WorkCaсhe.png)
+
+### Балансировка
+![Balance1](Images/WorkBalancer8000.png)
+![Balance1](Images/WorkBalancer8001.png)
+![Balance1](Images/WorkBalancer8002.png)
