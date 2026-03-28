@@ -17,18 +17,18 @@ public class PatientService(
     {
         var cacheKey = $"{CacheKeyPrefix}{id}";
 
-        logger.LogInformation($"Patient with Id: {id} was requested");
+        logger.LogInformation("Patient with Id: {id} was requested", id);
 
         var cachedData = await cache.GetStringAsync(cacheKey, cancellationToken);
 
         if (!string.IsNullOrEmpty(cachedData))
         {
-            logger.LogInformation($"Patient with {id} was found in cache");
+            logger.LogInformation("Patient with {id} was found in cache", id);
             var cachedPatient = JsonSerializer.Deserialize<Patient>(cachedData);
             if (cachedPatient != null) return cachedPatient;
         }
 
-        logger.LogInformation($"Patient with {id} was found in cache, start generating");
+        logger.LogInformation("Patient with {id} was found in cache, start generating", id);
 
         var patient = generator.Generate(id);
 
@@ -40,7 +40,7 @@ public class PatientService(
 
         await cache.SetStringAsync(cacheKey, serializedData, cacheOptions, cancellationToken);
 
-        logger.LogInformation($"Patint with Id: {id} was saved to cache with TTL {_cacheExpiration.TotalMinutes} minutes");
+        logger.LogInformation("Patint with Id: {id} was saved to cache with TTL {TtlMinutes} minutes", id, _cacheExpiration.TotalMinutes);
 
         return patient;
     }

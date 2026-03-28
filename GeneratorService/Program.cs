@@ -11,11 +11,15 @@ builder.AddRedisDistributedCache("redis");
 builder.Services.AddSingleton<PatientGenerator>();
 builder.Services.AddScoped<PatientService>();
 
+var allowedOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>();
+
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.WithOrigins(allowedOrigins!)
               .AllowAnyMethod()
               .AllowAnyHeader();
     });
@@ -34,12 +38,12 @@ app.MapGet("/patient", async (
     ILogger<Program> logger,
     CancellationToken cancellationToken) =>
 {
-    logger.LogInformation($"Received request for patient with ID: {id}");
+    logger.LogInformation("Received request for patient with ID: {id}", id);
 
     if (id <= 0)
     {
-        logger.LogWarning($"Received invalid ID: {id}");
-        return Results.BadRequest(new { error = "ID must be a positive number" });
+        logger.LogWarning("Received invalid ID: {id}", id);
+        return Results.BadRequest(new { error = "ID must be a positive number"});
     }
 
     try
@@ -49,7 +53,7 @@ app.MapGet("/patient", async (
     }
     catch (Exception ex)
     {
-        logger.LogError(ex, $"Error while getting patient {id}");
+        logger.LogError(ex, "Error while getting patient {id}", id);
         return Results.Problem("An error occurred while processing the request");
     }
 })

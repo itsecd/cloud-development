@@ -5,9 +5,11 @@ var redis = builder.AddRedis("redis")
 
 var generator = builder.AddProject<Projects.PatientApp_Generator>("generator")
     .WithReference(redis)
+    .WaitFor(redis)
     .WithExternalHttpEndpoints();
 
 builder.AddProject<Projects.Client_Wasm>("client")
-    .WithReference(generator);
+    .WithReference(generator)
+    .WaitFor(generator);
 
 builder.Build().Run();

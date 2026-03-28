@@ -30,6 +30,8 @@ public static class Extensions
 
     public static IHostApplicationBuilder ConfigureSerilog(this IHostApplicationBuilder builder)
     {
+        var otlpEndpoint = builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"];
+
         Log.Logger = new LoggerConfiguration()
             .ReadFrom.Configuration(builder.Configuration)
             .Enrich.FromLogContext()
@@ -39,6 +41,28 @@ public static class Extensions
             .WriteTo.Console(outputTemplate:
                 "[{Timestamp:HH:mm:ss} {Level:u3}] [{SourceContext}] {Message:lj}{NewLine}{Exception}")
             .CreateLogger();
+
+        if (!string.IsNullOrWhiteSpace(otlpEndpoint))
+        {
+            Log.Logger = Log.Logger.ForContext("Application", builder.Environment.ApplicationName);
+
+            Log.Logger = new LoggerConfiguration()
+                .ReadFrom.Configuration(builder.Configuration)
+                .Enrich.FromLogContext()
+                .Enrich.WithEnvironmentName()
+                .Enrich.WithThreadId()
+                .Enrich.WithMachineName()
+                .WriteTo.Console()
+                .WriteTo.OpenTelemetry(options =>
+                {
+                    options.Endpoint = otlpEndpoint;
+                    options.ResourceAttributes = new Dictionary<string, object>
+                    {
+                        ["service.name"] = builder.Environment.ApplicationName
+                    };
+                })
+                .CreateLogger();
+        }
 
         builder.Services.AddSerilog();
 
