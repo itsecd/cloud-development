@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vehicle.ServiceDefaults", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vehicle.Api", "Vehicle.Api\Vehicle.Api.csproj", "{A07A69BA-7257-47D7-9A72-96305089AAC1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vehicle.Gateway", "Vehicle.Gateway\Vehicle.Gateway.csproj", "{6A946D9E-A3D9-4345-929B-1415379D9102}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{A07A69BA-7257-47D7-9A72-96305089AAC1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A07A69BA-7257-47D7-9A72-96305089AAC1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A07A69BA-7257-47D7-9A72-96305089AAC1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6A946D9E-A3D9-4345-929B-1415379D9102}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6A946D9E-A3D9-4345-929B-1415379D9102}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6A946D9E-A3D9-4345-929B-1415379D9102}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6A946D9E-A3D9-4345-929B-1415379D9102}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

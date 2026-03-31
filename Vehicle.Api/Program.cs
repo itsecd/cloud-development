@@ -41,6 +41,26 @@ app.UseHttpsRedirection();
 
 app.UseCors("ClientCors");
 
+app.MapGet("/", () =>
+{
+    var instanceId = Environment.GetEnvironmentVariable("INSTANCE_ID") ?? "vehicle-api-unknown";
+
+    return Results.Ok(new
+    {
+        service = "Vehicle.Api",
+        status = "ok",
+        instanceId,
+        message = "Vehicle API is running"
+    });
+});
+
 app.MapControllers();
+
+app.Use(async (context, next) =>
+{
+    var instanceId = Environment.GetEnvironmentVariable("INSTANCE_ID") ?? "vehicle-api-unknown";
+    context.Response.Headers["X-Instance-Id"] = instanceId;
+    await next();
+});
 
 app.Run();
