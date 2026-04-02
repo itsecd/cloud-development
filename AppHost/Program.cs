@@ -9,6 +9,8 @@ builder.AddProject<Projects.GeneratorService>("generator-service")
     .WithReference(redis)
     .WaitFor(redis)
     .WithEnvironment("Cors__AllowedOrigin", client.GetEndpoint("http"))
-    .WaitFor(client);
+    .WaitFor(client)
+    .WithUrlForEndpoint("http", url => url.Url += "/swagger")
+    .WithUrlForEndpoint("https", url => url.Url += "/swagger");
 
 builder.Build().Run();

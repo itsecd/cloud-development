@@ -46,7 +46,11 @@ try
     });
     builder.Services.AddCors();
 
+    builder.AddServiceDefaults();
+
     var app = builder.Build();
+
+    app.MapDefaultEndpoints();
 
     var allowedOrigin = builder.Configuration["Cors:AllowedOrigin"]
         ?? throw new InvalidOperationException("Cors:AllowedOrigin is not configured");
@@ -64,6 +68,7 @@ try
             ? Results.BadRequest("id must be > 0")
             : Results.Ok(await svc.GetAsync(id, ct)))
         .WithName("GetPatient")
+        .WithSummary("Возвращает медицинскую карту пациента по идентификатору")
         .Produces<MedicalPatient>()
         .ProducesProblem(400);
 
