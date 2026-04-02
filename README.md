@@ -14,3 +14,15 @@
 <img width="1907" height="908" alt="image" src="https://github.com/user-attachments/assets/eb03159e-13f0-4cc5-ab6a-1312d58990a0" />
 <img width="1901" height="513" alt="image" src="https://github.com/user-attachments/assets/296dfe53-a337-4d58-9884-4fa89ce7036a" />
 <img width="1910" height="912" alt="image" src="https://github.com/user-attachments/assets/e5c2d488-225a-4162-bd98-e98cfd754f50" />
+
+
+
+
+Современные технологии разработки программного обеспечения Вариант 10 Учебный курс Лабораторная работа №2
+
+
+В рамках второй лабораторной работы было реализовано:
+
+1. Оркестрацию на запуск нескольких реплик сервиса генерации,
+2. Апи гейтвей на основе Ocelot,
+3. Алгоритм балансировки нагрузки WeightedRoundRobin.
