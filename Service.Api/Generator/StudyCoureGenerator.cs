@@ -17,7 +17,7 @@ public static class StudyCoureGenerator
     private static readonly DateOnly _maxDate = new(2030, 1, 1);
     private const int MaxYearsForward = 5;
 
-    private static Faker<StudyCourse> _faker = new Faker<StudyCourse>("en")
+    private static  Faker<StudyCourse> _faker = new Faker<StudyCourse>("en")
         .RuleFor(s => s.TeacherFullName, f => $"{f.PickRandom(f.Person.FirstName)} {f.PickRandom(f.Person.LastName)}")
         .RuleFor(s => s.CourseName, f => f.PickRandom(_courseNames))
         .RuleFor(s => s.StartDate, f => f.Date.BetweenDateOnly(_minDate, _maxDate))
