@@ -6,17 +6,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("ClientCors", policy =>
-    {
-        policy
-            .AllowAnyOrigin()
-            .WithMethods("GET")
-            .WithHeaders("Content-Type");
-    });
-});
-
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -38,8 +27,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-app.UseCors("ClientCors");
 
 app.MapGet("/", () =>
 {

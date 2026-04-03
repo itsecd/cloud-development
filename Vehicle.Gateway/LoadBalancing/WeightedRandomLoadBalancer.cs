@@ -93,26 +93,24 @@ public sealed class WeightedRandomLoadBalancer(IConfiguration configuration, Fun
     /// <returns>Словарь весов реплик.</returns>
     private static Dictionary<(string Host, int Port), int> ReadWeights(IConfiguration configuration)
     {
-        var result = new Dictionary<(string Host, int Port), int>();
+        return configuration
+            .GetSection("WeightedRandom:Replicas")
+            .GetChildren()
+            .Where(item => !string.IsNullOrWhiteSpace(item.Key) && int.TryParse(item.Value, out _))
+            .ToDictionary(
+                item =>
+                {
+                    var parts = item.Key.Split(':', 2, StringSplitOptions.TrimEntries);
 
-        foreach (var item in configuration.GetSection("WeightedRandom:Replicas").GetChildren())
-        {
-            var endpoint = item.Key;
-            var separatorIndex = endpoint.LastIndexOf(':');
+                    if (parts.Length != 2 || !int.TryParse(parts[1], out var port))
+                    {
+                        throw new InvalidOperationException(
+                            $"Invalid replica endpoint format: '{item.Key}'. Expected format: host:port");
+                    }
 
-            if (separatorIndex <= 0 || separatorIndex >= endpoint.Length - 1)
-                continue;
-
-            var host = endpoint[..separatorIndex].Trim().ToLowerInvariant();
-            var portText = endpoint[(separatorIndex + 1)..].Trim();
-
-            if (!int.TryParse(portText, out var port))
-                continue;
-            if (!int.TryParse(item.Value, out var weight))
-                continue;
-
-            result[(host, port)] = Math.Max(weight, 1);
-        }
-        return result;
+                    return (parts[0].ToLowerInvariant(), port);
+                },
+                item => Math.Max(int.Parse(item.Value!), 1)
+            );
     }
 }

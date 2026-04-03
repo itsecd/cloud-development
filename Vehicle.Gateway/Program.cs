@@ -6,6 +6,17 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("GatewayCors", policy =>
+    {
+        policy
+            .AllowAnyOrigin()
+            .WithMethods("GET")
+            .WithHeaders("Content-Type");
+    });
+});
+
 builder.Configuration
     .SetBasePath(builder.Environment.ContentRootPath)
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
@@ -30,12 +41,9 @@ builder.Services
 
 var app = builder.Build();
 
-app.MapGet("/", () => Results.Ok(new
-{
-    service = "Vehicle.Gateway",
-    status = "ok",
-    message = "Gateway is running"
-}));
+app.MapDefaultEndpoints();
+
+app.UseCors("GatewayCors");
 
 await app.UseOcelot();
 await app.RunAsync();
