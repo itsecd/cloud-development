@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-using Ocelot.LoadBalancer.Interfaces;
+﻿using Ocelot.LoadBalancer.Interfaces;
 using Ocelot.Responses;
 using Ocelot.Values;
 
@@ -29,10 +28,10 @@ public class WeightedRoundRobin(Func<Task<List<Service>>> services, IConfigurati
             throw new InvalidOperationException("No available downstream services");
         lock (_locker)
         {
-            if(_currentWeight >= _weights[_lastIndex])
+            if (_currentWeight >= _weights[_lastIndex])
             {
                 _currentWeight = 0;
-                _lastIndex = (_lastIndex +1 >= _weights.Length) ? 0 : _lastIndex + 1;
+                _lastIndex = (_lastIndex + 1 >= _weights.Length) ? 0 : _lastIndex + 1;
             }
             _currentWeight++;
             return new OkResponse<ServiceHostAndPort>(servicesList[_lastIndex].HostAndPort);

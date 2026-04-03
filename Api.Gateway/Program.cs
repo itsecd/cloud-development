@@ -23,18 +23,17 @@ builder.Services.AddOcelot()
     .AddCustomLoadBalancer((sp, _, provider) =>
         new WeightedRoundRobin(provider.GetAsync, sp.GetRequiredService<IConfiguration>()));
 
-builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
-{
-    policy.AllowAnyOrigin();
-    policy.AllowAnyMethod();
-    policy.AllowAnyHeader();
-}));
+var allowedOrigins = builder.Configuration.GetSection("CorsSettings:AllowedOrigins").Get<string[]>() ?? [];
+builder.Services.AddCors(options => options.AddPolicy("AllowClient", policy =>
+    policy.WithOrigins(allowedOrigins)
+        .AllowAnyMethod()
+        .AllowAnyHeader()));
 
 builder.AddServiceDefaults();
 var app = builder.Build();
 
 app.MapDefaultEndpoints();
-app.UseCors();
+app.UseCors("AllowClient");
 await app.UseOcelot();
 
 app.Run();

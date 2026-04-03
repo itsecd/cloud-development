@@ -31,7 +31,7 @@ public class GeneratorService(IDistributedCache _cache, IConfiguration _configur
             throw;
         }
     }
-    private async Task<StudyCourse> RetrieveFromCache(int id)
+    private async Task<StudyCourse?> RetrieveFromCache(int id)
     {
         var json = await _cache.GetStringAsync(id.ToString());
         if (!string.IsNullOrEmpty(json))
