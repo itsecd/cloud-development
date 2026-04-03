@@ -1,6 +1,7 @@
-﻿using System.Text.Json;
-using CreditApp.Domain.Data;
+﻿using CreditApp.Domain.Data;
+using CreditApp.Messaging.Contracts;
 using Microsoft.Extensions.Caching.Distributed;
+using System.Text.Json;
 
 namespace CreditApp.Api.Services;
 
@@ -9,7 +10,8 @@ namespace CreditApp.Api.Services;
 /// </summary>
 public class CreditService(
     IDistributedCache cache,
-    ILogger<CreditService> logger)
+    ILogger<CreditService> logger,
+    SqsProducer sqsProducer)
     : ICreditService
 {
     private const string CachePrefix = "credit:";
@@ -36,6 +38,22 @@ public class CreditService(
             id);
 
         var result = CreditGenerator.Generate(id);
+        var creditEvent = new CreditGeneratedEvent
+        {
+            Id = result.Id,
+            CreditType = result.CreditType,
+            RequestedAmount = result.RequestedAmount,
+            TermMonths = result.TermMonths,
+            InterestRate = result.InterestRate,
+            ApplicationDate = result.ApplicationDate,
+            HasInsurance = result.HasInsurance,
+            Status = result.Status,
+            DecisionDate = result.DecisionDate,
+            ApprovedAmount = result.ApprovedAmount,
+            GeneratedAt = DateTime.UtcNow
+        };
+
+        await sqsProducer.PublishAsync(creditEvent);
 
         var serialized = JsonSerializer.Serialize(result);
 
@@ -45,6 +63,7 @@ public class CreditService(
         };
 
         await cache.SetStringAsync(key, serialized, options, cancellationToken);
+
 
         logger.LogInformation(
             "Generated credit application {CreditId}. Type: {Type}, Amount: {Amount}, Status: {Status}",
