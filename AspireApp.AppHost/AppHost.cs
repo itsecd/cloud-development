@@ -4,6 +4,9 @@ var cache = builder.AddRedis("RedisCache").WithRedisInsight(containerName: "insi
 
 var ports = new[] { 5001, 5002, 5003 };
 
+var gateway = builder.AddProject<Projects.AspireApp_ApiGateway>("api-gateway")
+    .WithHttpEndpoint(port: 5101, name: "gateway");
+
 for (var i = 0; i < 3; i++)
 {
     var api = builder.AddProject<Projects.AspireApp_ApiService>($"warehouse-api-{i}")
@@ -11,12 +14,11 @@ for (var i = 0; i < 3; i++)
         .WithEnvironment("REPLICA_ID", i.ToString())
         .WithHttpEndpoint(port: ports[i], name: $"api-{i}")
         .WaitFor(cache);
+
+    gateway = gateway.WaitFor(api);
 }
 
-var gateway = builder.AddProject("api-gateway", "../AspireApp.ApiGateway/AspireApp.ApiGateway.csproj")
-    .WithHttpEndpoint(port: 5101, name: "gateway");
-
-builder.AddProject("client-wasm", "../Client.Wasm/Client.Wasm.csproj")
+builder.AddProject<Projects.Client_Wasm>("client-wasm")
     .WithReference(gateway)
     .WithHttpEndpoint(port: 5127, name: "client")
     .WaitFor(gateway);

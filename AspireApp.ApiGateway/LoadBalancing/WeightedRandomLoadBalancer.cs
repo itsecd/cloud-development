@@ -1,11 +1,8 @@
 using Microsoft.AspNetCore.Http;
-using Ocelot.LoadBalancer.Interfaces;
 using Ocelot.Responses;
 using Ocelot.Values;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Ocelot.LoadBalancer.Interfaces;
+using Ocelot.LoadBalancer.Errors;
 
 namespace AspireApp.ApiGateway.LoadBalancing;
 
@@ -16,8 +13,9 @@ namespace AspireApp.ApiGateway.LoadBalancing;
 public class WeightedRandomLoadBalancer(List<Service> services) : ILoadBalancer
 {
     private readonly List<Service> _services = services;
-    private readonly List<int> _weights = services.Select(s => GetWeight(s)).ToList();
-    private readonly Random _random = new();
+    private readonly List<int> _weights = services.Select(GetWeight).ToList();
+    private readonly int _totalWeight = services.Sum(GetWeight);
+    private static readonly Random _random = Random.Shared;
 
     private static int GetWeight(Service service)
     {
@@ -27,8 +25,10 @@ public class WeightedRandomLoadBalancer(List<Service> services) : ILoadBalancer
 
     public async Task<Response<ServiceHostAndPort>> LeaseAsync(HttpContext httpContext)
     {
-        var totalWeight = _weights.Sum();
-        var randomValue = _random.Next(totalWeight);
+        if (_services.Count == 0)
+            return new ErrorResponse<ServiceHostAndPort>(new ServicesAreEmptyError("Нет доступных сервисов"));
+
+        var randomValue = _random.Next(_totalWeight);
 
         var current = 0;
         for (var i = 0; i < _services.Count; i++)
@@ -40,10 +40,10 @@ public class WeightedRandomLoadBalancer(List<Service> services) : ILoadBalancer
             }
         }
 
-        return new OkResponse<ServiceHostAndPort>(_services.First().HostAndPort);
+        return new OkResponse<ServiceHostAndPort>(_services[0].HostAndPort);
     }
 
-    public void Release(ServiceHostAndPort hostAndPort) {}
+    public void Release(ServiceHostAndPort hostAndPort) { }
 
     public string Name => nameof(WeightedRandomLoadBalancer);
     public string Type => "WeightedRandom";
