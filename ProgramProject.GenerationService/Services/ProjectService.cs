@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Caching.Distributed;
+﻿using Amazon.SQS;
+using Amazon.SQS.Model;
+using Microsoft.Extensions.Caching.Distributed;
 using ProgramProject.GenerationService.Generator;
 using ProgramProject.GenerationService.Models;
 using System.Text.Json;
@@ -14,20 +16,26 @@ public class ProjectService : IProjectService
     private readonly IProgramProjectFaker _faker;
     private readonly ILogger<ProjectService> _logger;
     private readonly DistributedCacheEntryOptions _cacheOptions;
+    private readonly IAmazonSQS _sqsClient;
+    private readonly string _queueUrl;
 
     public ProjectService(
         IDistributedCache cache,
         IProgramProjectFaker faker,
         ILogger<ProjectService> logger,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IAmazonSQS sqsClient)
     {
         _cache = cache;
         _faker = faker;
         _logger = logger;
+        _sqsClient = sqsClient;
 
         var cacheMinutes = configuration.GetValue("Cache:ExpirationMinutes", 5);
         _cacheOptions = new DistributedCacheEntryOptions()
             .SetAbsoluteExpiration(TimeSpan.FromMinutes(cacheMinutes));
+
+        _queueUrl = configuration["SQS:QueueUrl"] ?? "http://localhost:9324/queue/projects";
     }
 
     public async Task<ProgramProjectModel> GetProjectByIdAsync(int id, CancellationToken cancellationToken = default)
@@ -59,11 +67,14 @@ public class ProjectService : IProjectService
             var newProject = _faker.Generate();
             newProject.Id = id;
 
-            // Сораняем в кэш
+            // Сохраняем в кэш
             var serializedProject = JsonSerializer.SerializeToUtf8Bytes(newProject);
             await _cache.SetAsync(cacheKey, serializedProject, _cacheOptions, cancellationToken);
 
             _logger.LogInformation("Проект с ID {ProjectId} сгенерирован и сохранён в кэш", id);
+
+            // *** НОВОЕ: Отправляем проект в SQS ***
+            await SendToSqsAsync(newProject, cancellationToken);
 
             return newProject;
         }
@@ -71,6 +82,30 @@ public class ProjectService : IProjectService
         {
             _logger.LogError(ex, "Ошибка при получении проекта с ID {ProjectId}", id);
             throw;
+        }
+    }
+
+    /// <summary>
+    /// Отправка проекта в очередь SQS для последующего сохранения в Minio
+    /// </summary>
+    private async Task SendToSqsAsync(ProgramProjectModel project, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var json = JsonSerializer.Serialize(project);
+            var sendRequest = new SendMessageRequest
+            {
+                QueueUrl = _queueUrl,
+                MessageBody = json
+            };
+
+            await _sqsClient.SendMessageAsync(sendRequest, cancellationToken);
+            _logger.LogInformation("Проект с ID {ProjectId} отправлен в SQS", project.Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка при отправке проекта {ProjectId} в SQS", project.Id);
+            // Не бросаем исключение, чтобы не прерывать основной поток
         }
     }
 }

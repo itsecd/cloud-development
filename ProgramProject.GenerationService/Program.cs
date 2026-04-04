@@ -1,4 +1,6 @@
-﻿using ProgramProject.GenerationService.Generator;
+﻿using Amazon.Runtime;
+using Amazon.SQS;
+using ProgramProject.GenerationService.Generator;
 using ProgramProject.GenerationService.Services;
 using ProgramProject.ServiceDefaults;
 
@@ -10,6 +12,15 @@ Console.OutputEncoding = System.Text.Encoding.UTF8;
 builder.AddServiceDefaults();
 
 builder.AddRedisDistributedCache("cache");
+
+// Добавляем SQS клиент
+var sqsConfig = new AmazonSQSConfig
+{
+    ServiceURL = builder.Configuration["SQS:ServiceURL"] ?? "http://localhost:9324",
+    UseHttp = true,
+    AuthenticationRegion = "us-east-1"
+};
+builder.Services.AddSingleton<IAmazonSQS>(sp => new AmazonSQSClient(new AnonymousAWSCredentials(), sqsConfig));
 
 builder.Services.AddSingleton<IProgramProjectFaker, ProgramProjectFaker>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
