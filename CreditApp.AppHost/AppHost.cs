@@ -1,12 +1,10 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-// Redis
 var redis = builder.AddRedis("redis")
     .WithRedisCommander(containerName: "redis-commander");
 
-// LocalStack (S3 + SQS)
 var localstack = builder.AddContainer("localstack", "localstack/localstack:latest")
-    .WithEnvironment("LOCALSTACK_AUTH_TOKEN", "ls-faLE5493-recA-BUha-5325-gifOqApu7f11") // <-- ТВОЙ ТОКЕН
+    .WithEnvironment("LOCALSTACK_AUTH_TOKEN", "ls-faLE5493-recA-BUha-5325-gifOqApu7f11")
     .WithEnvironment("SERVICES", "s3,sqs")
     .WithEnvironment("AWS_DEFAULT_REGION", "us-east-1")
     .WithEnvironment("AWS_ACCESS_KEY_ID", "test")
@@ -14,7 +12,6 @@ var localstack = builder.AddContainer("localstack", "localstack/localstack:lates
     .WithEndpoint(port: 4566, targetPort: 4566, name: "api")
     .WithLifetime(ContainerLifetime.Persistent);
 
-// Gateway
 var gateway = builder.AddProject<Projects.CreditApp_Gateway>("gateway")
     .WithEndpoint("https", e =>
     {
@@ -24,7 +21,6 @@ var gateway = builder.AddProject<Projects.CreditApp_Gateway>("gateway")
     })
     .WithExternalHttpEndpoints();
 
-// 5 реплик API
 for (var i = 0; i < 5; i++)
 {
     var port = 7401 + i;
@@ -43,12 +39,10 @@ for (var i = 0; i < 5; i++)
     gateway.WaitFor(api);
 }
 
-// FileService
 builder.AddProject<Projects.CreditApp_FileService>("fileservice")
     .WithEnvironment("LOCALSTACK_URL", "http://localhost:4566")
     .WaitFor(localstack);
 
-// Клиент
 builder.AddProject<Projects.Client_Wasm>("client")
     .WithReference(gateway)
     .WithExternalHttpEndpoints();
