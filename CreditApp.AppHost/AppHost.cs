@@ -1,10 +1,12 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
+var localstackToken = builder.Configuration["LocalStack:AuthToken"];
+
 var redis = builder.AddRedis("redis")
     .WithRedisCommander(containerName: "redis-commander");
 
 var localstack = builder.AddContainer("localstack", "localstack/localstack:latest")
-    .WithEnvironment("LOCALSTACK_AUTH_TOKEN", "ls-faLE5493-recA-BUha-5325-gifOqApu7f11")
+    .WithEnvironment("LOCALSTACK_AUTH_TOKEN", localstackToken)
     .WithEnvironment("SERVICES", "s3,sqs")
     .WithEnvironment("AWS_DEFAULT_REGION", "us-east-1")
     .WithEnvironment("AWS_ACCESS_KEY_ID", "test")
