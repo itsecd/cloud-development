@@ -1,10 +1,8 @@
-using Aspire.Hosting;
-
 var builder = DistributedApplication.CreateBuilder(args);
 
 var cache = builder.AddRedis("cache").WithRedisCommander();
 
-// Minio (хранилище)
+// Minio (объектное хранилище)
 var minio = builder.AddContainer("minio", "minio/minio")
     .WithArgs("server", "/data", "--console-address", ":9001")
     .WithHttpEndpoint(port: 9000, targetPort: 9000, name: "api")
@@ -41,7 +39,7 @@ foreach (var generator in generators)
 }
 
 // Файловый сервис (с зависимостями от Minio и SQS)
-var fileService = builder.AddProject<Projects.ProgramProject_FileService>("programproject-fileservice")
+builder.AddProject<Projects.ProgramProject_FileService>("programproject-fileservice")
     .WithExternalHttpEndpoints()
     .WaitFor(sqs)
     .WaitFor(minio);
@@ -50,7 +48,5 @@ var fileService = builder.AddProject<Projects.ProgramProject_FileService>("progr
 builder.AddProject<Projects.Client_Wasm>("client-wasm")
     .WithExternalHttpEndpoints()
     .WaitFor(gateway);
-
-//builder.AddProject<Projects.ProgramProject_FileService>("programproject-fileservice");
 
 builder.Build().Run();
