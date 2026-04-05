@@ -1,0 +1,28 @@
+{
+    "Generators": [ "generator-1", "generator-2", "generator-3" ],
+    "Routes": [
+        {
+            "DownstreamPathTemplate": "/api/CompanyEmployee",
+            "DownstreamScheme": "http",
+            "DownstreamHostAndPorts": [
+                {
+                    "Host": "localhost",
+                    "Port": 5213
+                },
+                {
+                    "Host": "localhost",
+                    "Port": 5214
+                },
+                {
+                    "Host": "localhost",
+                    "Port": 5215
+                }
+            ],
+            "UpstreamPathTemplate": "/api/CompanyEmployee",
+            "UpstreamHttpMethod": [ "GET" ],
+            "LoadBalancerOptions": {
+                "Type": "WeightedRoundRobin"
+            }
+        }
+    ]
+}
