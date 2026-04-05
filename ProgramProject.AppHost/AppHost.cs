@@ -15,7 +15,7 @@ var minio = builder.AddContainer("minio", "minio/minio")
 var sqs = builder.AddContainer("elasticmq", "softwaremill/elasticmq")
     .WithHttpEndpoint(port: 9324, targetPort: 9324, name: "http");
 
-// Сервис генерации (5 реплик)
+// Создаём 5 генераторов в цикле
 var generators = new List<IResourceBuilder<ProjectResource>>();
 
 for (var i = 1; i <= 5; i++)
@@ -50,7 +50,7 @@ var fileService = builder.AddProject<Projects.ProgramProject_FileService>("progr
     .WaitFor(sqs)
     .WaitFor(minio);
 
-// Клиент
+// Клиент теперь связывается с генератором через шлюз
 builder.AddProject<Projects.Client_Wasm>("client-wasm")
     .WithExternalHttpEndpoints()
     .WaitFor(gateway);

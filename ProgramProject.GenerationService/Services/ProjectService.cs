@@ -73,7 +73,7 @@ public class ProjectService : IProjectService
 
             _logger.LogInformation("Проект с ID {ProjectId} сгенерирован и сохранён в кэш", id);
 
-            // *** НОВОЕ: Отправляем проект в SQS ***
+            //Отправляем проект в SQS 
             await SendToSqsAsync(newProject, cancellationToken);
 
             return newProject;
@@ -105,7 +105,6 @@ public class ProjectService : IProjectService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Ошибка при отправке проекта {ProjectId} в SQS", project.Id);
-            // Не бросаем исключение, чтобы не прерывать основной поток
         }
     }
 }
