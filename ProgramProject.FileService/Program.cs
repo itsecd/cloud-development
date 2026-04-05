@@ -10,31 +10,30 @@ Console.OutputEncoding = System.Text.Encoding.UTF8;
 
 builder.AddServiceDefaults();
 
-// Настройка SQS
+// SQS — читаем из переменной окружения (которая приходит из AppHost)
+var sqsServiceUrl = builder.Configuration["SQS:ServiceURL"] ?? "http://localhost:9324";
 var sqsConfig = new AmazonSQSConfig
 {
-    ServiceURL = builder.Configuration["SQS:ServiceURL"] ?? "http://127.0.0.1:59517",
+    ServiceURL = sqsServiceUrl,
     UseHttp = true,
     AuthenticationRegion = "us-east-1"
 };
-builder.Services.AddSingleton<IAmazonSQS>(sp =>
-    new AmazonSQSClient(new AnonymousAWSCredentials(), sqsConfig));
+builder.Services.AddSingleton<IAmazonSQS>(sp => new AmazonSQSClient(new AnonymousAWSCredentials(), sqsConfig));
 
-// Настройка Minio
+// Minio — читаем из переменных окружения
+var minioEndpoint = builder.Configuration["Minio:Endpoint"] ?? "http://localhost:9000";
+var minioAccessKey = builder.Configuration["Minio:AccessKey"] ?? "minioadmin";
+var minioSecretKey = builder.Configuration["Minio:SecretKey"] ?? "minioadmin";
+
 builder.Services.AddSingleton<Minio.IMinioClient>(sp =>
 {
-    var endpoint = builder.Configuration["Minio:Endpoint"] ?? "localhost:9000";
-    var accessKey = builder.Configuration["Minio:AccessKey"] ?? "minioadmin";
-    var secretKey = builder.Configuration["Minio:SecretKey"] ?? "minioadmin";
-
     return new Minio.MinioClient()
-        .WithEndpoint(endpoint)
-        .WithCredentials(accessKey, secretKey)
+        .WithEndpoint(minioEndpoint.Replace("http://", "").Replace("https://", ""))
+        .WithCredentials(minioAccessKey, minioSecretKey)
         .WithSSL(false)
         .Build();
 });
 
-// Регистрируем фоновый сервис
 builder.Services.AddHostedService<SqsBackgroundService>();
 
 builder.Services.AddControllers();

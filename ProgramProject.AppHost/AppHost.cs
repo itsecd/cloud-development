@@ -1,3 +1,5 @@
+using Aspire.Hosting;
+
 var builder = DistributedApplication.CreateBuilder(args);
 
 var cache = builder.AddRedis("cache").WithRedisCommander();
@@ -13,10 +15,9 @@ var minio = builder.AddContainer("minio", "minio/minio")
 var sqs = builder.AddContainer("elasticmq", "softwaremill/elasticmq")
     .WithHttpEndpoint(port: 9324, targetPort: 9324, name: "http");
 
-// Сервис генерации теперь делится на 5 реплик
+// Сервис генерации (5 реплик)
 var generators = new List<IResourceBuilder<ProjectResource>>();
 
-// Создаём 5 генераторов в цикле
 for (var i = 1; i <= 5; i++)
 {
     var generator = builder.AddProject<Projects.ProgramProject_GenerationService>($"generator-{i}")
@@ -24,7 +25,8 @@ for (var i = 1; i <= 5; i++)
         .WithReference(cache)
         .WaitFor(cache)
         .WithEndpoint("http", endpoint => endpoint.Port = 6200 + i)
-        .WithEndpoint("https", endpoint => endpoint.Port = 7200 + i);
+        .WithEndpoint("https", endpoint => endpoint.Port = 7200 + i)
+        .WithEnvironment("SQS__ServiceURL", sqs.GetEndpoint("http"));
 
     generators.Add(generator);
 }
@@ -38,13 +40,17 @@ foreach (var generator in generators)
     gateway.WaitFor(generator);
 }
 
-// Файловый сервис (с зависимостями от Minio и SQS)
-builder.AddProject<Projects.ProgramProject_FileService>("programproject-fileservice")
+// Файловый сервис
+var fileService = builder.AddProject<Projects.ProgramProject_FileService>("programproject-fileservice")
     .WithExternalHttpEndpoints()
+    .WithEnvironment("SQS__ServiceURL", sqs.GetEndpoint("http"))
+    .WithEnvironment("Minio__Endpoint", minio.GetEndpoint("api"))
+    .WithEnvironment("Minio__AccessKey", "minioadmin")
+    .WithEnvironment("Minio__SecretKey", "minioadmin")
     .WaitFor(sqs)
     .WaitFor(minio);
 
-// Клиент теперь связывается с генератором через шлюз
+// Клиент
 builder.AddProject<Projects.Client_Wasm>("client-wasm")
     .WithExternalHttpEndpoints()
     .WaitFor(gateway);

@@ -6,17 +6,15 @@ using ProgramProject.ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Починка кодировки в консоли
 Console.OutputEncoding = System.Text.Encoding.UTF8;
 
 builder.AddServiceDefaults();
-
 builder.AddRedisDistributedCache("cache");
 
-// Добавляем SQS клиент
+var sqsServiceUrl = builder.Configuration["SQS:ServiceURL"] ?? "http://localhost:9324";
 var sqsConfig = new AmazonSQSConfig
 {
-    ServiceURL = builder.Configuration["SQS:ServiceURL"] ?? "http://localhost:9324",
+    ServiceURL = sqsServiceUrl,
     UseHttp = true,
     AuthenticationRegion = "us-east-1"
 };
