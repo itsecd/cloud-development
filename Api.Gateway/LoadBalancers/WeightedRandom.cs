@@ -13,11 +13,9 @@ namespace Api.Gateway.LoadBalancers;
 /// <param name="configuration">Конфигурация приложения с секцией весов.</param>
 public class WeightedRandom(Func<Task<List<Service>>> services, IConfiguration configuration) : ILoadBalancer
 {
-    private static readonly object _locker = new();
     private readonly int[] _weights = configuration
         .GetSection("WeightedRandom:Weights")
         .Get<int[]>() ?? [1, 1, 1, 1, 1];
-    private readonly Random _random = new(111);
 
     public string Type => nameof(WeightedRandom);
 
@@ -28,23 +26,20 @@ public class WeightedRandom(Func<Task<List<Service>>> services, IConfiguration c
         if (serviceList.Count == 0)
             throw new InvalidOperationException("Нет доступных сервисов");
 
-        lock (_locker)
+        var totalWeight = 0;
+        for (var i = 0; i < serviceList.Count; i++)
+            totalWeight += i < _weights.Length ? _weights[i] : 1;
+
+        var threshold = Random.Shared.Next(totalWeight);
+        var cumulative = 0;
+        for (var i = 0; i < serviceList.Count; i++)
         {
-            var totalWeight = 0;
-            for (var i = 0; i < serviceList.Count; i++)
-                totalWeight += i < _weights.Length ? _weights[i] : 1;
-
-            var threshold = _random.Next(totalWeight);
-            var cumulative = 0;
-            for (var i = 0; i < serviceList.Count; i++)
-            {
-                cumulative += i < _weights.Length ? _weights[i] : 1;
-                if (threshold < cumulative)
-                    return new OkResponse<ServiceHostAndPort>(serviceList[i].HostAndPort);
-            }
-
-            return new OkResponse<ServiceHostAndPort>(serviceList[^1].HostAndPort);
+            cumulative += i < _weights.Length ? _weights[i] : 1;
+            if (threshold < cumulative)
+                return new OkResponse<ServiceHostAndPort>(serviceList[i].HostAndPort);
         }
+
+        return new OkResponse<ServiceHostAndPort>(serviceList[^1].HostAndPort);
     }
 
     public void Release(ServiceHostAndPort hostAndPort) { }
