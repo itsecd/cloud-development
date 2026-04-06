@@ -33,17 +33,37 @@ public class CreditApplicationGeneratorTests
     public void ApprovedAmount_Only_For_Approved_Status_And_Leq_Requested()
     {
         var generator = CreateGenerator();
-        var app = generator.Generate();
 
-        if (app.Status == "Одобрена")
+        // Generate many objects to cover all possible statuses
+        var apps = new List<CreditApplication>();
+        for (int i = 0; i < 100; i++)
+        {
+            apps.Add(generator.Generate());
+        }
+
+        // Group by status to verify conditions for each
+        var appsByStatus = apps.GroupBy(a => a.Status).ToDictionary(g => g.Key, g => g.ToList());
+
+        // Verify "Одобрена" status has ApprovedAmount
+        Assert.True(appsByStatus.ContainsKey("Одобрена"), "Should have at least one approved application");
+        foreach (var app in appsByStatus["Одобрена"])
         {
             Assert.NotNull(app.ApprovedAmount);
             Assert.True(app.ApprovedAmount!.Value <= app.RequestedAmount);
             Assert.Equal(Math.Round(app.ApprovedAmount.Value, 2), app.ApprovedAmount.Value);
         }
-        else
+
+        // Verify other statuses don't have ApprovedAmount
+        var nonApprovedStatuses = new[] { "Новая", "В обработке", "Отклонена" };
+        foreach (var status in nonApprovedStatuses)
         {
-            Assert.Null(app.ApprovedAmount);
+            if (appsByStatus.ContainsKey(status))
+            {
+                foreach (var app in appsByStatus[status])
+                {
+                    Assert.Null(app.ApprovedAmount);
+                }
+            }
         }
     }
 
@@ -51,16 +71,40 @@ public class CreditApplicationGeneratorTests
     public void DecisionDate_Only_For_Terminal_Statuses_And_After_ApplicationDate()
     {
         var generator = CreateGenerator();
-        var app = generator.Generate();
 
-        if (app.Status is "Одобрена" or "Отклонена")
+        // Generate many objects to cover all possible statuses
+        var apps = new List<CreditApplication>();
+        for (int i = 0; i < 100; i++)
         {
-            Assert.NotNull(app.DecisionDate);
-            Assert.True(app.DecisionDate!.Value >= app.ApplicationDate);
+            apps.Add(generator.Generate());
         }
-        else
+
+        // Group by status to verify conditions for each
+        var appsByStatus = apps.GroupBy(a => a.Status).ToDictionary(g => g.Key, g => g.ToList());
+
+        // Verify "Одобрена" and "Отклонена" statuses have DecisionDate after ApplicationDate
+        var terminalStatuses = new[] { "Одобрена", "Отклонена" };
+        foreach (var status in terminalStatuses)
         {
-            Assert.Null(app.DecisionDate);
+            Assert.True(appsByStatus.ContainsKey(status), $"Should have at least one {status} application");
+            foreach (var app in appsByStatus[status])
+            {
+                Assert.NotNull(app.DecisionDate);
+                Assert.True(app.DecisionDate!.Value >= app.ApplicationDate);
+            }
+        }
+
+        // Verify "Новая" and "В обработке" statuses don't have DecisionDate
+        var nonTerminalStatuses = new[] { "Новая", "В обработке" };
+        foreach (var status in nonTerminalStatuses)
+        {
+            if (appsByStatus.ContainsKey(status))
+            {
+                foreach (var app in appsByStatus[status])
+                {
+                    Assert.Null(app.DecisionDate);
+                }
+            }
         }
     }
 

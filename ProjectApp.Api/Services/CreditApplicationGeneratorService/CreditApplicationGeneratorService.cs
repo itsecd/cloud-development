@@ -23,15 +23,35 @@ public class CreditApplicationGeneratorService(
     {
         logger.LogInformation("Attempting to retrieve credit application {Id} from cache", id);
 
-        var cacheKey = $"credit-application-{id}";
+        var cacheKey = GetCacheKey(id);
 
-        CreditApplication? application = null;
+        var application = await TryGetFromCacheAsync(id, cacheKey, cancellationToken);
+        if (application != null)
+        {
+            return application;
+        }
+
+        logger.LogInformation("Credit application {Id} not found in cache or cache unavailable, generating a new one", id);
+        application = generator.Generate();
+        application.Id = id;
+
+        await SaveToCacheAsync(id, cacheKey, application, cancellationToken);
+
+        return application;
+    }
+
+    /// <summary>
+    /// Получает кредитную заявку из кэша по ключу.
+    /// </summary>
+    /// <returns>Заявка, если найдена в кэше; иначе null.</returns>
+    private async Task<CreditApplication?> TryGetFromCacheAsync(int id, string cacheKey, CancellationToken cancellationToken)
+    {
         try
         {
             var cachedData = await cache.GetStringAsync(cacheKey, cancellationToken);
             if (!string.IsNullOrEmpty(cachedData))
             {
-                application = JsonSerializer.Deserialize<CreditApplication>(cachedData);
+                var application = JsonSerializer.Deserialize<CreditApplication>(cachedData);
                 if (application != null)
                 {
                     logger.LogInformation("Credit application {Id} found in cache", id);
@@ -45,10 +65,14 @@ public class CreditApplicationGeneratorService(
             logger.LogWarning(ex, "Failed to retrieve credit application {Id} from cache (error ignored)", id);
         }
 
-        logger.LogInformation("Credit application {Id} not found in cache or cache unavailable, generating a new one", id);
-        application = generator.Generate();
-        application.Id = id;
+        return null;
+    }
 
+    /// <summary>
+    /// Сохраняет кредитную заявку в кэш.
+    /// </summary>
+    private async Task SaveToCacheAsync(int id, string cacheKey, CreditApplication application, CancellationToken cancellationToken)
+    {
         try
         {
             logger.LogInformation("Saving credit application {Id} to cache", id);
@@ -76,7 +100,10 @@ public class CreditApplicationGeneratorService(
         {
             logger.LogWarning(ex, "Failed to save credit application {Id} to cache (error ignored)", id);
         }
-
-        return application;
     }
+
+    /// <summary>
+    /// Возвращает ключ кэша для указанного идентификатора заявки.
+    /// </summary>
+    private static string GetCacheKey(int id) => $"credit-application-{id}";
 }

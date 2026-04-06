@@ -8,7 +8,6 @@ var api = builder.AddProject<Projects.ProjectApp_Api>("projectapp-api")
     .WaitFor(redis);
 
 builder.AddProject<Projects.Client_Wasm>("client")
-    .WithReference(api)
     .WaitFor(api);
 
 builder.Build().Run();
