@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Ocelot" Version="24.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\MedicalPatient.AppHost\MedicalPatient.AppHost.ServiceDefaults\MedicalPatient.AppHost.ServiceDefaults.csproj" />
   </ItemGroup>
 

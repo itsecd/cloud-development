@@ -1,0 +1,44 @@
+{
+  "Routes": [
+    {
+      "DownstreamPathTemplate": "/medicalpatient-generator",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5101
+        },
+        {
+          "Host": "localhost",
+          "Port": 5102
+        },
+        {
+          "Host": "localhost",
+          "Port": 5103
+        }
+      ],
+      "UpstreamPathTemplate": "/medicalpatient-generator",
+      "UpstreamHttpMethod": [ "GET" ],
+      "LoadBalancerOptions": {
+        "Type": "WeightedRoundRobin"
+      },
+      "DownstreamHostWeights": [
+        {
+          "Host": "localhost",
+          "Port": 5101,
+          "Weight": 3
+        },
+        {
+          "Host": "localhost",
+          "Port": 5102,
+          "Weight": 2
+        },
+        {
+          "Host": "localhost",
+          "Port": 5103,
+          "Weight": 1
+        }
+      ]
+    }
+  ]
+}
