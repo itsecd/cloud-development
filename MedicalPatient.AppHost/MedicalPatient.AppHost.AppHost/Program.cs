@@ -12,5 +12,7 @@ builder.AddProject<Projects.Client_Wasm>("client")
     .WithReference(generator)
     .WaitFor(generator);
 
+builder.AddProject<Projects.MedicalPatient_ApiGateway>("medicalpatient-apigateway");
+
 builder.Build().Run();
 
