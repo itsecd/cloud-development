@@ -8,8 +8,5 @@
 	<ItemGroup>
 		<PackageReference Include="Ocelot" Version="24.1.0" />
 	</ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\AspireApp1\AspireApp1.ServiceDefaults\AspireApp.ServiceDefaults.csproj" />
-  </ItemGroup>
-
+	
 </Project>
