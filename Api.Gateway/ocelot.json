@@ -1,0 +1,35 @@
+{
+  "Routes": [
+    {
+      "UpstreamPathTemplate": "/program-project",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 4440
+        },
+        {
+          "Host": "localhost",
+          "Port": 4441
+        },
+        {
+          "Host": "localhost",
+          "Port": 4442
+        },
+        {
+          "Host": "localhost",
+          "Port": 4443
+        },
+        {
+          "Host": "localhost",
+          "Port": 4444
+        }
+      ],
+      "DownstreamPathTemplate": "/program-project",
+      "DownstreamScheme": "https",
+      "LoadBalancerOptions": {
+        "Type": "WeightedRandom"
+      }
+    }
+  ]
+}
