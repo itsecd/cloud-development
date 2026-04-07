@@ -1,4 +1,4 @@
-# Современные технологии разработки программного обеспечения
+<img width="2560" height="1440" alt="image" src="https://github.com/user-attachments/assets/88078b0a-bd6f-4e05-96c9-0949951b2bae" /># Современные технологии разработки программного обеспечения
 
 ### Вариант №6:
 - Доменная область: Медицинский пациент
@@ -7,18 +7,17 @@
 - Хостинг S3: Localstack
 
 
-## Лабораторная работа №1 - кеширование
+## Лабораторная работа №2 - Балансировка нагрузки
 
-В рамках первой лабораторной работы необходимо:
-* Реализовать сервис генерации контрактов на основе Bogus,
-* Реализовать кеширование при помощи IDistributedCache и Redis,
-* Реализовать структурное логирование сервиса генерации,
-* Настроить оркестрацию Aspire. 
+В рамках второй лабораторной работы необходимо:
+* Настроить оркестрацию на запуск нескольких реплик сервиса генерации,
+* Реализовать апи гейтвей на основе Ocelot,
+* Имплементировать алгоритм балансировки нагрузки согласно варианту.
   
 ### Реализовано:
-- Добавлен сервис генерации сотрудников с кешированием
-- Выполнена оркестрация Aspire
-- Логирование основных действий
+- Добавлен API Gateway на основе Ocelot, настроен конфиг файл
+- Реализован класс балансироващика WeightedRoundRobin
+- бновлены конфиг-файлы проекта для конкретного запуска, проверена работа балансировщика
 
 ### Скриншоты работащего приложения
 <details>
@@ -26,29 +25,34 @@
     Поднятые контейнеры
   </summary>
 
-  ![alt text](./images/1/image.png)
+  <img width="2560" height="1440" alt="image" src="https://github.com/user-attachments/assets/44d0ff7e-386a-4edf-b2da-35af965220f1" />
 
-  ![alt text](./images/1/image-1.png)
+   </br>Граф связей в проекте:</br>
 
-  ![alt text](./images/1/image-5.png)
+  <img width="719" height="650" alt="image" src="https://github.com/user-attachments/assets/064f7b83-0d2b-43d3-a356-78fb1ab5b4e6" />
+
 </details>
 
 <details>
   <summary>
-    Пример полученного сотрудника
+    Логи запуска генераторов
   </summary>
 
-  ![alt text](./images/1/image-2.png)
+    <img width="2560" height="1440" alt="image" src="https://github.com/user-attachments/assets/67ccbc95-16d1-4406-b412-ebea48661e55" />
 
-  </br>При попытке получить пациента с ID = 0 возникает ошибка:</br>
+    <img width="2560" height="1440" alt="image" src="https://github.com/user-attachments/assets/4a79997b-0629-438d-9d91-f4a31d87a9cd" />
 
-  ![alt text](./images/1/image-6.png)
 </details>
 
 <details>
   <summary>
-    Трассировки и демонстрация работы кэширования
+    Демонстрация балансировки
   </summary>
 
-  ![alt text](./images/1/image-4.png)
+   <img width="2560" height="1435" alt="image" src="https://github.com/user-attachments/assets/a1cd3e1c-46da-47a1-bac4-edfc4e801c69" />
+
+   <img width="2560" height="1428" alt="image" src="https://github.com/user-attachments/assets/08d9e1ea-3ea9-47ae-97df-7645ddf4a6e2" />
+
+   <img width="2560" height="1436" alt="image" src="https://github.com/user-attachments/assets/21847f03-e0a8-473a-abf9-3cc53527352b" />
+
 </details>
