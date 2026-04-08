@@ -38,9 +38,9 @@
     Логи запуска генераторов
   </summary>
 
-    <img width="2560" height="1440" alt="image" src="https://github.com/user-attachments/assets/67ccbc95-16d1-4406-b412-ebea48661e55" />
+  <img width="2560" height="1440" alt="image" src="https://github.com/user-attachments/assets/67ccbc95-16d1-4406-b412-ebea48661e55" />
 
-    <img width="2560" height="1440" alt="image" src="https://github.com/user-attachments/assets/4a79997b-0629-438d-9d91-f4a31d87a9cd" />
+  <img width="2560" height="1440" alt="image" src="https://github.com/user-attachments/assets/4a79997b-0629-438d-9d91-f4a31d87a9cd" />
 
 </details>
 

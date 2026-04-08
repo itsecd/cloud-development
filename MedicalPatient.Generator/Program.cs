@@ -11,15 +11,6 @@ builder.AddRedisDistributedCache("redis");
 builder.Services.AddSingleton<MedicalPatientGenerator>();
 builder.Services.AddScoped<MedicalPatientService>();
 
-builder.Services.AddCors(options =>
-{
-    options.AddDefaultPolicy(policy =>
-    {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
-    });
-});
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.OpenTelemetry()
@@ -28,7 +19,6 @@ Log.Logger = new LoggerConfiguration()
 
 var app = builder.Build();
 
-app.UseCors();
 app.UseSerilogRequestLogging();
 
 app.MapDefaultEndpoints();

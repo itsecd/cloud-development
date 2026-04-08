@@ -1,5 +1,4 @@
-﻿using System.Threading;
-using Ocelot.LoadBalancer.Errors;
+﻿using Ocelot.LoadBalancer.Errors;
 using Ocelot.LoadBalancer.Interfaces;
 using Ocelot.Responses;
 using Ocelot.ServiceDiscovery.Providers;
@@ -12,6 +11,9 @@ public class WeightedRoundRobin(IServiceDiscoveryProvider serviceDiscovery, IRea
 {
     private readonly int[] _weights = (weights is { Count: > 0 } ? [.. weights] : []);
     private int _cursor = -1;
+
+    private List<int>? _wheel;
+    private int _lastServicesCount = -1;
 
     public string Type => nameof(WeightedRoundRobin);
 
@@ -27,11 +29,15 @@ public class WeightedRoundRobin(IServiceDiscoveryProvider serviceDiscovery, IRea
             return new ErrorResponse<ServiceHostAndPort>(
                 new ServicesAreNullError("No downstream services are available"));
 
-        var wheel = BuildWheel(services.Count);
+        if (_wheel == null || _lastServicesCount != services.Count)
+        {
+            _wheel = BuildWheel(services.Count);
+            _lastServicesCount = services.Count;
+        }
 
         var next = (uint)Interlocked.Increment(ref _cursor);
-        var wheelIndex = (int)(next % (uint)wheel.Count);
-        var serviceIndex = wheel[wheelIndex];
+        var wheelIndex = (int)(next % (uint)_wheel.Count);
+        var serviceIndex = _wheel[wheelIndex];
 
         return new OkResponse<ServiceHostAndPort>(services[serviceIndex].HostAndPort);
     }

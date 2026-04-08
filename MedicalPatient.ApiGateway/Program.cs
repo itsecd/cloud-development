@@ -1,8 +1,25 @@
 using MedicalPatient.ApiGateway.Balancer;
+using MedicalPatient.AppHost.ServiceDefaults;
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.AddServiceDefaults();
+
+var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ??
+    ["https://localhost:7282", "http://localhost:5127"];
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("ClientCorsPolicy", policy =>
+    {
+        policy.WithOrigins(allowedOrigins)
+        .WithMethods("GET", "POST", "PUT", "DELETE")
+        .WithHeaders("Authorization", "Content-Type")
+        .AllowCredentials();
+    });
+});
 
 builder.Configuration
     .AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
@@ -40,6 +57,8 @@ builder.Services
         new WeightedRoundRobin(serviceDiscovery, weights));
 
 var app = builder.Build();
+
+app.UseCors("ClientCorsPolicy");
 
 await app.UseOcelot();
 await app.RunAsync();
