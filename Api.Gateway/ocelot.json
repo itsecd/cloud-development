@@ -3,25 +3,21 @@
     {
       "UpstreamPathTemplate": "/training-course",
       "UpstreamHttpMethod": [ "GET" ],
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 4000
-        },
-        {
-          "Host": "localhost",
-          "Port": 4001
-        },
-        {
-          "Host": "localhost",
-          "Port": 4002
-        }
-      ],
       "DownstreamPathTemplate": "/training-course",
-      "DownstreamScheme": "https",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "localhost", "Port": 4000 },
+        { "Host": "localhost", "Port": 4001 },
+        { "Host": "localhost", "Port": 4002 },
+        { "Host": "localhost", "Port": 4003 },
+        { "Host": "localhost", "Port": 4004 }
+      ],
       "LoadBalancerOptions": {
         "Type": "WeightedRandom"
       }
     }
-  ]
+  ],
+  "GlobalConfiguration": {
+    "BaseUrl": "http://localhost:7185"
+  }
 }

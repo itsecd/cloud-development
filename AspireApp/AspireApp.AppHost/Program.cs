@@ -6,7 +6,7 @@ var cache = builder.AddRedis("course-cache")
 
 var gateway = builder.AddProject<Projects.Api_Gateway>("api-gateway");
 
-for (var i = 0; i < 3; i++)
+for (var i = 0; i < 5; i++)
 {
     var service = builder.AddProject<Projects.Service_Api>($"training-course-api-{i + 1}", launchProfileName: null)
         .WithHttpEndpoint(4000 + i)
