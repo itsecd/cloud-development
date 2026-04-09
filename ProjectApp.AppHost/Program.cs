@@ -9,15 +9,15 @@ var localstack = builder.AddContainer("localstack", "localstack/localstack")
 
 var apiReplica1 = builder.AddProject<Projects.ProjectApp_Api>("projectapp-api-r1")
     .WaitFor(localstack)
-    .WithHttpEndpoint(port: 7001, name: "http");
+    .WithEndpoint("http", endpoint => endpoint.Port = 7001);
 
 var apiReplica2 = builder.AddProject<Projects.ProjectApp_Api>("projectapp-api-r2")
     .WaitFor(localstack)
-    .WithHttpEndpoint(port: 7002, name: "http");
+    .WithEndpoint("http", endpoint => endpoint.Port = 7002);
 
 var apiReplica3 = builder.AddProject<Projects.ProjectApp_Api>("projectapp-api-r3")
     .WaitFor(localstack)
-    .WithHttpEndpoint(port: 7003, name: "http");
+    .WithEndpoint("http", endpoint => endpoint.Port = 7003);
 
 var gateway = builder.AddProject<Projects.ProjectApp_Gateway>("projectapp-gateway")
     .WithReference(apiReplica1)
@@ -26,7 +26,7 @@ var gateway = builder.AddProject<Projects.ProjectApp_Gateway>("projectapp-gatewa
     .WaitFor(apiReplica1)
     .WaitFor(apiReplica2)
     .WaitFor(apiReplica3)
-    .WithHttpEndpoint(port: 7000, name: "http");
+    .WithEndpoint("http", endpoint => endpoint.Port = 7000);
 
 builder.AddProject<Projects.Client_Wasm>("client")
     .WithReference(gateway)
