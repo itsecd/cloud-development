@@ -1,4 +1,5 @@
 using ProjectApp.Api.Services.CreditApplicationService;
+using ProjectApp.Api.Options;
 using ProjectApp.ServiceDefaults;
 using Amazon.SQS;
 using Amazon.Runtime;
@@ -26,7 +27,10 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.Configure<CreditApplicationGenerationOptions>(
+    builder.Configuration.GetSection(CreditApplicationGenerationOptions.SectionName));
 builder.Services.AddSingleton<CreditApplicationGenerator>();
+builder.Services.AddSingleton<CreditApplicationValidator>();
 builder.Services.AddScoped<ICreditApplicationService, CreditApplicationService>();
 
 builder.Services.AddControllers();

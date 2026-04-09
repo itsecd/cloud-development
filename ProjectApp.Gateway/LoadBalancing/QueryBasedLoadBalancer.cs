@@ -30,7 +30,7 @@ public class QueryBasedLoadBalancer(IServiceDiscoveryProvider serviceProvider) :
             .ToArray();
 
         var id = ExtractRequestId(httpContext);
-        var replicaIndex = (int)(((long)id % orderedServices.Length + orderedServices.Length) % orderedServices.Length);
+        var replicaIndex = QueryBasedReplicaSelector.SelectIndex(id, orderedServices.Length);
         var selectedService = orderedServices[replicaIndex];
 
         return new OkResponse<ServiceHostAndPort>(selectedService.HostAndPort);

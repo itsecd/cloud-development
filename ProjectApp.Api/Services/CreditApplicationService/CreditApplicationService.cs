@@ -11,6 +11,7 @@ namespace ProjectApp.Api.Services.CreditApplicationService;
 public class CreditApplicationService(
     IAmazonSQS sqsClient,
     CreditApplicationGenerator generator,
+    CreditApplicationValidator validator,
     IConfiguration configuration,
     ILogger<CreditApplicationService> logger) : ICreditApplicationService
 {
@@ -47,6 +48,15 @@ public class CreditApplicationService(
                     var app = JsonSerializer.Deserialize<CreditApplication>(message.Body);
                     if (app != null && app.Id == id)
                     {
+                        if (!validator.TryValidate(app, out var cachedValidationError))
+                        {
+                            logger.LogWarning(
+                                "Cached credit application {Id} is invalid: {ValidationError}. Cache entry ignored.",
+                                id,
+                                cachedValidationError);
+                            continue;
+                        }
+
                         logger.LogInformation("Credit application {Id} found in SQS", id);
                         
                         // Удаляем сообщение после получения
@@ -74,6 +84,11 @@ public class CreditApplicationService(
         logger.LogInformation("Credit application {Id} not found in SQS or SQS unavailable, generating a new one", id);
         application = generator.Generate();
         application.Id = id;
+
+        if (!validator.TryValidate(application, out var generatedValidationError))
+        {
+            throw new InvalidOperationException($"Generated application is invalid: {generatedValidationError}");
+        }
 
         // Попытка сохранить в SQS
         try
