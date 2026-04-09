@@ -1,0 +1,26 @@
+{
+  "Generators": [ "generator-1", "generator-2", "generator-3" ],
+  "Routes": [
+    {
+      "DownstreamPathTemplate": "/contracts/vehicle",
+      "DownstreamScheme": "http",
+      "UpstreamPathTemplate": "/contracts/vehicle",
+      "UpstreamHttpMethod": [ "Get" ],
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "back-0",
+          "Port": 8090
+        },
+        {
+          "Host": "back-1",
+          "Port": 8091
+        },
+        {
+          "Host": "back-2",
+          "Port": 8092
+        }
+      ]
+    }
+  ],
+  "GlobalConfiguration": {}
+}
