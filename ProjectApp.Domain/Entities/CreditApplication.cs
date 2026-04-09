@@ -8,60 +8,50 @@ public class CreditApplication
     /// <summary>
     /// Идентификатор в системе
     /// </summary>
-    public required int Id { get; set; }
-    
+    public int Id { get; set; }
+
     /// <summary>
-    /// ФИО клиента
+    /// Тип кредита
     /// </summary>
-    public required string ClientFullName { get; set; }
-    
+    public string CreditType { get; set; } = string.Empty;
+
     /// <summary>
-    /// Дата подачи заявки
+    /// Запрашиваемая сумма
+    /// </summary>
+    public decimal RequestedAmount { get; set; }
+
+    /// <summary>
+    /// Срок в месяцах
+    /// </summary>
+    public int TermMonths { get; set; }
+
+    /// <summary>
+    /// Процентная ставка
+    /// </summary>
+    public double InterestRate { get; set; }
+
+    /// <summary>
+    /// Дата подачи
     /// </summary>
     public DateOnly ApplicationDate { get; set; }
-    
+
     /// <summary>
-    /// Сумма кредита
+    /// Необходимость страховки
     /// </summary>
-    public decimal CreditAmount { get; set; }
-    
+    public bool RequiresInsurance { get; set; }
+
     /// <summary>
-    /// Срок кредита в месяцах
+    /// Статус заявки
     /// </summary>
-    public int CreditTermMonths { get; set; }
-    
+    public string Status { get; set; } = string.Empty;
+
     /// <summary>
-    /// Цель кредита
-    /// </summary>
-    public required string CreditPurpose { get; set; }
-    
-    /// <summary>
-    /// Доход клиента
-    /// </summary>
-    public decimal ClientIncome { get; set; }
-    
-    /// <summary>
-    /// Кредитный рейтинг (0-1000)
-    /// </summary>
-    public int CreditScore { get; set; }
-    
-    /// <summary>
-    /// Дата принятия решения
+    /// Дата решения
     /// </summary>
     public DateOnly? DecisionDate { get; set; }
-    
+
     /// <summary>
-    /// Решение по заявке: одобрено (true), отклонено (false), null - ещё не решено
+    /// Одобренная сумма
     /// </summary>
-    public bool? Approved { get; set; }
-    
-    /// <summary>
-    /// Процентная ставка (годовых)
-    /// </summary>
-    public decimal InterestRate { get; set; }
-    
-    /// <summary>
-    /// Ежемесячный платёж
-    /// </summary>
-    public decimal MonthlyPayment { get; set; }
+    public decimal? ApprovedAmount { get; set; }
 }

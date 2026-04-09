@@ -93,12 +93,12 @@ public class CreditApplicationService(
             await sqsClient.SendMessageAsync(sendRequest, cancellationToken);
 
             logger.LogInformation(
-                "Credit application generated and sent to SQS: Id={Id}, Client={ClientFullName}, Amount={CreditAmount}, Purpose={CreditPurpose}, Score={CreditScore}",
+                "Credit application generated and sent to SQS: Id={Id}, CreditType={CreditType}, RequestedAmount={RequestedAmount}, Status={Status}, ApprovedAmount={ApprovedAmount}",
                 application.Id,
-                application.ClientFullName,
-                application.CreditAmount,
-                application.CreditPurpose,
-                application.CreditScore);
+                application.CreditType,
+                application.RequestedAmount,
+                application.Status,
+                application.ApprovedAmount);
         }
         catch (Exception ex)
         {
