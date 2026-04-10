@@ -1,0 +1,35 @@
+{
+  "Routes": [
+    {
+      "DownstreamPathTemplate": "/api/courses",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5213
+        },
+        {
+          "Host": "localhost",
+          "Port": 5214
+        },
+        {
+          "Host": "localhost",
+          "Port": 5215
+        },
+        {
+          "Host": "localhost",
+          "Port": 5216
+        },
+        {
+          "Host": "localhost",
+          "Port": 5217
+        }
+      ],
+      "UpstreamPathTemplate": "/courses",
+      "UpstreamHttpMethod": [ "GET" ],
+      "LoadBalancerOptions": {
+        "Type": "WeightedRandomLoadBalancer"
+      }
+    }
+  ]
+}
