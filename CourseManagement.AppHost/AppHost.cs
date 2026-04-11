@@ -1,5 +1,7 @@
-using k8s.Models;
+using Amazon;
+using Aspire.Hosting.LocalStack.Container;
 using Microsoft.Extensions.Configuration;
+using CourseManagement.AppHost.Stacks;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
@@ -16,6 +18,28 @@ var gatewayPort = apiGatewayConfig.GetValue<int>("Port");
 var redis = builder.AddRedis("course-cache")
     .WithRedisInsight(containerName: "course-insight")
     .WithDataVolume();
+
+
+// Message Broker + Object Store (Localstack, SNS, S3)
+var awsConfig = builder.AddAWSSDKConfig()
+    .WithProfile("default")
+    .WithRegion(RegionEndpoint.EUCentral1);
+
+var localstack = builder
+    .AddLocalStack("course-localstack", awsConfig: awsConfig, configureContainer: container =>
+    {
+        container.Lifetime = ContainerLifetime.Session;
+        container.DebugLevel = 1;
+        container.LogLevel = LocalStackLogLevel.Debug;
+        container.Port = 4566;
+        container.AdditionalEnvironmentVariables
+            .Add("DEBUG", "1");
+        container.AdditionalEnvironmentVariables
+            .Add("SNS_CERT_URL_HOST", "sns.eu-central-1.amazonaws.com");
+    });
+
+var awsResources = builder.AddAWSCDKStack("course-resources", stack => new CourseStack(stack, "course-stack"))
+    .WithReference(awsConfig);
 
 
 // API Gateway (Ocelot)
@@ -49,5 +73,6 @@ builder.AddProject<Projects.Client_Wasm>("course-wasm")
     .WithReference(apiGateway)
     .WaitFor(apiGateway);
 
+builder.UseLocalStack(localstack);
 
 builder.Build().Run();
