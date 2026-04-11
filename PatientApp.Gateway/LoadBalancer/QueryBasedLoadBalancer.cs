@@ -8,45 +8,37 @@ namespace PatientApp.Gateway.LoadBalancer;
 
 public class QueryBasedLoadBalancer : ILoadBalancer
 {
-    private readonly IServiceDiscoveryProvider _serviceDiscoveryProvider;
+    private readonly IServiceDiscoveryProvider _serviceDiscovery;
 
-    public QueryBasedLoadBalancer(IServiceDiscoveryProvider serviceDiscoveryProvider)
+    public QueryBasedLoadBalancer(IServiceDiscoveryProvider serviceDiscovery)
     {
-        _serviceDiscoveryProvider = serviceDiscoveryProvider;
+        _serviceDiscovery = serviceDiscovery;
     }
 
-    public string Type => "QueryBased";
+    public string Type => "QueryBasedLoadBalancer";
 
     public async Task<Response<ServiceHostAndPort>> LeaseAsync(HttpContext httpContext)
     {
-        var services = await _serviceDiscoveryProvider.GetAsync();
+        var services = await _serviceDiscovery.GetAsync();
 
         if (services == null || services.Count == 0)
         {
             return new ErrorResponse<ServiceHostAndPort>(
-                new UnableToFindLoadBalancerError("No services available")
-            );
+                    new ServicesAreNullError("No services available")
+                );
         }
 
         var idStr = httpContext.Request.Query["id"].FirstOrDefault();
 
         if (!int.TryParse(idStr, out var id))
         {
-            return new ErrorResponse<ServiceHostAndPort>(
-                new UnableToFindLoadBalancerError("Invalid or missing id")
-            );
+            return new OkResponse<ServiceHostAndPort>(services[0].HostAndPort);
         }
 
-        var index = id % services.Count;
+        var selected = services[id % services.Count];
 
-        var selected = services[index];
-
-        var result = selected.HostAndPort;
-
-        return new OkResponse<ServiceHostAndPort>(result);
+        return new OkResponse<ServiceHostAndPort>(selected.HostAndPort);
     }
 
-    public void Release(ServiceHostAndPort service)
-    {
-    }
+    public void Release(ServiceHostAndPort hostAndPort) { }
 }

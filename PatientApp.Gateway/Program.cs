@@ -1,5 +1,4 @@
 using Ocelot.DependencyInjection;
-using Ocelot.LoadBalancer.Interfaces;
 using Ocelot.Middleware;
 using PatientApp.Gateway.LoadBalancer;
 
@@ -7,12 +6,45 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
 
-builder.Services.AddOcelot();
+var generators = builder.Configuration.GetSection("Generators").Get<string[]>() ?? [];
 
-builder.Services.AddSingleton<ILoadBalancerCreator, QueryBasedLoadBalancerCreator>();
+var addressOverrides = new List<KeyValuePair<string, string?>>();
+
+for (var i = 0; i < generators.Length; ++i)
+{
+    var name = generators[i];
+    var url = builder.Configuration[$"services:{name}:http:0"];
+
+    if (!string.IsNullOrEmpty(url) && Uri.TryCreate(url, UriKind.Absolute, out var uri))
+    {
+        addressOverrides.Add(new($"Routes:0:DownstreamHostAndPorts:{i}:Host", uri.Host));
+        addressOverrides.Add(new($"Routes:0:DownstreamHostAndPorts:{i}:Port", uri.Port.ToString()));
+    }
+}
+
+if (addressOverrides.Count > 0)
+    builder.Configuration.AddInMemoryCollection(addressOverrides);
+
+builder.Services
+    .AddOcelot(builder.Configuration)
+    .AddCustomLoadBalancer((route, serviceDiscovery) =>
+        new QueryBasedLoadBalancer(serviceDiscovery));
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy
+            .AllowAnyOrigin()
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 
 var app = builder.Build();
 
+app.UseCors("AllowAll");
+
 await app.UseOcelot();
 
-app.Run();
+await app.RunAsync();

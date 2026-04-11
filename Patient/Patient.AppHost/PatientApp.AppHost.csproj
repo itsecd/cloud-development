@@ -19,6 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Client.Wasm\Client.Wasm.csproj" />
     <ProjectReference Include="..\..\GeneratorService\PatientApp.Generator.csproj" />
+    <ProjectReference Include="..\..\PatientApp.Gateway\PatientApp.Gateway.csproj" />
     <ProjectReference Include="..\Patient.ServiceDefaults\PatientApp.ServiceDefaults.csproj" />
   </ItemGroup>
 
