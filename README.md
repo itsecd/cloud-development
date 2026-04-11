@@ -61,6 +61,11 @@ cloud-development/
 │  ├─ Layout/                   
 │  ├─ Pages/Home.razor          
 │  └─ wwwroot/appsettings.json                    # Конфигурация клиента
+├─ PatientApp.Gateway/ # API Gateway (Ocelot)
+│ ├─ LoadBalancer/                                # Кастомный балансировщик
+│ │ └─ QueryBasedLoadBalancer.cs
+│ ├─ ocelot.json                                  # Конфигурация маршрутизации
+│ └─ Program.cs
 ├─ GeneratorService/                              
 │  ├─ Models/Patient.cs                           # Объектная модель
 │  ├─ Services/{Generator,PatientService}.cs      # Сервис генерации и генератор
