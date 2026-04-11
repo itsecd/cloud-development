@@ -18,6 +18,7 @@ public class PatientService(
         var cacheKey = $"{CacheKeyPrefix}{id}";
 
         logger.LogInformation("Patient with Id: {id} was requested", id);
+        logger.LogInformation("Handled by instance: {instance}", Environment.MachineName);
 
         var cachedData = await cache.GetStringAsync(cacheKey, cancellationToken);
 

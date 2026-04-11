@@ -1,0 +1,13 @@
+{
+  "Routes": [
+    {
+      "DownstreamPathTemplate": "/patient",
+      "UpstreamPathTemplate": "/patient",
+      "UpstreamHttpMethod": [ "GET" ],
+      "ServiceName": "generator",
+      "LoadBalancerOptions": {
+        "Type": "QueryBased"
+      }
+    }
+  ]
+}

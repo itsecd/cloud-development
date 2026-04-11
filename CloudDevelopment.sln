@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PatientApp.AppHost", "Patie
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PatientApp.ServiceDefaults", "Patient\Patient.ServiceDefaults\PatientApp.ServiceDefaults.csproj", "{DA24CCA7-7B4A-871C-985C-DBE0FA1F7524}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PatientApp.Gateway", "PatientApp.Gateway\PatientApp.Gateway.csproj", "{88D580C2-3FC6-4FF0-B313-37152F9D581B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{DA24CCA7-7B4A-871C-985C-DBE0FA1F7524}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DA24CCA7-7B4A-871C-985C-DBE0FA1F7524}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DA24CCA7-7B4A-871C-985C-DBE0FA1F7524}.Release|Any CPU.Build.0 = Release|Any CPU
+		{88D580C2-3FC6-4FF0-B313-37152F9D581B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{88D580C2-3FC6-4FF0-B313-37152F9D581B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{88D580C2-3FC6-4FF0-B313-37152F9D581B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{88D580C2-3FC6-4FF0-B313-37152F9D581B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
