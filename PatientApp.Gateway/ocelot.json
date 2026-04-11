@@ -1,0 +1,28 @@
+{
+  "Generators": [ "generator-1", "generator-2", "generator-3" ],
+  "Routes": [
+    {
+      "DownstreamPathTemplate": "/patient",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5001
+        },
+        {
+          "Host": "localhost",
+          "Port": 5002
+        },
+        {
+          "Host": "localhost",
+          "Port": 5003
+        }
+      ],
+      "UpstreamPathTemplate": "/patient",
+      "UpstreamHttpMethod": [ "GET" ],
+      "LoadBalancerOptions": {
+        "Type": "QueryBasedLoadBalancer"
+      }
+    }
+  ]
+}
