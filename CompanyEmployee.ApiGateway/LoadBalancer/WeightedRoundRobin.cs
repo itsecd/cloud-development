@@ -22,22 +22,22 @@ public class WeightedRoundRobin : ILoadBalancer
         var weights = config
             .GetSection("LoadBalancerWeights")
             .Get<Dictionary<string, int>>() ?? [];
+        ;
 
-
-        foreach (var s in services)
+        for (var i = 0; i < services.Count; i++)
         {
+            var s = services[i];
 
-            var key = s.DownstreamPort.ToString();
+            var key = $"R{i + 1}";
             var weight = weights.TryGetValue(key, out var w) ? w : 1;
 
-            for (var i = 0; i < weight; i++)
+            for (var j = 0; j < weight; j++)
             {
                 _expandedList.Add(s);
             }
         }
 
         _initialized = true;
-
     }
 
     public Task<Response<ServiceHostAndPort>> LeaseAsync(HttpContext context)

@@ -7,15 +7,15 @@
             "DownstreamHostAndPorts": [
                 {
                     "Host": "localhost",
-                    "Port": 5213
+                    "Port": 0
                 },
                 {
                     "Host": "localhost",
-                    "Port": 5214
+                    "Port": 0
                 },
                 {
                     "Host": "localhost",
-                    "Port": 5215
+                    "Port": 0
                 }
             ],
             "UpstreamPathTemplate": "/api/CompanyEmployee",

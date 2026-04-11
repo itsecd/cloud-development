@@ -3,8 +3,6 @@ var builder = DistributedApplication.CreateBuilder(args);
 var redis = builder.AddRedis("redis").WithRedisInsight();
 
 var api = builder.AddProject<Projects.CompanyEmployee_ApiGateway>("companyemployee-apigateway")
-    .WithReference(redis)
-    .WaitFor(redis)
     .WithHttpEndpoint(name: "gateway", port: 5212);
 
 for (var i = 1; i <= 3; i++)
@@ -13,7 +11,7 @@ for (var i = 1; i <= 3; i++)
         .AddProject<Projects.CompanyEmployee_ApiService>($"generator-{i}")
         .WithReference(redis)
         .WaitFor(redis)
-        .WithHttpEndpoint(name: $"http", port: 5212 + i);
+        .WithHttpEndpoint(name: $"http");
 
     api.WithReference(generator)
         .WaitFor(generator);
