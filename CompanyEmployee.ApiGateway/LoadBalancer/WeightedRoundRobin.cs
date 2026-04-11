@@ -1,14 +1,12 @@
-﻿using Ocelot.LoadBalancer.Errors;
-using Ocelot.LoadBalancer.Interfaces;
+﻿using Ocelot.LoadBalancer.Interfaces;
 using Ocelot.Responses;
-using Ocelot.ServiceDiscovery.Providers;
 using Ocelot.Values;
 
 namespace CompanyEmployee.ApiGateway.LoadBalancer;
 
 public class WeightedRoundRobin : ILoadBalancer
 {
-    private static List<ServiceHostAndPort> _expandedList = new();
+    private static readonly List<ServiceHostAndPort> _expandedList = [];
     private static int _index = 0;
     private static readonly object _lock = new();
     private static bool _initialized = false;
@@ -23,7 +21,7 @@ public class WeightedRoundRobin : ILoadBalancer
 
         var weights = config
             .GetSection("LoadBalancerWeights")
-            .Get<Dictionary<string, int>>() ?? new();
+            .Get<Dictionary<string, int>>() ?? [];
 
 
         foreach (var s in services)

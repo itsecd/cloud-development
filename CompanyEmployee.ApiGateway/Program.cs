@@ -1,6 +1,5 @@
 using CompanyEmployee.ApiGateway.LoadBalancer;
 using Ocelot.DependencyInjection;
-using Ocelot.LoadBalancer.Interfaces;
 using Ocelot.Middleware;
 using Ocelot.Values;
 
