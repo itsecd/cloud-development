@@ -4,8 +4,22 @@
 
 ## Описание
 
-- **GeneratorService** — минималистичный ASP.NET Core API, который генерирует карточку пациента по идентификатору, кеширует результат в Redis и отдает его клиенту.
-- **Patient** — папка с оркестратором .NET Aspire AppHost.
+- **GeneratorService** — ASP.NET Core API, генерирующий карточку пациента по идентификатору, кеширует результат в Redis.
+- **API Gateway (Ocelot)** — маршрутизация и балансировка запросов.
+- **Client (Blazor WASM)** — пользовательский интерфейс.
+- **Redis** — кеш.
+- **.NET Aspire AppHost** — оркестрация сервисов.
+
+## Архитектура
+
+
+Client (Blazor)
+↓
+API Gateway (Ocelot)
+↓
+GeneratorService (3 реплики)
+↓
+Redis
 
 ## REST API
 
@@ -59,7 +73,29 @@ cloud-development/
 └─ LICENSE
 ```
 
+## Балансировка нагрузки
+
+Реализован кастомный балансировщик:
+
+instanceIndex = id % N
+
+где N — количество реплик сервиса.
+
+## Кеширование
+Используется Redis
+Повторный запрос берётся из кеша
+В логах:
+Patient with id: X was found in cache
+
 ## Скрины работы
-![Сервисы](image.png)
+<details>
+  Сервисы
+<img width="1753" height="907" alt="Сервисы" src="https://github.com/user-attachments/assets/391f0f98-4179-4510-acff-cc7ab21dcbc9" />
+</details>
+<details>
 ![Ответ клиента](image-1.png)
-![Трассировка](image-2.png)
+</details>
+<details>
+  Трассировки
+  <img width="1753" height="760" alt="Трассировки" src="https://github.com/user-attachments/assets/72deb2da-0acc-4a33-b193-ae64d472d2dd" />
+</details>
