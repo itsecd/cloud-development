@@ -9,16 +9,31 @@ namespace CourseManagement.AppHost.Stacks;
 public class CourseStack : Stack
 {
     public ITopic CourseTopic { get; }
+
     public IBucket ContractsBucket { get; }
 
-    public CourseStack(Construct scope, string id, IStackProps? props = null)
-        : base(scope, id, props)
+    public CourseStack(Construct scope, string id, IStackProps? props = null) : base(scope, id, props)
     {
+        // Параметризация названия топика и бакета
+        var bucketName = new CfnParameter(this, "BucketName", new CfnParameterProps
+        {
+            Type = "String",
+            Description = "Name for the S3 bucket",
+            Default = "course-bucket"
+        });
+
+        var topicName = new CfnParameter(this, "TopicName", new CfnParameterProps
+        {
+            Type = "String",
+            Description = "Name for the SNS topic",
+            Default = "course-topic"
+        });
+
         // SNS топик для контрактов
         CourseTopic = new Topic(this, "CourseContractsTopic", new TopicProps
         {
-            TopicName = "course-contracts-topic",
-            DisplayName = "Course Contracts Topic",
+            TopicName = topicName.ValueAsString,
+            DisplayName = topicName.ValueAsString,
             Fifo = false
         });
 
@@ -29,7 +44,7 @@ public class CourseStack : Stack
         // S3 бакет для хранения контрактов
         ContractsBucket = new Bucket(this, "CourseContractsBucket", new BucketProps
         {
-            BucketName = "course-contracts-bucket",
+            BucketName = bucketName.ValueAsString,
             Versioned = false,
             RemovalPolicy = RemovalPolicy.DESTROY,
             AutoDeleteObjects = true,

@@ -1,12 +1,12 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace CourseManagement.ApiService.Dto;
+namespace CourseManagement.ApiService.Entities;
 
 
 /// <summary>
-/// DTO для сущности типа курс
+/// Сущность типа курс
 /// </summary>
-public class CourseDto
+public class Course
 {
     /// <summary>
     /// Идентификатор курса

@@ -1,26 +1,21 @@
 ﻿using System.Text.Json;
 using Microsoft.Extensions.Caching.Distributed;
 
-namespace CourseManagement.ApiService.Services;
+namespace CourseManagement.ApiService.Cache;
 
 /// <summary>
-/// Сервис для взаимодействия с кэшем
+/// Универсальный сервис для взаимодействия с кэшем
 /// </summary>
 /// <param name="logger">Логгер</param>
 /// <param name="cache">Кэш</param>
-public class CacheService<T>(ILogger<CacheService<T>> logger, IDistributedCache cache)
+public class CacheService<T>(ILogger<CacheService<T>> logger, IDistributedCache cache) : ICacheService<T>
 {
     /// <summary>
     /// Время жизни данных в кэше
     /// </summary>
     private static readonly double _cacheDuration = 5;
 
-    /// <summary>
-    /// Асинхронный метод для извлечения данных из кэша
-    /// </summary>
-    /// <param name="key">Ключ для сущности</param>
-    /// <param name="id">Идентификатор объекта</param>
-    /// <returns>Объект или null при его отсутствии</returns>
+    /// <inheritdoc/>
     public async Task<T?> FetchAsync(string key, int id)
     {
         var cacheKey = $"{key}:{id}";
@@ -32,12 +27,12 @@ public class CacheService<T>(ILogger<CacheService<T>> logger, IDistributedCache 
             {
                 var obj = JsonSerializer.Deserialize<T>(cached);
 
-                logger.LogInformation("Cache hit for object {ResourceId}", id);
+                logger.LogInformation("Cache hit for {EntityType} {ResourceId}", typeof(T).Name, id);
 
                 return obj;
             }
 
-            logger.LogInformation("Cache miss for object {ResourceId}", id);
+            logger.LogInformation("Cache miss for {EntityType} {ResourceId}", typeof(T).Name, id);
         }
         catch (Exception ex)
         {
@@ -47,13 +42,8 @@ public class CacheService<T>(ILogger<CacheService<T>> logger, IDistributedCache 
         return default;
     }
 
-    /// <summary>
-    /// Асинхронный метод для внесения данных в кэш
-    /// </summary>
-    /// <param name="key">Ключ для сущности</param>
-    /// <param name="id">Идентификатор объекта</param>
-    /// <param name="obj">Объект</param>
-    public async Task StoreAsync(string key, int id, T obj)
+    /// <inheritdoc/>
+    public async Task StoreAsync(string key, int id, T entity)
     {
         var cacheKey = $"{key}:{id}";
 
@@ -64,9 +54,9 @@ public class CacheService<T>(ILogger<CacheService<T>> logger, IDistributedCache 
 
         try
         {
-            var serialized = JsonSerializer.Serialize(obj);
+            var serialized = JsonSerializer.Serialize(entity);
             await cache.SetStringAsync(cacheKey, serialized, options);
-            logger.LogInformation("Object {ResourceId} cached", id);
+            logger.LogInformation("{EntityType} {ResourceId} cached", typeof(T).Name, id);
         }
         catch (Exception ex)
         {

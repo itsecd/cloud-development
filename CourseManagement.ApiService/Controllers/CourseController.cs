@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using CourseManagement.ApiService.Dto;
+using CourseManagement.ApiService.Entities;
 using CourseManagement.ApiService.Services;
 
 namespace CourseManagement.ApiService.Controllers;
@@ -11,7 +11,7 @@ namespace CourseManagement.ApiService.Controllers;
 /// <param name="courseService">Сервис для сущности типа Курс</param>
 [ApiController]
 [Route("course-management")]
-public class CourseController(ILogger<CourseController> logger, CourseService courseService) : ControllerBase
+public class CourseController(ILogger<CourseController> logger, ICourseService courseService) : ControllerBase
 {
     /// <summary>
     /// Обработчик GET-запроса на генерацию курса
@@ -19,7 +19,7 @@ public class CourseController(ILogger<CourseController> logger, CourseService co
     /// <param name="id">Идентификатор курса</param>
     /// <returns>Сгенерированный курс</returns>
     [HttpGet]
-    public async Task<ActionResult<CourseDto>> GetCourse(int? id)
+    public async Task<ActionResult<Course>> GetCourse(int? id)
     {
         logger.LogInformation("Processing request for course {ResourceId}", id);
 

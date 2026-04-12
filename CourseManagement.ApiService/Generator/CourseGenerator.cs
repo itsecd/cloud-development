@@ -1,13 +1,13 @@
 ﻿using Bogus;
-using CourseManagement.ApiService.Dto;
+using CourseManagement.ApiService.Entities;
 
-namespace CourseManagement.ApiService.Services;
+namespace CourseManagement.ApiService.Generator;
 
 /// <summary>
 /// Генератор для сущности типа Курс
 /// </summary>
 /// <param name="logger">Логгер</param>
-public class CourseGenerator(ILogger<CourseGenerator> logger)
+public class CourseGenerator(ILogger<CourseGenerator> logger) : ICourseGenerator
 {
     /// <summary>
     /// Список названий курсов
@@ -53,7 +53,7 @@ public class CourseGenerator(ILogger<CourseGenerator> logger)
     /// <summary>
     /// Экземпляр генератора данных
     /// </summary>
-    private static readonly Faker<CourseDto> _courseFaker = new Faker<CourseDto>("ru")
+    private static readonly Faker<Course> _courseFaker = new Faker<Course>("ru")
             .RuleFor(c => c.Title, f => f.PickRandom(_courseTitles))
             .RuleFor(c => c.Lector, f => f.Name.FullName())
             .RuleFor(c => c.StartDate, f => DateOnly.FromDateTime(f.Date.Future(1)))
@@ -64,12 +64,8 @@ public class CourseGenerator(ILogger<CourseGenerator> logger)
             .RuleFor(c => c.Price, f => f.Finance.Amount(5000, 100000, 2))
             .RuleFor(c => c.Rating, f => f.Random.Int(1, 5));
 
-    /// <summary>
-    /// Метод для генерации одного экземпляра сущности типа Курс 
-    /// </summary>
-    /// <param name="id">Идентификатор курса</param>
-    /// <returns>Курс</returns>
-    public CourseDto GenerateOne(int? id = null)
+    /// <inheritdoc/>
+    public Course GenerateOne(int? id)
     {
         var course = _courseFaker.Generate();
         course.Id = id ?? new Randomizer().Int(1, 100000);

@@ -13,6 +13,9 @@ var ports = apiServiceConfig.GetSection("Ports").Get<List<int>>() ?? [];
 var apiGatewayConfig = builder.Configuration.GetSection("ApiGateway");
 var gatewayPort = apiGatewayConfig.GetValue<int>("Port");
 
+var topicName = builder.Configuration.GetSection("CourseStack").GetValue<string>("TopicName") ?? "course-topic";
+var bucketName = builder.Configuration.GetSection("CourseStack").GetValue<string>("BucketName") ?? "course-bucket";
+
 
 // Cache (Redis)
 var redis = builder.AddRedis("course-cache")
@@ -38,7 +41,12 @@ var localstack = builder
             .Add("SNS_CERT_URL_HOST", "sns.eu-central-1.amazonaws.com");
     });
 
-var awsResources = builder.AddAWSCDKStack("course-resources", stack => new CourseStack(stack, "course-stack"))
+var awsResources = builder.AddAWSCDKStack("course-resources", stack => 
+    new CourseStack(stack, "course-stack", new CourseStackProps
+    {
+        BucketName = bucketName,
+        TopicName = topicName,
+    }))
     .WithReference(awsConfig);
 
 
@@ -72,6 +80,7 @@ builder.AddProject<Projects.Client_Wasm>("course-wasm")
     .WithHttpHealthCheck("/health")
     .WithReference(apiGateway)
     .WaitFor(apiGateway);
+
 
 builder.UseLocalStack(localstack);
 

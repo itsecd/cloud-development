@@ -1,4 +1,6 @@
-using CourseManagement.ApiService.Dto;
+using CourseManagement.ApiService.Cache;
+using CourseManagement.ApiService.Entities;
+using CourseManagement.ApiService.Generator;
 using CourseManagement.ApiService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,7 +22,7 @@ builder.Services.AddControllers();
 builder.Services.AddSingleton<CourseGenerator>();
 
 // Сервис для взаимодействия с кэшем
-builder.Services.AddSingleton<CacheService<CourseDto>>();
+builder.Services.AddSingleton<CacheService<Course>>();
 
 // Сервис для сущности типа Курс
 builder.Services.AddSingleton<CourseService>();
