@@ -6,7 +6,7 @@
       "DownstreamPathTemplate": "/contracts/{everything}",
       "DownstreamScheme": "http",
       "LoadBalancerOptions": {
-        "Type": "WeightedRoundRobin"
+        "Type": "WeightedRoundRobinBalancer"
       },
       "DownstreamHostAndPorts": [
         {
@@ -21,7 +21,7 @@
       "DownstreamPathTemplate": "/contracts",
       "DownstreamScheme": "http",
       "LoadBalancerOptions": {
-        "Type": "WeightedRoundRobin"
+        "Type": "WeightedRoundRobinBalancer"
       },
       "DownstreamHostAndPorts": [
         {
@@ -31,7 +31,5 @@
       ]
     }
   ],
-  "GlobalConfiguration": {
-    "BaseUrl": "http://localhost:5000"
-  }
+  "GlobalConfiguration": {}
 }

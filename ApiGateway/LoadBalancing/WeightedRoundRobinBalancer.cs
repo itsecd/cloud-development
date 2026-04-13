@@ -6,7 +6,7 @@ namespace ApiGateway.LoadBalancing;
 
 public class WeightedRoundRobinBalancer : ILoadBalancer
 {
-    public string Type => "WeightedRoundRobin";
+    public string Type => nameof(WeightedRoundRobinBalancer);
 
     private readonly List<ServiceHostAndPort> _expandedHosts;
     private readonly object _lock = new();
@@ -15,6 +15,7 @@ public class WeightedRoundRobinBalancer : ILoadBalancer
     public WeightedRoundRobinBalancer(IConfiguration configuration)
     {
         var hosts = new List<(string host, int port, int weight)>();
+
         AddHostFromConfig(configuration, "generation-service-1", 3, hosts);
         AddHostFromConfig(configuration, "generation-service-2", 2, hosts);
         AddHostFromConfig(configuration, "generation-service-3", 1, hosts);
@@ -30,7 +31,7 @@ public class WeightedRoundRobinBalancer : ILoadBalancer
 
         if (_expandedHosts.Count == 0)
         {
-            _expandedHosts.Add(new ServiceHostAndPort("localhost", 5001));
+            _expandedHosts.Add(new ServiceHostAndPort("localhost", 5229));
         }
     }
 
@@ -40,7 +41,7 @@ public class WeightedRoundRobinBalancer : ILoadBalancer
         int weight,
         List<(string, int, int)> hosts)
     {
-        var url = config[$"services__{serviceName}__http__0"];
+        var url = config[$"services:{serviceName}:http:0"];
         if (string.IsNullOrEmpty(url)) return;
 
         var uri = new Uri(url);

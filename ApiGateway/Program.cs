@@ -8,10 +8,11 @@ builder.AddServiceDefaults();
 
 builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
 
-// Передаём IConfiguration в балансировщик через лямбду
 builder.Services
     .AddOcelot(builder.Configuration)
-    .AddCustomLoadBalancer(() => new WeightedRoundRobinBalancer(builder.Configuration));
+    .AddCustomLoadBalancer(
+        (route, serviceDiscoveryProvider) =>
+            new WeightedRoundRobinBalancer(builder.Configuration));
 
 var app = builder.Build();
 
