@@ -16,7 +16,8 @@ public class CompanyEmployeeService(
     CompanyEmployeeGenerator generator,
     IDistributedCache cache,
     ILogger<CompanyEmployeeService> logger,
-    IConfiguration config
+    IConfiguration config,
+    IEmployeePublisher? employeePublisher = null
 )
 {
     private readonly TimeSpan _cacheExpiration = TimeSpan.FromMinutes(config.GetSection("CacheSetting").GetValue("CacheExpirationMinutes", 5));
@@ -54,6 +55,12 @@ public class CompanyEmployeeService(
         };
 
         await cache.SetStringAsync(cacheKey, serializedData, cacheOptions, cancellationToken);
+
+        if (employeePublisher is not null)
+        {
+            var res = employeePublisher.PublishAsync(application, cancellationToken);
+            logger.LogInformation("Publisher complete task");
+        }
 
         logger.LogInformation(
             "Company employee application {Id} saved to cache with TTL {CacheExpiration} minutes",

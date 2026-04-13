@@ -1,6 +1,8 @@
 using CompanyEmployees.Generator.Services;
 using CompanyEmployees.ServiceDefaults;
 using Serilog;
+using MassTransit;
+using Amazon.SQS;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +22,30 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader();
     });
 });
+
+var sqsServiceUrl = builder.Configuration["Sqs:ServiceUrl"];
+if (!string.IsNullOrEmpty(sqsServiceUrl))
+{
+    builder.Services.AddMassTransit(x =>
+    {
+        x.UsingAmazonSqs((_, cfg) =>
+        {
+            cfg.Host("us-east-1", h =>
+            {
+                h.AccessKey("test");
+                h.SecretKey("test");
+                h.Config(new AmazonSQSConfig
+                {
+                    ServiceURL = sqsServiceUrl,
+                    AuthenticationRegion = "us-east-1"
+                });
+            });
+            cfg.UseRawJsonSerializer();
+        });
+    });
+
+    builder.Services.AddScoped<IEmployeePublisher, EmployeePublisher>();
+}
 
 var app = builder.Build();
 
@@ -45,6 +71,7 @@ app.MapGet("/employee", async (
     try
     {
         var application = await service.GetByIdAsync(id, cancellationToken);
+
         return Results.Ok(application);
     }
     catch (Exception ex)
