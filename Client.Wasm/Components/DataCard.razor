@@ -67,8 +67,27 @@
 
     private async Task RequestNewData()
     {
-        var baseAddress = Configuration["BaseAddress"] ?? throw new KeyNotFoundException("Конфигурация клиента не содержит параметра BaseAddress");
+        var baseAddress = ResolveBaseAddress();
         Value = await Client.GetFromJsonAsync<JsonObject>($"{baseAddress}?id={Id}", new JsonSerializerOptions { });
         StateHasChanged();
+    }
+
+    private string ResolveBaseAddress()
+    {
+        var direct = Configuration["BaseAddress"];
+        if (!string.IsNullOrWhiteSpace(direct))
+        {
+            return direct;
+        }
+
+        var gateway = Configuration["services:projectapp-gateway:https:0"]
+                      ?? Configuration["services:projectapp-gateway:http:0"];
+
+        if (string.IsNullOrWhiteSpace(gateway))
+        {
+            throw new KeyNotFoundException("Не найден адрес API Gateway в конфигурации.");
+        }
+
+        return gateway.TrimEnd('/') + "/api/project";
     }
 }

@@ -24,6 +24,7 @@ public class ProjectController(ProgramProjectGeneratorService generatorService, 
             return BadRequest("id must be a positive integer.");
         }
 
+        logger.LogInformation("Instance: {InstanceId}", Environment.MachineName);
         logger.LogInformation("Received request to retrieve/generate project {Id}", id);
 
         var project = await generatorService.GetByIdAsync(id, cancellationToken);
