@@ -1,46 +1,57 @@
 using ApiGateway.Balancer;
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.AddServiceDefaults();
-
 builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
 
-builder.Services
-    .AddOcelot(builder.Configuration)
-    .AddCustomLoadBalancer((route, serviceDiscovery) =>
-        new QueryBasedLoadBalancer(serviceDiscovery));
+var generators = builder.Configuration.GetSection("Generators").Get<string[]>() ?? [];
 
+var overrides = new List<KeyValuePair<string, string?>>();
 
-builder.Services
-    .AddHttpClient("ocelot")
-    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
-    {
-        ServerCertificateCustomValidationCallback =
-            HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
-    });
+for (var i = 0; i < generators.Length; i++)
+{
+    var serviceName = generators[i];
+    var url = builder.Configuration[$"services:{serviceName}:http:0"];
 
-var clientAddress = builder.Configuration["ClientAddress"]
-    ?? throw new InvalidOperationException("ClientAddress is not configured.");
+    if (string.IsNullOrWhiteSpace(url))
+        continue;
+
+    if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
+        continue;
+
+    overrides.Add(new KeyValuePair<string, string?>(
+        $"Routes:0:DownstreamHostAndPorts:{i}:Host", uri.Host));
+
+    overrides.Add(new KeyValuePair<string, string?>(
+        $"Routes:0:DownstreamHostAndPorts:{i}:Port", uri.Port.ToString()));
+}
+
+if (overrides.Count != 0)
+{
+    builder.Configuration.AddInMemoryCollection(overrides);
+}
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("ClientPolicy", policy =>
     {
         policy
-            .WithOrigins(clientAddress)
-            .AllowAnyHeader()
-            .AllowAnyMethod();
+            .AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader();
     });
 });
 
+builder.Services
+    .AddOcelot(builder.Configuration)
+    .AddCustomLoadBalancer((route, sp) =>
+        new QueryBasedLoadBalancer(sp));
+
 var app = builder.Build();
 
-app.MapDefaultEndpoints();
 app.UseCors("ClientPolicy");
 
 await app.UseOcelot();
-app.Run();
+await app.RunAsync();
