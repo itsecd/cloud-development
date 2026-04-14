@@ -67,10 +67,10 @@
 
 
 ##### Aspire
-![alt text](1.png)
+![alt text](1.PNG)
 
 ##### Получение данных
-![alt text](2.png)
+![alt text](2.PNG)
 
 ##### Логи  
-![alt text](3.png)
+![alt text](3.PNG)
