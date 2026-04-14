@@ -4,15 +4,15 @@ using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using Generator.DTO;
 
-namespace Generator.Messaging;
+namespace Generator.Service.Messaging;
 
 /// <summary>
-/// Служба для отправки сообщений в SNS
+/// Сервис для отправки сообщений в SNS
 /// </summary>
 /// <param name="client">Клиент SNS</param>
 /// <param name="configuration">Конфигурация</param>
 /// <param name="logger">Логгер</param>
-public class SnsPublisherService(IAmazonSimpleNotificationService client, IConfiguration configuration, ILogger<SnsPublisherService> logger) : IProducerService
+public class SnsPublisherService(IAmazonSimpleNotificationService client, IConfiguration configuration, ILogger<SnsPublisherService> logger) : IPublisherService
 {
     private readonly string _topicArn = configuration["AWS:Resources:SNSTopicArn"]
                                         ?? throw new KeyNotFoundException("SNS topic link was not found in configuration");
@@ -28,11 +28,14 @@ public class SnsPublisherService(IAmazonSimpleNotificationService client, IConfi
                 Message = json,
                 TopicArn = _topicArn
             };
-            var response = await client.PublishAsync(request);
-            if (response.HttpStatusCode == HttpStatusCode.OK)
-                logger.LogInformation("Residential building {id} was sent to sink via SNS", residentialBuilding.Id);
-            else
-                throw new Exception($"SNS returned {response.HttpStatusCode}");
+            
+            var statusCode = (await client.PublishAsync(request)).HttpStatusCode;
+            if (statusCode != HttpStatusCode.OK)
+            {
+                throw new Exception($"SNS returned status code {statusCode}");
+            }
+            
+            logger.LogInformation("Residential building with id={Id} was sent to file service via SNS", residentialBuilding.Id);
         }
         catch (Exception ex)
         {

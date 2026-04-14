@@ -1,7 +1,8 @@
 using Amazon.SimpleNotificationService;
 using Generator.Generator;
-using Generator.Messaging;
 using Generator.Service;
+using Generator.Service.Cache;
+using Generator.Service.Messaging;
 using LocalStack.Client.Extensions;
 using ResidentialBuilding.ServiceDefaults;
 
@@ -11,10 +12,11 @@ builder.AddServiceDefaults();
 builder.AddRedisDistributedCache("residential-building-cache");
 
 builder.Services.AddSingleton<ResidentialBuildingGenerator>();
+builder.Services.AddSingleton<ICacheService, CacheService>();
+builder.Services.AddSingleton<IPublisherService, SnsPublisherService>();
 builder.Services.AddSingleton<IResidentialBuildingService,  ResidentialBuildingService>();
 
 builder.Services.AddLocalStack(builder.Configuration);
-builder.Services.AddSingleton<IProducerService, SnsPublisherService>();
 builder.Services.AddAwsService<IAmazonSimpleNotificationService>();
 
 builder.Services.AddControllers();

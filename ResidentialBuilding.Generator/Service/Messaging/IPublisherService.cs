@@ -1,11 +1,11 @@
 ﻿using Generator.DTO;
 
-namespace Generator.Messaging;
+namespace Generator.Service.Messaging;
 
 /// <summary>
-/// Интерфейс службы для отправки генерируемых ЗУ в брокер сообщений
+/// Интерфейс службы для отправки генерируемых объектов в брокер сообщений
 /// </summary>
-public interface IProducerService
+public interface IPublisherService
 {
     /// <summary>
     /// Отправляет сообщение в брокер
