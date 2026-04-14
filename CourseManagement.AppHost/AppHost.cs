@@ -53,6 +53,18 @@ var localstack = builder.AddContainer("localstack", "localstack/localstack:3.8.0
     );
 
 
+var localstackInit = builder.AddContainer("localstack-init", "amazon/aws-cli")
+    .WithArgs(
+        "--endpoint-url=http://localstack:4566",
+        "sns", "create-topic",
+        "--name", topicName,
+        "--region", snsRegion
+    )
+    .WithEnvironment("AWS_ACCESS_KEY_ID", snsAccessKey)
+    .WithEnvironment("AWS_SECRET_ACCESS_KEY", snsSecretKey)
+    .WithEnvironment("AWS_DEFAULT_REGION", snsRegion)
+    .WaitFor(localstack);
+
 // Storage service (S3 + SNS)
 var storage = builder.AddProject<Projects.CourseManagement_Storage>("course-storage")
     .WithEnvironment("S3__ServiceURL", s3ServiceUrl)
@@ -68,20 +80,7 @@ var storage = builder.AddProject<Projects.CourseManagement_Storage>("course-stor
     .WithEnvironment("AWS__Resources__SNSEndpointUrl", "http://host.docker.internal:5280/api/sns")
     .WithHttpEndpoint(port: 5280, name: "course-storage-endpoint")
     .WithExternalHttpEndpoints()
-    .WaitFor(localstack);
-
-
-var localstackInit = builder.AddContainer("localstack-init", "amazon/aws-cli")
-    .WithArgs(
-        "--endpoint-url=http://localstack:4566",
-        "sns", "create-topic",
-        "--name", topicName,
-        "--region", snsRegion
-    )
-    .WithEnvironment("AWS_ACCESS_KEY_ID", snsAccessKey)
-    .WithEnvironment("AWS_SECRET_ACCESS_KEY", snsSecretKey)
-    .WithEnvironment("AWS_DEFAULT_REGION", snsRegion)
-    .WaitFor(storage);
+    .WaitFor(localstackInit);
 
 
 // API Gateway (Ocelot)
