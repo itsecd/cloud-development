@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <UserSecretsId>dotnet-ResidentialBuilding.EventSink-3fc8b533-d1b8-4ada-b0c8-745b4c7331f7</UserSecretsId>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+        <RootNamespace>ResidentialBuilding.EventSink</RootNamespace>
+    </PropertyGroup>
+    
+    <ItemGroup>
+        <PackageReference Include="AWSSDK.S3" Version="4.0.18.7" />
+        <PackageReference Include="AWSSDK.SimpleNotificationService" Version="4.0.2.17" />
+        <PackageReference Include="LocalStack.Client.Extensions" Version="2.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\ResidentialBuilding.ServiceDefaults\ResidentialBuilding.ServiceDefaults.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="..\.dockerignore">
+        <Link>.dockerignore</Link>
+      </Content>
+    </ItemGroup>
+</Project>

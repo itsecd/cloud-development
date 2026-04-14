@@ -28,7 +28,7 @@ var localstack = builder
     });
 
 var awsResources = builder
-    .AddAWSCloudFormationTemplate("resources", "CloudFormation/residential-building-template-sns-s3.yaml", "residential-building")
+    .AddAWSCloudFormationTemplate("files", "CloudFormation/residential-building-template-sns-s3.yaml", "residential-building")
     .WithReference(awsConfig);
 
 const int generatorPortBase = 5200;
@@ -48,6 +48,13 @@ for (var i = 1; i <= 5; ++i)
 builder.AddProject<Projects.Client_Wasm>("client")
     .WithReference(gateway)
     .WaitFor(gateway);
+
+var fileService = builder.AddProject<Projects.ResidentialBuilding_FileService>("residential-building-file-service")
+    .WithReference(awsResources)
+    .WithEnvironment("Settings__MessageBroker", "SNS")
+    .WithEnvironment("Settings__S3Hosting", "Localstack")
+    .WaitFor(awsResources);
+fileService.WithEnvironment("AWS__Resources__SNSUrl", "http://host.docker.internal:5280/api/sns");
 
 builder.UseLocalStack(localstack);
 
