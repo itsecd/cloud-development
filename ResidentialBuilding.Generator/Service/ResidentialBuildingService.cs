@@ -5,6 +5,9 @@ using Generator.Service.Messaging;
 
 namespace Generator.Service;
 
+/// <summary>
+/// Реализация <see cref="IResidentialBuildingService"/>.
+/// </summary>
 public class ResidentialBuildingService(
     ILogger<ResidentialBuildingService> logger,
     ResidentialBuildingGenerator generator,
