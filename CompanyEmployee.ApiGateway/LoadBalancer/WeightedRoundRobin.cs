@@ -6,7 +6,10 @@ namespace CompanyEmployee.ApiGateway.LoadBalancer;
 
 public class WeightedRoundRobin : ILoadBalancer
 {
-    private static readonly List<ServiceHostAndPort> _expandedList = [];
+    private static List<ServiceHostAndPort> _services = [];
+    private static List<int> _weights = [];
+    private static int _totalWeight = 0;
+
     private static int _index = 0;
     private static readonly object _lock = new();
     private static bool _initialized = false;
@@ -19,22 +22,18 @@ public class WeightedRoundRobin : ILoadBalancer
     {
         if (_initialized) return;
 
-        var weights = config
+        var weightsConfig = config
             .GetSection("LoadBalancerWeights")
             .Get<Dictionary<string, int>>() ?? [];
-        ;
 
         for (var i = 0; i < services.Count; i++)
         {
-            var s = services[i];
-
             var key = $"R{i + 1}";
-            var weight = weights.TryGetValue(key, out var w) ? w : 1;
+            var weight = weightsConfig.TryGetValue(key, out var w) ? w : 1;
 
-            for (var j = 0; j < weight; j++)
-            {
-                _expandedList.Add(s);
-            }
+            _services.Add(services[i]);
+            _weights.Add(weight);
+            _totalWeight += weight;
         }
 
         _initialized = true;
@@ -44,11 +43,22 @@ public class WeightedRoundRobin : ILoadBalancer
     {
         lock (_lock)
         {
-            var s = _expandedList[_index];
-            _index = (_index + 1) % _expandedList.Count;
+            var current = _index % _totalWeight;
+            _index++;
+
+            var sum = 0;
+            for (var i = 0; i < _services.Count; i++)
+            {
+                sum += _weights[i];
+                if (current < sum)
+                {
+                    return Task.FromResult<Response<ServiceHostAndPort>>(
+                        new OkResponse<ServiceHostAndPort>(_services[i]));
+                }
+            }
 
             return Task.FromResult<Response<ServiceHostAndPort>>(
-                new OkResponse<ServiceHostAndPort>(s));
+                new OkResponse<ServiceHostAndPort>(_services[0]));
         }
     }
 
