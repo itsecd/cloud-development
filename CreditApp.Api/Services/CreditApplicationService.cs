@@ -1,4 +1,5 @@
 using System.Text.Json;
+using CreditApp.Api.Messaging;
 using CreditApp.Api.Models;
 using Microsoft.Extensions.Caching.Distributed;
 
@@ -10,6 +11,7 @@ namespace CreditApp.Api.Services;
 public class CreditApplicationService(
     IDistributedCache cache,
     CreditApplicationGenerator generator,
+    IProducerService producer,
     IConfiguration configuration,
     ILogger<CreditApplicationService> logger) : ICreditApplicationService
 {
@@ -50,6 +52,8 @@ public class CreditApplicationService(
             logger.LogInformation(
                 "Generated credit application {Id}, status: {Status}, amount: {RequestedAmount}",
                 id, application.Status, application.RequestedAmount);
+
+            await producer.SendMessage(application);
 
             try
             {

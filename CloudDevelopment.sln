@@ -13,6 +13,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CreditApp.Api", "CreditApp.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Api.Gateway", "Api.Gateway\Api.Gateway.csproj", "{C99E72F4-9BA7-7D56-C88E-FB28534EFCB6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CreditApp.AppHost.Tests", "CreditApp.AppHost.Tests\CreditApp.AppHost.Tests.csproj", "{F1E58572-4194-45C8-BAC1-CE4638047D36}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Service.FileStorage", "Service.FileStorage\Service.FileStorage.csproj", "{395BE70D-7DB4-7F62-3FF9-C8EE68E5C610}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +43,14 @@ Global
 		{C99E72F4-9BA7-7D56-C88E-FB28534EFCB6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C99E72F4-9BA7-7D56-C88E-FB28534EFCB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C99E72F4-9BA7-7D56-C88E-FB28534EFCB6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F1E58572-4194-45C8-BAC1-CE4638047D36}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F1E58572-4194-45C8-BAC1-CE4638047D36}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F1E58572-4194-45C8-BAC1-CE4638047D36}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F1E58572-4194-45C8-BAC1-CE4638047D36}.Release|Any CPU.Build.0 = Release|Any CPU
+		{395BE70D-7DB4-7F62-3FF9-C8EE68E5C610}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{395BE70D-7DB4-7F62-3FF9-C8EE68E5C610}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{395BE70D-7DB4-7F62-3FF9-C8EE68E5C610}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{395BE70D-7DB4-7F62-3FF9-C8EE68E5C610}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

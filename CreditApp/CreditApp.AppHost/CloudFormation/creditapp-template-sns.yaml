@@ -1,0 +1,29 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudFormation template for credit application project (SNS + Minio)'
+
+Parameters:
+  TopicName:
+    Type: String
+    Description: Name for the SNS topic
+    Default: 'creditapp-topic'
+
+Resources:
+  CreditAppTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Ref TopicName
+      DisplayName: !Ref TopicName
+      Tags:
+        - Key: Name
+          Value: !Ref TopicName
+        - Key: Environment
+          Value: Development
+
+Outputs:
+  SNSTopicName:
+    Description: Name of the SNS topic
+    Value: !GetAtt CreditAppTopic.TopicName
+
+  SNSTopicArn:
+    Description: ARN of the SNS topic
+    Value: !Ref CreditAppTopic
