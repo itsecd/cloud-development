@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Aspire.Hosting.Testing" Version="9.5.0"/>
+        <PackageReference Include="coverlet.collector" Version="6.0.4"/>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1"/>
+        <PackageReference Include="xunit" Version="2.9.3"/>
+        <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4"/>
+        <PackageReference Include="MartinCostello.Logging.XUnit" Version="0.7.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Using Include="System.Net"/>
+        <Using Include="Microsoft.Extensions.DependencyInjection"/>
+        <Using Include="Aspire.Hosting.ApplicationModel"/>
+        <Using Include="Aspire.Hosting.Testing"/>
+        <Using Include="Xunit"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\ResidentialBuilding.AppHost\ResidentialBuilding.AppHost.csproj" />
+        <ProjectReference Include="..\ResidentialBuilding.Generator\ResidentialBuilding.Generator.csproj" />
+        <ProjectReference Include="..\ResidentialBuilding.Gateway\ResidentialBuilding.Gateway.csproj" />
+        <ProjectReference Include="..\ResidentialBuilding.FileService\ResidentialBuilding.FileService.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Content Include="..\ResidentialBuilding.AppHost\CloudFormation\residential-building-template-sns-s3.yaml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <Link>CloudFormation\residential-building-template-sns-s3.yaml</Link>
+        </Content>
+    </ItemGroup>
+    
+</Project>
