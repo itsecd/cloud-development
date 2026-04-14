@@ -3,6 +3,9 @@ using System.Text.Json;
 
 namespace Generator.Service.Cache;
 
+/// <summary>
+/// Реализация <see cref="ICacheService"/> на базе <see cref="IDistributedCache"/> (Redis).
+/// </summary>
 public class CacheService(
     ILogger<ResidentialBuildingService> logger,
     IDistributedCache cache,
@@ -16,6 +19,7 @@ public class CacheService(
         TimeSpan.FromMinutes(configuration.GetValue("CacheSettings:ExpirationTimeMinutes",
             CacheExpirationTimeMinutesDefault));
     
+    /// <inheritdoc />
     public async Task<T?> GetCache<T>(int id, CancellationToken cancellationToken = default)
     {
         var cacheKey = $"{CacheKeyPrefix}{id}";
@@ -58,6 +62,7 @@ public class CacheService(
         return objCached;
     }
 
+    /// <inheritdoc />
     public async Task<bool> SetCache<T>(int id, T obj, CancellationToken cancellationToken = default)
     {
         var cacheKey = $"{CacheKeyPrefix}{id}";

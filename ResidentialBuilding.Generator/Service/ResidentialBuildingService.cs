@@ -13,6 +13,7 @@ public class ResidentialBuildingService(
     ) : IResidentialBuildingService
 {
     
+    /// <inheritdoc />
     public async Task<ResidentialBuildingDto> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         var obj = await cacheService.GetCache<ResidentialBuildingDto>(id, cancellationToken);
