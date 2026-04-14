@@ -15,11 +15,11 @@ public class WeightedRandom : ILoadBalancer
     private readonly int[] _values = null!;
 
     public string Type => nameof(WeightedRandom);
-    public WeightedRandom(Func<Task<List<Service>>> services)
+    public WeightedRandom(Func<Task<List<Service>>> services, IConfiguration configuration)
     {
         _services = services;
-        int[] frequencies = [1, 2, 3, 2, 1];
-        _values = [.. Enumerable.Range(1, 5).Zip(frequencies, (val, freq) => Enumerable.Repeat(val, freq)).SelectMany(x => x)];
+        var frequencies = configuration.GetSection("LoadBalancer:WeightedRandom:Weights").Get<int[]>();
+        _values = [.. Enumerable.Range(0, 5).Zip(frequencies, (val, freq) => Enumerable.Repeat(val, freq)).SelectMany(x => x)];
     }
     public async Task<Response<ServiceHostAndPort>> LeaseAsync(HttpContext httpContext)
     {
