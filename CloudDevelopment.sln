@@ -11,12 +11,18 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WarehouseItem.Generator", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WarehouseItem.AppHost", "WarehouseItem.AppHost\WarehouseItem.AppHost.csproj", "{07AFB6CB-7359-432D-BF0B-14BA7C582AA5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WarehouseItem.Gateway", "WarehouseItem.Gateway\WarehouseItem.Gateway.csproj", "{D0EFD087-0103-4ACE-AD32-F8A68EDE1988}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D0EFD087-0103-4ACE-AD32-F8A68EDE1988}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D0EFD087-0103-4ACE-AD32-F8A68EDE1988}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D0EFD087-0103-4ACE-AD32-F8A68EDE1988}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D0EFD087-0103-4ACE-AD32-F8A68EDE1988}.Release|Any CPU.Build.0 = Release|Any CPU
 		{AE7EEA74-2FE0-136F-D797-854FD87E022A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{AE7EEA74-2FE0-136F-D797-854FD87E022A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AE7EEA74-2FE0-136F-D797-854FD87E022A}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -41,3 +47,5 @@ Global
 		SolutionGuid = {90FE6B04-8381-437E-893A-FEBA1DA10AEE}
 	EndGlobalSection
 EndGlobal
+
+
