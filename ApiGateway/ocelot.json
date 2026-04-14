@@ -1,0 +1,32 @@
+{
+  "Routes": [
+    {
+      "UpstreamPathTemplate": "/employee",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DownstreamPathTemplate": "/employee",
+      "DownstreamScheme": "https",
+      "LoadBalancerOptions": {
+        "Type": "WeightedRoundRobinBalancer"
+      },
+      "DownstreamHostAndPorts": [
+        { "Host": "localhost", "Port": 15000 },
+        { "Host": "localhost", "Port": 15001 },
+        { "Host": "localhost", "Port": 15002 },
+        { "Host": "localhost", "Port": 15003 },
+        { "Host": "localhost", "Port": 15004 }
+      ]
+    }
+  ],
+  "GlobalConfiguration": {
+    "BaseUrl": "http://localhost:7200"
+  },
+  "WeightedRoundRobin": {
+    "Nodes": [
+      { "ReplicaId": "R1", "Host": "localhost", "Port": 15000, "Weight": 1 },
+      { "ReplicaId": "R2", "Host": "localhost", "Port": 15001, "Weight": 2 },
+      { "ReplicaId": "R3", "Host": "localhost", "Port": 15002, "Weight": 3 },
+      { "ReplicaId": "R4", "Host": "localhost", "Port": 15003, "Weight": 2 },
+      { "ReplicaId": "R5", "Host": "localhost", "Port": 15004, "Weight": 1 }
+    ]
+  }
+}
