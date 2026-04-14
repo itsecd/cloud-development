@@ -2,6 +2,7 @@
 using Generator.Generator;
 using Microsoft.Extensions.Caching.Distributed;
 using System.Text.Json;
+using Generator.Messaging;
 
 namespace Generator.Service;
 
@@ -9,6 +10,7 @@ public class ResidentialBuildingService(
     ILogger<ResidentialBuildingService> logger,
     ResidentialBuildingGenerator generator,
     IDistributedCache cache,
+    IProducerService messagingService,
     IConfiguration configuration
     ) : IResidentialBuildingService
 {
@@ -65,6 +67,7 @@ public class ResidentialBuildingService(
             {
                 AbsoluteExpirationRelativeToNow = _cacheExpirationTimeMinutes
             };
+            await messagingService.SendMessage(obj);
             await cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(obj), cacheOptions, cancellationToken);
         }
         catch (Exception ex)
