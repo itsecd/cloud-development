@@ -1,22 +1,34 @@
-﻿@inject IConfiguration Configuration 
+@using System.Net.Http.Json
+@using System.Text.Json.Nodes
+@inject IConfiguration Configuration
 @inject HttpClient Client
 
 <CardDeck>
     <Card>
         <CardHeader>
-            <Heading Size="HeadingSize.Is5"><Icon Name="IconName.Table" />  Характеристики текущего объекта</Heading>
+            <Heading Size="HeadingSize.Is5"><Icon Name="IconName.Table" /> Характеристики текущего объекта</Heading>
         </CardHeader>
         <CardBody>
-            <Table Bordered >
+            @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+            {
+                <Alert Color="Color.Danger">@ErrorMessage</Alert>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(ReplicaInfo))
+            {
+                <Alert Color="Color.Info">@ReplicaInfo</Alert>
+            }
+
+            <Table Bordered>
                 <TableHeader ThemeContrast="ThemeContrast.Light">
-                     <TableRow>
+                    <TableRow>
                         <TableHeaderCell>#</TableHeaderCell>
                         <TableHeaderCell>Характеристика</TableHeaderCell>
                         <TableHeaderCell>Значение</TableHeaderCell>
-                     </TableRow>
+                    </TableRow>
                 </TableHeader>
                 <TableBody>
-                    @if(Value is null)
+                    @if (Value is null)
                     {
                         <TableRow>
                             <TableRowCell>1</TableRowCell>
@@ -30,7 +42,7 @@
                         foreach (var property in array)
                         {
                             <TableRow>
-                                <TableRowCell>@(Array.IndexOf(array, property)+1)</TableRowCell>
+                                <TableRowCell>@(Array.IndexOf(array, property) + 1)</TableRowCell>
                                 <TableRowCell>@property.Key</TableRowCell>
                                 <TableRowCell>@property.Value?.ToString()</TableRowCell>
                             </TableRow>
@@ -40,10 +52,10 @@
             </Table>
         </CardBody>
     </Card>
-    
+
     <Card Margin="Margin.Is3.OnY">
         <CardHeader>
-            <Heading Size="HeadingSize.Is5"><Icon Name="IconName.Send" />  Запросить новый объект</Heading>
+            <Heading Size="HeadingSize.Is5"><Icon Name="IconName.Send" /> Запросить новый объект</Heading>
         </CardHeader>
         <CardBody>
             <Row>
@@ -51,10 +63,10 @@
                     <Text>Идентификатор нового объекта:</Text>
                 </Column>
                 <Column ColumnSize="ColumnSize.Is4">
-                    <NumericEdit TValue="int" @bind-Value="@Id"/>
+                    <NumericEdit TValue="int" @bind-Value="@Id" />
                 </Column>
                 <Column ColumnSize="ColumnSize.Is4">
-                    <Button Clicked=RequestNewData Color="Color.Primary">Запросить данные  <Icon Name="IconName.ArrowRight" /></Button>
+                    <Button Clicked="RequestNewData" Color="Color.Primary">Запросить данные <Icon Name="IconName.ArrowRight" /></Button>
                 </Column>
             </Row>
         </CardBody>
@@ -63,12 +75,51 @@
 
 @code {
     private JsonObject? Value { get; set; }
-    private int Id { get; set; }
+    private string? ErrorMessage { get; set; }
+    private string? ReplicaInfo { get; set; }
+    private int Id { get; set; } = 1;
 
     private async Task RequestNewData()
     {
-        var baseAddress = Configuration["BaseAddress"] ?? throw new KeyNotFoundException("Конфигурация клиента не содержит параметра BaseAddress");
-        Value = await Client.GetFromJsonAsync<JsonObject>($"{baseAddress}?id={Id}", new JsonSerializerOptions { });
-        StateHasChanged();
+        ErrorMessage = null;
+        ReplicaInfo = null;
+
+        if (Id <= 0)
+        {
+            ErrorMessage = "Идентификатор должен быть больше нуля.";
+            return;
+        }
+
+        var baseAddress = Configuration["BaseAddress"];
+        if (string.IsNullOrWhiteSpace(baseAddress))
+        {
+            ErrorMessage = "Конфигурация клиента не содержит параметра BaseAddress.";
+            return;
+        }
+
+        try
+        {
+            using var response = await Client.GetAsync($"{baseAddress}?id={Id}");
+            response.EnsureSuccessStatusCode();
+
+            Value = await response.Content.ReadFromJsonAsync<JsonObject>();
+
+            var replica = response.Headers.TryGetValues("X-Service-Replica", out var replicaValues)
+                ? replicaValues.FirstOrDefault()
+                : null;
+            var weight = response.Headers.TryGetValues("X-Service-Weight", out var weightValues)
+                ? weightValues.FirstOrDefault()
+                : null;
+
+            if (!string.IsNullOrWhiteSpace(replica))
+            {
+                ReplicaInfo = $"Ответ пришёл от реплики {replica} (вес {weight ?? "1"}). Алгоритм: Weighted Round Robin.";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Не удалось получить данные: {ex.Message}";
+            Value = null;
+        }
     }
 }
