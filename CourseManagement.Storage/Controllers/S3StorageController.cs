@@ -8,11 +8,11 @@ namespace CourseManagement.Storage.Controllers;
 /// <summary>
 /// Контроллер для взаимодейсвия с S3
 /// </summary>
-/// <param name="s3Service">Служба для работы с S3</param>
 /// <param name="logger">Логгер</param>
+/// <param name="s3Service">Служба для работы с S3</param>
 [ApiController]
 [Route("api/s3")]
-public class S3StorageController(IS3Service s3Service, ILogger<S3StorageController> logger) : ControllerBase
+public class S3StorageController(ILogger<S3StorageController> logger, IS3Service s3Service) : ControllerBase
 {
     /// <summary>
     /// Метод для получения списка хранящихся в S3 файлов

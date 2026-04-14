@@ -10,7 +10,7 @@ namespace CourseManagement.Storage.Messaging;
 /// <param name="logger">Логгер</param>
 /// <param name="snsClient">Клиент SNS</param>
 /// <param name="configuration">Конфигурация</param>
-public class SnsSubscriptionService(ILogger<SnsSubscriptionService> logger, IAmazonSimpleNotificationService snsClient, IConfiguration configuration) : ISubscriberService
+public class SnsSubscriberService(ILogger<SnsSubscriberService> logger, IAmazonSimpleNotificationService snsClient, IConfiguration configuration) : ISubscriberService
 {
     /// <summary>
     /// Уникальный идентификатор топика SNS
@@ -22,7 +22,7 @@ public class SnsSubscriptionService(ILogger<SnsSubscriptionService> logger, IAma
     {
         logger.LogInformation("Sending subscride request for {topic}", _topicArn);
 
-        var endpoint = configuration["AWS:Resources:SNSUrl"];
+        var endpoint = configuration["AWS:Resources:SNSEndpointUrl"];
 
         var request = new SubscribeRequest
         {

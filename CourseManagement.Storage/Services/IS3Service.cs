@@ -3,7 +3,7 @@
 namespace CourseManagement.Storage.Services;
 
 /// <summary>
-/// Интерфейс службы для манипуляции файлами в объектном хранилище
+/// Интерфейс сервиса для манипуляции файлами в объектном хранилище
 /// </summary>
 public interface IS3Service
 {
@@ -11,6 +11,7 @@ public interface IS3Service
     /// Отправляет файл в хранилище 
     /// </summary>
     /// <param name="fileData">Строковая репрезентация сохраняемого файла</param>
+    /// <returns>Успешность операции отправки файла</returns>
     public Task<bool> UploadFile(string fileData);
 
     /// <summary>

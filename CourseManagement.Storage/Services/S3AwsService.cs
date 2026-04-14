@@ -8,7 +8,7 @@ using System.Text.Json.Nodes;
 namespace CourseManagement.Storage.Services;
 
 /// <summary>
-/// Cлужба для манипуляции файлами в объектном хранилище
+/// Сервис для манипуляции файлами в объектном хранилище
 /// </summary>
 /// /// <param name="logger">Логер</param>
 /// <param name="client">S3 клиент</param>
@@ -21,32 +21,11 @@ public class S3AwsService(ILogger<S3AwsService> logger, IAmazonS3 client, IConfi
     private readonly string _bucketName = configuration["AWS:Resources:S3BucketName"]
         ?? throw new KeyNotFoundException("S3 bucket name was not found in configuration");
 
-    ///<inheritdoc/>
-    public async Task<List<string>> GetFileList()
-    {
-        var list = new List<string>();
-        var request = new ListObjectsV2Request
-        {
-            BucketName = _bucketName,
-            Prefix = "",
-            Delimiter = ",",
-        };
-        var paginator = client.Paginators.ListObjectsV2(request);
-
-        logger.LogInformation("Began listing files in {Bucket}", _bucketName);
-        await foreach (var response in paginator.Responses)
-            if (response != null && response.S3Objects != null)
-                foreach (var obj in response.S3Objects)
-                {
-                    if (obj != null)
-                        list.Add(obj.Key);
-                    else
-                        logger.LogWarning("Received null object from {Bucket}", _bucketName);
-                }
-            else
-                logger.LogWarning("Received null response from {Bucket}", _bucketName);
-        return list;
-    }
+    /// <summary>
+    /// Регион бакета
+    /// </summary>
+    private readonly string _region = configuration["S3:Region"] 
+        ?? throw new KeyNotFoundException("S3 region was not found in configuration");
 
     ///<inheritdoc/>
     public async Task<bool> UploadFile(string fileData)
@@ -59,6 +38,7 @@ public class S3AwsService(ILogger<S3AwsService> logger, IAmazonS3 client, IConfi
         stream.Seek(0, SeekOrigin.Begin);
 
         logger.LogInformation("Began uploading {file} onto {Bucket}", id, _bucketName);
+
         var request = new PutObjectRequest
         {
             BucketName = _bucketName,
@@ -73,8 +53,40 @@ public class S3AwsService(ILogger<S3AwsService> logger, IAmazonS3 client, IConfi
             logger.LogError("Failed to upload {File}: {Code}", id, response.HttpStatusCode);
             return false;
         }
+
         logger.LogInformation("Finished uploading {File} to {Bucket}", id, _bucketName);
+        
         return true;
+    }
+
+    ///<inheritdoc/>
+    public async Task<List<string>> GetFileList()
+    {
+        var list = new List<string>();
+
+        var request = new ListObjectsV2Request
+        {
+            BucketName = _bucketName,
+            Prefix = "",
+            Delimiter = ",",
+        };
+        var paginator = client.Paginators.ListObjectsV2(request);
+
+        logger.LogInformation("Began listing files in {Bucket}", _bucketName);
+
+        await foreach (var response in paginator.Responses)
+            if (response != null && response.S3Objects != null)
+                foreach (var obj in response.S3Objects)
+                {
+                    if (obj != null)
+                        list.Add(obj.Key);
+                    else
+                        logger.LogWarning("Received null object from {Bucket}", _bucketName);
+                }
+            else
+                logger.LogWarning("Received null response from {Bucket}", _bucketName);
+
+        return list;
     }
 
     ///<inheritdoc/>
@@ -97,6 +109,7 @@ public class S3AwsService(ILogger<S3AwsService> logger, IAmazonS3 client, IConfi
                 throw new InvalidOperationException($"Error occurred downloading {key} - {response.HttpStatusCode}");
             }
             using var reader = new StreamReader(response.ResponseStream, Encoding.UTF8);
+
             return JsonNode.Parse(reader.ReadToEnd()) ?? throw new InvalidOperationException($"Downloaded document is not a valid JSON");
         }
         catch (Exception ex)
@@ -110,10 +123,23 @@ public class S3AwsService(ILogger<S3AwsService> logger, IAmazonS3 client, IConfi
     public async Task EnsureBucketExists()
     {
         logger.LogInformation("Checking whether {Bucket} exists", _bucketName);
+
         try
         {
-            await client.EnsureBucketExistsAsync(_bucketName);
+            var putBucketRequest = new PutBucketRequest
+            {
+                BucketName = _bucketName,
+                BucketRegionName = _region
+            };
+
+            await client.PutBucketAsync(putBucketRequest);
             logger.LogInformation("{Bucket} existence ensured", _bucketName);
+        }
+        catch (AmazonS3Exception ex) when (ex.ErrorCode == "BucketAlreadyOwnedByYou" ||
+                                               ex.ErrorCode == "BucketAlreadyExists" ||
+                                               ex.StatusCode == HttpStatusCode.Conflict)
+        {
+            logger.LogInformation("{Bucket} already exists", _bucketName);
         }
         catch (Exception ex)
         {

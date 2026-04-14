@@ -19,6 +19,7 @@ public class CourseController(ILogger<CourseController> logger, ICourseService c
     /// <param name="id">Идентификатор курса</param>
     /// <returns>Сгенерированный курс</returns>
     [HttpGet]
+    [ProducesResponseType(200)]
     public async Task<ActionResult<Course>> GetCourse(int? id)
     {
         logger.LogInformation("Processing request for course {ResourceId}", id);
