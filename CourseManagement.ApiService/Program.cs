@@ -17,20 +17,20 @@ builder.AddRedisDistributedCache("course-cache");
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
 
-// Регистрация AWS сервисов
+// Получение конфигурации 
 var configuration = builder.Configuration;
+var snsUrl = configuration["SNS:ServiceURL"] ?? throw new KeyNotFoundException("SNS service URL was not found in configuration");
+var region = configuration["AWS:Region"] ?? throw new KeyNotFoundException("AWS region was not found in configuration");
+var accessKey = configuration["AWS:AccessKeyId"] ?? throw new KeyNotFoundException("AWS access key ID was not found in configuration");
+var secretKey = configuration["AWS:SecretAccessKey"] ?? throw new KeyNotFoundException("AWS secret access key was not found in configuration");
 
-var snsUrl = configuration["SNS:ServiceURL"] ?? throw new KeyNotFoundException("SNS service url was not found in configuration");
-var snsRegion = configuration["SNS:Region"] ?? throw new KeyNotFoundException("SNS region was not found in configuration");
-var snsAccessKey = configuration["SNS:AccessKeyId"] ?? throw new KeyNotFoundException("SNS access key id was not found in configuration");
-var snsSecretKey = configuration["SNS:SecretAccessKey"] ?? throw new KeyNotFoundException("SNS secret access key was not found in configuration");
-
+// Регистрация AWS сервисов
 builder.Services.AddSingleton<IAmazonSimpleNotificationService>(
-    new AmazonSimpleNotificationServiceClient(snsAccessKey, snsSecretKey, new AmazonSimpleNotificationServiceConfig
+    new AmazonSimpleNotificationServiceClient(accessKey, secretKey, new AmazonSimpleNotificationServiceConfig
     {
         ServiceURL = snsUrl,
         UseHttp = true,
-        AuthenticationRegion = snsRegion
+        AuthenticationRegion = region
     })
 );
 
@@ -51,7 +51,6 @@ builder.Services.AddSingleton<IPublisherService<Course>, SnsPublisherService<Cou
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline
 app.UseExceptionHandler();
 
 // Mapping

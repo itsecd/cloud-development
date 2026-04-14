@@ -34,7 +34,7 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
     /// Тестирование корректности работы сервиса генерации, api-gateway, сервисов взаимодействия с S3 и SNS 
     /// </summary>
     [Fact]
-    public async Task TestPipeline()
+    public async Task TestAppServices()
     {
         Assert.NotNull(_builder);
         _app = await _builder.BuildAsync();
@@ -45,15 +45,9 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
 
         var id = new Random().Next(1, 100);
 
-        var handler = new HttpClientHandler
-        {
-            ServerCertificateCustomValidationCallback = (_, _, _, _) => true
-        };
+        using var client = new HttpClient() { Timeout = TimeSpan.FromSeconds(5) };
 
-
-        using var client = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(5) };
-
-        using var gatewayClient = new HttpClient(handler)
+        using var gatewayClient = new HttpClient()
         {
             BaseAddress = new Uri("https://localhost:5000"),
             Timeout = TimeSpan.FromSeconds(30)
@@ -61,12 +55,9 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
 
         using var gatewayResponse = await gatewayClient.GetAsync($"/course-management?id={id}");
 
-        output.WriteLine($"Gateway response: {gatewayResponse.StatusCode}");
         var content = await gatewayResponse.Content.ReadAsStringAsync();
-        output.WriteLine($"Content: {content}");
 
-        Assert.True(gatewayResponse.IsSuccessStatusCode,
-            $"Gateway failed: {gatewayResponse.StatusCode} - {content}");
+        Assert.True(gatewayResponse.IsSuccessStatusCode, $"Gateway failed: {gatewayResponse.StatusCode} - {content}");
 
         var apiCourse = JsonSerializer.Deserialize<Course>(content);
         Assert.NotNull(apiCourse);
@@ -74,7 +65,7 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
         // Ожидание готовности S3
         await Task.Delay(5000);
 
-        using var storageClient = new HttpClient(handler)
+        using var storageClient = new HttpClient()
         {
             BaseAddress = new Uri("http://localhost:5280"),
             Timeout = TimeSpan.FromSeconds(30)
@@ -87,7 +78,7 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
         Assert.NotNull(courseList);
         Assert.NotEmpty(courseList);
 
-        var matchingFile = courseList.FirstOrDefault(f => f.Contains($"file_{id}"));
+        var matchingFile = courseList.FirstOrDefault(f => f.Contains($"course_{id}"));
         Assert.NotNull(matchingFile);
 
         using var s3Response = await storageClient.GetAsync($"/api/s3/{matchingFile}");

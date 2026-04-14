@@ -24,8 +24,8 @@ public class S3AwsService(ILogger<S3AwsService> logger, IAmazonS3 client, IConfi
     /// <summary>
     /// Регион бакета
     /// </summary>
-    private readonly string _region = configuration["S3:Region"] 
-        ?? throw new KeyNotFoundException("S3 region was not found in configuration");
+    private readonly string _region = configuration["AWS:Region"] 
+        ?? throw new KeyNotFoundException("AWS region was not found in configuration");
 
     ///<inheritdoc/>
     public async Task<bool> UploadFile(string fileData)
@@ -42,7 +42,7 @@ public class S3AwsService(ILogger<S3AwsService> logger, IAmazonS3 client, IConfi
         var request = new PutObjectRequest
         {
             BucketName = _bucketName,
-            Key = $"file_{id}.json",
+            Key = $"course_{id}.json",
             InputStream = stream
         };
 

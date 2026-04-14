@@ -22,7 +22,7 @@ public class SnsSubscriberService(ILogger<SnsSubscriberService> logger, IAmazonS
     {
         logger.LogInformation("Sending subscride request for {topic}", _topicArn);
 
-        var endpoint = configuration["AWS:Resources:SNSEndpointUrl"];
+        var endpoint = configuration["AWS:Resources:SNSEndpointURL"];
 
         var request = new SubscribeRequest
         {
