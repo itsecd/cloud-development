@@ -5,12 +5,16 @@ var redis = builder.AddRedis("redis")
 
 var client = builder.AddProject<Projects.Client_Wasm>("client");
 
-builder.AddProject<Projects.GeneratorService>("generator-service")
-    .WithReference(redis)
-    .WaitFor(redis)
-    .WithEnvironment("Cors__AllowedOrigin", client.GetEndpoint("http"))
-    .WaitFor(client)
-    .WithUrlForEndpoint("http", url => url.Url += "/swagger")
-    .WithUrlForEndpoint("https", url => url.Url += "/swagger");
+var gateway = builder.AddProject<Projects.ApiGateway>("api-gateway");
+
+for (var i = 0; i < 3; i++)
+{
+    var replica = builder.AddProject<Projects.GeneratorService>($"generator-service-{i}", launchProfileName: null)
+        .WithHttpEndpoint(port: 15000 + i)
+        .WithReference(redis)
+        .WaitFor(redis)
+        .WithEnvironment("Cors__AllowedOrigin", client.GetEndpoint("http"));
+    gateway.WaitFor(replica);
+}
 
 builder.Build().Run();

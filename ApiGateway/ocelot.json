@@ -1,0 +1,18 @@
+{
+  "Routes": [
+    {
+      "UpstreamPathTemplate": "/patient",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DownstreamPathTemplate": "/patient",
+      "DownstreamScheme": "http",
+      "LoadBalancerOptions": {
+        "Type": "WeightedRoundRobinBalancer"
+      },
+      "DownstreamHostAndPorts": [
+        { "Host": "localhost", "Port": 15000 },
+        { "Host": "localhost", "Port": 15001 },
+        { "Host": "localhost", "Port": 15002 }
+      ]
+    }
+  ]
+}
