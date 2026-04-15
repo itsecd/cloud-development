@@ -11,9 +11,11 @@
 - [x] Поддержка работы с несколькими репликами сервиса генерации
 - [x] Api Gateway Ocelot
 - [x] QueryBased балансировщик нагрузки
+- [x] Брокер сообщений SNS схема (Publish-Subscribe)
+- [x] Объектное хранилище S3
+- [x] Файловый сервис для сохранения сгенерированных контрактов в объектном хранилище
+- [x] Интеграционные тесты
 
-<img width="1912" height="715" alt="image" src="https://github.com/user-attachments/assets/d2288fd6-edb3-4568-b53c-735065542e7a" />
+<img width="1890" height="702" alt="image" src="https://github.com/user-attachments/assets/8183e071-0e97-4011-aec2-39c03dbb94e9" />
 
-<img width="1914" height="842" alt="image" src="https://github.com/user-attachments/assets/14a33ad5-c086-4bf7-962f-bbee637bad45" />
-
-
+<img width="1912" height="835" alt="image" src="https://github.com/user-attachments/assets/21a4dedc-1400-4e59-b518-041ae34f369b" />
