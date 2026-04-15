@@ -19,7 +19,9 @@ public class WeightedRandom : ILoadBalancer
     {
         _services = services;
         var frequencies = configuration.GetSection("LoadBalancer:WeightedRandom:Weights").Get<int[]>();
-        _values = [.. Enumerable.Range(0, 5).Zip(frequencies, (val, freq) => Enumerable.Repeat(val, freq)).SelectMany(x => x)];
+        if (frequencies == null || frequencies.Length == 0)
+            throw new InvalidOperationException("LoadBalancer:WeightedRandom:Weights is empty or null. Add weights to configuration");
+        _values = [.. Enumerable.Range(0, frequencies.Length).Zip(frequencies, (val, freq) => Enumerable.Repeat(val, freq)).SelectMany(x => x)];
     }
     public async Task<Response<ServiceHostAndPort>> LeaseAsync(HttpContext httpContext)
     {
