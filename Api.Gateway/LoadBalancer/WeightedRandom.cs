@@ -17,8 +17,23 @@ public class WeightedRandom : ILoadBalancer
     public WeightedRandom(Func<Task<List<Service>>> services, IConfiguration configuration)
     {
         _services = services;
-        int[] frequencies = configuration.GetSection("LoadBalancer:WeightedRandom:Weights").Get<int[]>();
-        _values = [.. Enumerable.Range(0, 5).Zip(frequencies, (val, freq) => Enumerable.Repeat(val, freq)).SelectMany(x => x)];
+        var section = configuration.GetSection("LoadBalancer:WeightedRandom:Weights");
+    
+        if (!section.Exists())
+        {
+            throw new ConfigurationErrorsException(
+                $"Required configuration section '{section.Path}' was not found. " +
+                "Please check your appsettings.json or environment variables.");
+        }
+
+        var frequencies = section.Get<int[]>();
+        if (frequencies == null || frequencies.Length == 0)
+        {
+            throw new InvalidOperationException(
+                $"Configuration section '{section.Path}' exists but contains no values.");
+        }
+        _values = [.. Enumerable.Range(0, frequencies.Length).Zip(frequencies, (val, freq) => Enumerable.Repeat(val, freq))
+        .SelectMany(x => x)];
     }
 
     public async Task<Response<ServiceHostAndPort>> LeaseAsync(HttpContext httpContext)
