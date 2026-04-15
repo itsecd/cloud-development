@@ -16,7 +16,7 @@ namespace CourseManagement.Storage.Controllers;
 public class SnsSubscriberController(IS3Service s3Service, ILogger<SnsSubscriberController> logger) : ControllerBase
 {
     /// <summary>
-    /// Вебхук, получающий оповещения из SNS топика/подтверждает подписку на топик
+    /// Обработчик POST-запроса оповещения из SNS топика и подтверждения подписки на топик
     /// </summary>
     [HttpPost]
     [ProducesResponseType(200)]

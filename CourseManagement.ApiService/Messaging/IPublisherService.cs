@@ -10,6 +10,7 @@ public interface IPublisherService<T>
     /// </summary>
     /// <param name="id">Идентификатор отправляемой сущности</param>
     /// <param name="entity">Отправляемая сущность</param>
+    /// <param name="cancellationToken">Токен для возможности отмены ожидания после отправки</param>
     /// <returns>Успешность операции отправки</returns>
     public Task<bool> SendMessage(int id, T entity, CancellationToken cancellationToken = default);
 }

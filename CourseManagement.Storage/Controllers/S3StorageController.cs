@@ -15,7 +15,7 @@ namespace CourseManagement.Storage.Controllers;
 public class S3StorageController(ILogger<S3StorageController> logger, IS3Service s3Service) : ControllerBase
 {
     /// <summary>
-    /// Метод для получения списка хранящихся в S3 файлов
+    /// Обработчик GET-запроса на получение списка хранящихся в S3 файлов
     /// </summary>
     /// <returns>Список с ключами файлов</returns>
     [HttpGet]
@@ -38,7 +38,7 @@ public class S3StorageController(ILogger<S3StorageController> logger, IS3Service
     }
 
     /// <summary>
-    /// Получает строковое представление хранящегося в S3 документа
+    /// Обработчик GET-запроса на получение строкового представления хранящегося в S3 файла
     /// </summary>
     /// <param name="key">Ключ файла</param>
     /// <returns>Строковое представление файла</returns>

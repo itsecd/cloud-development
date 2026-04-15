@@ -22,7 +22,7 @@ public class S3AwsService(ILogger<S3AwsService> logger, IAmazonS3 client, IConfi
         ?? throw new KeyNotFoundException("S3 bucket name was not found in configuration");
 
     /// <summary>
-    /// Регион бакета
+    /// Регион AWS
     /// </summary>
     private readonly string _region = configuration["AWS:Region"] 
         ?? throw new KeyNotFoundException("AWS region was not found in configuration");

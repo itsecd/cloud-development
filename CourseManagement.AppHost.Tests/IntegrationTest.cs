@@ -40,7 +40,6 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
         _app = await _builder.BuildAsync();
         await _app.StartAsync();
 
-        // Ожидание готовности сервисов
         await Task.Delay(10000);
 
         var id = new Random().Next(1, 100);
@@ -62,7 +61,6 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
         var apiCourse = JsonSerializer.Deserialize<Course>(content);
         Assert.NotNull(apiCourse);
 
-        // Ожидание готовности S3
         await Task.Delay(5000);
 
         using var storageClient = new HttpClient()

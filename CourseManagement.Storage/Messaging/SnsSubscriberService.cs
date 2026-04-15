@@ -17,18 +17,21 @@ public class SnsSubscriberService(ILogger<SnsSubscriberService> logger, IAmazonS
     /// </summary>
     private readonly string _topicArn = configuration["AWS:Resources:SNSTopicArn"] ?? throw new KeyNotFoundException("SNS topic link was not found in configuration");
 
+    /// <summary>
+    /// URL сервиса SNS
+    /// </summary>
+    private readonly string _snsEndpointUrl = configuration["AWS:Resources:SNSEndpointURL"] ?? throw new KeyNotFoundException("SNS endpoint URL was not found in configuration");
+
     /// <inheritdoc/>
     public async Task<bool> SubscribeEndpoint()
     {
         logger.LogInformation("Sending subscride request for {topic}", _topicArn);
 
-        var endpoint = configuration["AWS:Resources:SNSEndpointURL"];
-
         var request = new SubscribeRequest
         {
             TopicArn = _topicArn,
             Protocol = "http",
-            Endpoint = endpoint,
+            Endpoint = _snsEndpointUrl,
             ReturnSubscriptionArn = true
         };
 

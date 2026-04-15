@@ -12,21 +12,21 @@ var gatewayPort = apiGatewayConfig.GetValue<int>("Port");
 
 // Read configuration for AWS
 var awsConfig = builder.Configuration.GetSection("AWS");
-var accessKey = awsConfig.GetValue<string>("AccessKeyId") ?? "test";
-var secretKey = awsConfig.GetValue<string>("SecretAccessKey") ?? "test";
-var region = awsConfig.GetValue<string>("Region") ?? "eu-central-1";
+var accessKey = awsConfig.GetValue<string>("AccessKeyId") ?? "none";
+var secretKey = awsConfig.GetValue<string>("SecretAccessKey") ?? "none";
+var region = awsConfig.GetValue<string>("Region") ?? "none";
 
 // Read configuration for AWS Resources
 var awsResourcesConfig = awsConfig.GetSection("Resources");
-var topicName = awsResourcesConfig.GetValue<string>("TopicName") ?? "course-topic";
-var bucketName = awsResourcesConfig.GetValue<string>("BucketName") ?? "course-bucket";
-var snsTopicArn = awsResourcesConfig.GetValue<string>("SNSTopicArn") ?? $"arn:aws:sns:eu-central-1:000000000000:{topicName}";
-var snsEndpointUrl = awsResourcesConfig.GetValue<string>("SNSEndpointURL") ?? "http://course-storage:5280/api/sns";
+var topicName = awsResourcesConfig.GetValue<string>("TopicName") ?? "none";
+var bucketName = awsResourcesConfig.GetValue<string>("BucketName") ?? "none";
+var snsTopicArn = awsResourcesConfig.GetValue<string>("SNSTopicArn") ?? "none";
+var snsEndpointUrl = awsResourcesConfig.GetValue<string>("SNSEndpointURL") ?? "none";
 
 // Read configuration for Localstack, S3, SNS
-var localStackServiceUrl = builder.Configuration.GetSection("LocalStack").GetValue<string>("ServiceURL") ?? "http://localstack:4566";
-var s3ServiceUrl = builder.Configuration.GetSection("S3").GetValue<string>("ServiceURL") ?? "http://s3.localhost.localstack.cloud:4566";
-var snsServiceUrl = builder.Configuration.GetSection("SNS").GetValue<string>("ServiceURL") ?? "http://sns.localhost.localstack.cloud:4566";
+var localStackServiceUrl = builder.Configuration.GetSection("LocalStack").GetValue<string>("ServiceURL") ?? "none";
+var s3ServiceUrl = builder.Configuration.GetSection("S3").GetValue<string>("ServiceURL") ?? "none";
+var snsServiceUrl = builder.Configuration.GetSection("SNS").GetValue<string>("ServiceURL") ?? "none";
 
 // Cache (Redis)
 var redis = builder.AddRedis("course-cache")
@@ -66,7 +66,7 @@ var storage = builder.AddProject<Projects.CourseManagement_Storage>("course-stor
     .WithEnvironment("AWS__SecretAccessKey", secretKey)
     .WithEnvironment("AWS__Resources__S3BucketName", bucketName)
     .WithEnvironment("AWS__Resources__SNSTopicArn", snsTopicArn)
-    .WithEnvironment("AWS__Resources__SNSEndpointURL", "http://host.docker.internal:5280/api/sns")
+    .WithEnvironment("AWS__Resources__SNSEndpointURL", snsEndpointUrl)
     .WithEnvironment("S3__ServiceURL", s3ServiceUrl)
     .WithEnvironment("SNS__ServiceURL", snsServiceUrl)
     .WaitFor(localstackInit);

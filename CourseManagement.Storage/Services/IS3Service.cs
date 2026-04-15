@@ -3,7 +3,7 @@
 namespace CourseManagement.Storage.Services;
 
 /// <summary>
-/// Интерфейс сервиса для манипуляции файлами в объектном хранилище
+/// Интерфейс сервиса для управления файлами в объектном хранилище
 /// </summary>
 public interface IS3Service
 {
