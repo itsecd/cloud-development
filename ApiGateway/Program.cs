@@ -13,7 +13,7 @@ var overrides = new List<KeyValuePair<string, string?>>();
 for (var i = 0; i < generators.Length; i++)
 {
     var serviceName = generators[i];
-    var url = builder.Configuration[$"services:{serviceName}:http:0"];
+    var url = builder.Configuration[$"services:{serviceName}:https:0"];
 
     if (string.IsNullOrWhiteSpace(url))
         continue;

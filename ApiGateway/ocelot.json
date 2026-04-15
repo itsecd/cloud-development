@@ -1,5 +1,5 @@
 {
-  "Generators": [ "generator-1", "generator-2", "generator-3" ],
+  "Generators": [ "back-0", "back-1", "back-2" ],
   "Routes": [
     {
       "DownstreamPathTemplate": "/contracts/vehicle",
