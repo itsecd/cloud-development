@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Nodes;
 
-namespace ResidentialBuilding.EventSink.Service.Storage;
+namespace ResidentialBuilding.FileService.Service.Storage;
 
 /// <summary>
 /// Интерфейс службы для манипуляции файлами в объектном хранилище

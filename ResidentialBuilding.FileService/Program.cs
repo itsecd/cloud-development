@@ -3,8 +3,8 @@ using Amazon.SimpleNotificationService;
 using LocalStack.Client.Extensions;
 using Microsoft.AspNetCore.Builder;
 using ResidentialBuilding.ServiceDefaults;
-using ResidentialBuilding.EventSink.Service.Messaging;
-using ResidentialBuilding.EventSink.Service.Storage;
+using ResidentialBuilding.FileService.Service.Messaging;
+using ResidentialBuilding.FileService.Service.Storage;
 
 var builder = WebApplication.CreateBuilder(args);
 

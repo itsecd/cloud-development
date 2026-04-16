@@ -1,9 +1,9 @@
 ﻿using Amazon.SimpleNotificationService.Util;
 using Microsoft.AspNetCore.Mvc;
-using ResidentialBuilding.EventSink.Service.Storage;
 using System.Text;
+using ResidentialBuilding.FileService.Service.Storage;
 
-namespace ResidentialBuilding.EventSink.Controller;
+namespace ResidentialBuilding.FileService.Controller;
 
 /// <summary>
 /// Контроллер для приема сообщений от SNS

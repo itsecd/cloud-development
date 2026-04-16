@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using ResidentialBuilding.EventSink.Service.Storage;
 using System.Text;
 using System.Text.Json.Nodes;
+using ResidentialBuilding.FileService.Service.Storage;
 
-namespace ResidentialBuilding.EventSink.Controller;
+namespace ResidentialBuilding.FileService.Controller;
 
 /// <summary>
 /// Контроллер для взаимодейсвия с S3

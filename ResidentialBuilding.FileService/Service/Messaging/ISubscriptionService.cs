@@ -1,4 +1,4 @@
-﻿namespace ResidentialBuilding.EventSink.Service.Messaging;
+﻿namespace ResidentialBuilding.FileService.Service.Messaging;
 
 public interface ISubscriptionService
 {

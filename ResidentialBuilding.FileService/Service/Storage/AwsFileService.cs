@@ -5,7 +5,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
-namespace ResidentialBuilding.EventSink.Service.Storage;
+namespace ResidentialBuilding.FileService.Service.Storage;
 
 public class AwsFileService(IAmazonS3 client, IConfiguration configuration, ILogger<AwsFileService> logger)
     : IFileService

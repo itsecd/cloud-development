@@ -4,9 +4,9 @@
         <TargetFramework>net8.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
-        <UserSecretsId>dotnet-ResidentialBuilding.EventSink-3fc8b533-d1b8-4ada-b0c8-745b4c7331f7</UserSecretsId>
+        <UserSecretsId>dotnet-ResidentialBuilding.FileService-3fc8b533-d1b8-4ada-b0c8-745b4c7331f7</UserSecretsId>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-        <RootNamespace>ResidentialBuilding.EventSink</RootNamespace>
+        <RootNamespace>ResidentialBuilding.FileService</RootNamespace>
     </PropertyGroup>
     
     <ItemGroup>

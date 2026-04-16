@@ -2,7 +2,7 @@
 using Amazon.SimpleNotificationService.Model;
 using System.Net;
 
-namespace ResidentialBuilding.EventSink.Service.Messaging;
+namespace ResidentialBuilding.FileService.Service.Messaging;
 
 /// <summary>
 /// Служба для подписки на SNS на старте приложения
