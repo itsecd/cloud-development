@@ -7,12 +7,17 @@ using System.Text.Json.Nodes;
 
 namespace ResidentialBuilding.FileService.Service.Storage;
 
+/// <summary>
+/// Реализация интерфейса IFileService, отвечающая за работу с хранилищем Amazon S3
+/// </summary>
+/// <param name="client">Клиент AWS SDK для работы с Amazon S3</param>
+/// <param name="configuration">Конфигурация приложения, из которой извлекается имя S3-бакета</param>
+/// <param name="logger">Логгер</param>
 public class AwsFileService(IAmazonS3 client, IConfiguration configuration, ILogger<AwsFileService> logger)
     : IFileService
 {
-    private readonly string _bucketName = configuration["AWS:Resources:S3BucketName"]
-                                          ?? throw new KeyNotFoundException(
-                                              "S3 bucket name was not found in configuration");
+    private readonly string _bucketName = configuration["AWS:Resources:S3BucketName"] 
+        ?? throw new KeyNotFoundException("S3 bucket name was not found in configuration");
 
     ///<inheritdoc/>
     public async Task<List<string>> GetFilesList()

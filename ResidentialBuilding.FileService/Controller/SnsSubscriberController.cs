@@ -57,7 +57,7 @@ public class SnsSubscriberController(IFileService fileService, ILogger<SnsSubscr
                     }
 
                     logger.LogInformation("Subscription was successfully confirmed.");
-                    return Ok();
+                    break;
                 }
                 case "Notification":
                 {
