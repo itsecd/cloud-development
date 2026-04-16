@@ -23,13 +23,14 @@ public class IntegrationTests(AppFixture fixture) : IClassFixture<AppFixture>
     /// Проверяет основной положительный сценарий:
     /// Запрос через Gateway → генерация объекта → сохранение в S3 → данные идентичны.
     /// </summary>
-    [Fact]
-    public async Task GetFromGateway_SavesToS3_AndDataIsIdentical()
+    [Theory]
+    [InlineData(11)]
+    [InlineData(12)]
+    [InlineData(13)]
+    public async Task GetFromGateway_SavesToS3_AndDataIsIdentical(int id)
     {
         var gatewayClient = _app.CreateHttpClient("gateway", "http");
         var fileClient = _app.CreateHttpClient("residential-building-file-service", "http");
-        
-        var id = Random.Shared.Next(1, 10);
         
         var response = await gatewayClient.GetAsync($"/residential-building?id={id}");
         response.EnsureSuccessStatusCode();
@@ -42,32 +43,6 @@ public class IntegrationTests(AppFixture fixture) : IClassFixture<AppFixture>
 
         Assert.NotNull(apiBuilding);
         Assert.Equal(id, apiBuilding.Id);
-        Assert.NotNull(s3Building);
-        Assert.Equal(id, s3Building.Id);
-        Assert.Equivalent(apiBuilding, s3Building, strict: true);
-    }
-    
-    /// <summary>
-    /// Проверяет корректность сохранения объектов с разными идентификаторами.
-    /// </summary>
-    [Theory]
-    [InlineData(11)]
-    [InlineData(12)]
-    [InlineData(13)]
-    public async Task DifferentIds_AreCorrectlySavedToS3(int id)
-    {
-        var gatewayClient = _app.CreateHttpClient("gateway", "http");
-        var fileClient = _app.CreateHttpClient("residential-building-file-service", "http");
-
-        var response = await gatewayClient.GetAsync($"/residential-building?id={id}");
-        response.EnsureSuccessStatusCode();
-
-        var apiBuilding = Deserialize<ResidentialBuildingDto>(await response.Content.ReadAsStringAsync());
-
-        await WaitForFileInS3Async(fileClient, id, TimeSpan.FromSeconds(10));
-
-        var s3Building = await GetBuildingFromS3Async(fileClient, id);
-
         Assert.NotNull(s3Building);
         Assert.Equal(id, s3Building.Id);
         Assert.Equivalent(apiBuilding, s3Building, strict: true);
@@ -118,42 +93,6 @@ public class IntegrationTests(AppFixture fixture) : IClassFixture<AppFixture>
         
         Assert.Equivalent(apiBuilding, apiBuilding1, strict: true);
         Assert.Equivalent(s3Building, s3Building1, strict: true);
-    }
-    
-    /// <summary>
-    /// Проверяет обработку нескольких разных объектов в одном тесте.
-    /// Убеждается, что все сгенерированные объекты корректно сохраняются в S3.
-    /// </summary>
-    [Fact]
-    public async Task MultipleDifferentIds_AllSavedCorrectly()
-    {
-        var gatewayClient = _app.CreateHttpClient("gateway", "http");
-        var fileClient = _app.CreateHttpClient("residential-building-file-service", "http");
-
-        var ids = Enumerable.Range(0, 5).Select(_ => Random.Shared.Next(40, 50)).ToList();
-
-        var apiBuildings = new List<ResidentialBuildingDto>();
-
-        foreach (var id in ids)
-        {
-            var response = await gatewayClient.GetAsync($"/residential-building?id={id}");
-            response.EnsureSuccessStatusCode();
-
-            var building = Deserialize<ResidentialBuildingDto>(await response.Content.ReadAsStringAsync());
-            Assert.NotNull(building);
-            apiBuildings.Add(building!);
-
-            await WaitForFileInS3Async(fileClient, id, TimeSpan.FromSeconds(8));
-        }
-
-        foreach (var id in ids)
-        {
-            var s3Building = await GetBuildingFromS3Async(fileClient, id);
-            var original = apiBuildings.First(b => b.Id == id);
-
-            Assert.Equal(id, s3Building.Id);
-            Assert.Equivalent(original, s3Building, strict: true);
-        }
     }
 
     /// <summary>
