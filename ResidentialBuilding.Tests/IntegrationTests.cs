@@ -191,6 +191,59 @@ public class IntegrationTests(AppFixture fixture) : IClassFixture<AppFixture>
     }
     
     /// <summary>
+    /// Проверяет обработку некорректных значений id в Gateway.
+    /// </summary>
+    [Theory]
+    [InlineData("0")]
+    [InlineData("-1")]
+    [InlineData("asd")]
+    public async Task InvalidId_ReturnsBadRequest(string invalidId)
+    {
+        var gatewayClient = _app.CreateHttpClient("gateway", "http");
+
+        var response = await gatewayClient.GetAsync($"/residential-building?id={invalidId}");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    /// <summary>
+    /// Проверяет поведение при отсутствии параметра id.
+    /// </summary>
+    [Fact]
+    public async Task MissingIdParameter_ReturnsBadRequest()
+    {
+        var gatewayClient = _app.CreateHttpClient("gateway", "http");
+
+        var response = await gatewayClient.GetAsync("/residential-building");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    /// <summary>
+    /// Проверяет, что при некорректном id файл в S3 НЕ создаётся.
+    /// </summary>
+    [Theory]
+    [InlineData("0")]
+    [InlineData("-1")]
+    [InlineData("asd")]
+    public async Task InvalidId_DoesNotCreateFileInS3(string invalidId)
+    {
+        var gatewayClient = _app.CreateHttpClient("gateway", "http");
+        var fileClient = _app.CreateHttpClient("residential-building-file-service", "http");
+
+        var response = await gatewayClient.GetAsync($"/residential-building?id={invalidId}");
+    
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        await Task.Delay(5000);
+
+        var fileName = $"residential_building_{invalidId}.json";
+        var probe = await fileClient.GetAsync($"/api/s3/{fileName}");
+    
+        Assert.False(probe.IsSuccessStatusCode, "Файл не должен был появиться в S3 при невалидном id");
+    }
+    
+    /// <summary>
     /// Ожидает появления файла в S3 с указанным id.
     /// Поллинг с таймаутом — необходим из-за асинхронной природы связи SNS и FileService.
     /// </summary>
