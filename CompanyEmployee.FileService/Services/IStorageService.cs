@@ -6,6 +6,10 @@
 public interface IStorageService
 {
     /// <summary>
+    /// Проверяет существование бакета и создает его, если он отсутствует.
+    /// </summary>
+    public Task EnsureBucketExistsAsync(string bucketName, CancellationToken cancellationToken = default);
+    /// <summary>
     /// Сохраняет файл в хранилище.
     /// </summary>
     public Task SaveFileAsync(string bucketName, string key, byte[] content);

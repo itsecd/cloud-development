@@ -1,53 +1,51 @@
-using Aspire.Hosting;
+using Amazon;
+using Aspire.Hosting.LocalStack;
+using Aspire.Hosting.LocalStack.Container;
+using LocalStack.Client.Enums;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
 var redis = builder.AddRedis("redis")
     .WithRedisCommander();
 
-var minio = builder.AddContainer("minio", "minio/minio")
-    .WithVolume("minio-data", "/data")
-    .WithArgs("server", "/data", "--console-address", ":9001")
-    .WithEnvironment("MINIO_ROOT_USER", "minioadmin")
-    .WithEnvironment("MINIO_ROOT_PASSWORD", "minioadmin")
-    .WithEndpoint(port: 9000, targetPort: 9000, scheme: "http", name: "minio-api")
-    .WithEndpoint(port: 9001, targetPort: 9001, scheme: "http", name: "minio-console");
+var minio = builder.AddMinioContainer("minio")
+    .WithDataVolume("minio-data");
 
-var localstack = builder.AddContainer("localstack", "localstack/localstack:3.8.0")
-    .WithEndpoint(port: 4566, targetPort: 4566, scheme: "http", name: "localstack")
-    .WithEnvironment("SERVICES", "sns")
-    .WithEnvironment("AWS_ACCESS_KEY_ID", "test")
-    .WithEnvironment("AWS_SECRET_ACCESS_KEY", "test")
-    .WithEnvironment("AWS_DEFAULT_REGION", "us-east-1")
-    .WithEnvironment("SKIP_SSL_CERT_DOWNLOAD", "1")
-    .WithEnvironment("LOCALSTACK_HOST", "localhost.localstack.cloud")
-    .WithLifetime(ContainerLifetime.Persistent);
+var awsConfig = builder.AddAWSSDKConfig()
+    .WithRegion(RegionEndpoint.USEast1);
+
+var localstack = builder.AddLocalStack("localstack", awsConfig: awsConfig, configureContainer: container =>
+{
+    container.Lifetime = ContainerLifetime.Persistent;
+    container.EagerLoadedServices = [AwsService.Sns];
+    container.LogLevel = LocalStackLogLevel.Warn;
+    container.Port = 4566;
+});
+builder.UseLocalStack(localstack);
 
 var fileService = builder.AddProject<Projects.CompanyEmployee_FileService>("fileservice")
-    .WithEnvironment("MinIO__Endpoint", "http://localhost:9000")
-    .WithEnvironment("MinIO__AccessKey", "minioadmin")
-    .WithEnvironment("MinIO__SecretKey", "minioadmin")
+    .WithReference(minio)
+    .WithReference(localstack)
     .WithEnvironment("MinIO__BucketName", "employee-data")
-    .WaitFor(minio)
-    .WaitFor(localstack);
+    .WaitFor(minio);
 
 var gateway = builder.AddProject<Projects.CompanyEmployee_Gateway>("gateway")
     .WithExternalHttpEndpoints();
 
 const int startApiHttpsPort = 6001;
-const int replicaCount = 5;
 var apiReplicas = new List<IResourceBuilder<ProjectResource>>();
 
-for (var i = 0; i < replicaCount; i++)
+for (var i = 0; i < 5; i++)
 {
     var httpsPort = startApiHttpsPort + i;
 
     var api = builder.AddProject<Projects.CompanyEmployee_Api>($"api-{i + 1}")
         .WithReference(redis)
+        .WithReference(localstack)
+        .WithReference(awsConfig)
         .WithEndpoint("https", e => e.Port = httpsPort)
         .WithEnvironment("ASPNETCORE_ENVIRONMENT", "Development")
-        .WaitFor(redis)
-        .WaitFor(localstack);
+        .WaitFor(redis);
 
     apiReplicas.Add(api);
     gateway.WaitFor(api);

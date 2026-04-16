@@ -1,17 +1,21 @@
 using CompanyEmployee.FileService.Services;
 using CompanyEmployee.ServiceDefaults;
-using Minio;
-using Minio.DataModel.Args;
+using Amazon.SimpleNotificationService;
+using LocalStack.Client.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
 
 builder.AddMinioClient("minio");
 
-var bucketName = builder.Configuration["MinIO:BucketName"] ?? "employee-data";
+builder.Services.AddLocalStack(builder.Configuration);
+builder.Services.AddAwsService<IAmazonSimpleNotificationService>();
 
+var bucketName = builder.Configuration["MinIO:BucketName"]
+    ?? throw new InvalidOperationException("MinIO:BucketName is not configured");
 builder.Services.AddSingleton<IStorageService, MinioStorageService>();
 builder.Services.AddSingleton(bucketName);
+builder.Services.AddHostedService<SnsInitializerService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -26,15 +30,18 @@ if (!app.Environment.IsEnvironment("Testing"))
 
 using (var scope = app.Services.CreateScope())
 {
-    var minioClient = scope.ServiceProvider.GetRequiredService<IMinioClient>();
+    var storageService = scope.ServiceProvider.GetRequiredService<IStorageService>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-    var bucket = bucketName;
 
-    var bucketExists = await minioClient.BucketExistsAsync(new BucketExistsArgs().WithBucket(bucket));
-    if (!bucketExists)
+    try
     {
-        await minioClient.MakeBucketAsync(new MakeBucketArgs().WithBucket(bucket));
-        logger.LogInformation("Bucket {BucketName} created successfully", bucket);
+        await storageService.EnsureBucketExistsAsync(bucketName);
+        logger.LogInformation("Storage initialized successfully for bucket {BucketName}", bucketName);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Failed to initialize storage bucket {BucketName}", bucketName);
+        throw;
     }
 }
 

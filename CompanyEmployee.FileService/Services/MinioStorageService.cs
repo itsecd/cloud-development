@@ -6,21 +6,46 @@ namespace CompanyEmployee.FileService.Services;
 /// <summary>
 /// Реализация хранилища через MinIO с использованием первичного конструктора.
 /// </summary>
+/// <param name="minioClient">Клиент MinIO для взаимодействия с хранилищем.</param>
+/// <param name="logger">Логгер для записи диагностических сообщений.</param>
 public class MinioStorageService(
     IMinioClient minioClient,
     ILogger<MinioStorageService> logger) : IStorageService
 {
     /// <inheritdoc/>
+    public async Task EnsureBucketExistsAsync(string bucketName, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var bucketExists = await minioClient.BucketExistsAsync(
+                new BucketExistsArgs().WithBucket(bucketName),
+                cancellationToken);
+
+            if (!bucketExists)
+            {
+                await minioClient.MakeBucketAsync(
+                    new MakeBucketArgs().WithBucket(bucketName),
+                    cancellationToken);
+                logger.LogInformation("Bucket {BucketName} created successfully", bucketName);
+            }
+            else
+            {
+                logger.LogDebug("Bucket {BucketName} already exists", bucketName);
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to ensure bucket {BucketName} exists", bucketName);
+            throw;
+        }
+    }
+
+    /// <inheritdoc/>
     public async Task SaveFileAsync(string bucketName, string key, byte[] content)
     {
         try
         {
-            var bucketExists = await minioClient.BucketExistsAsync(new BucketExistsArgs().WithBucket(bucketName));
-            if (!bucketExists)
-            {
-                await minioClient.MakeBucketAsync(new MakeBucketArgs().WithBucket(bucketName));
-                logger.LogInformation("Created bucket {BucketName}", bucketName);
-            }
+            await EnsureBucketExistsAsync(bucketName);
 
             using var stream = new MemoryStream(content);
             await minioClient.PutObjectAsync(new PutObjectArgs()

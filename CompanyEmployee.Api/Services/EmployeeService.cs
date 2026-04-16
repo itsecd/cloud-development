@@ -7,6 +7,10 @@ namespace CompanyEmployee.Api.Services;
 /// <summary>
 /// Сервис для работы с сотрудниками, включая кэширование и публикацию в SNS.
 /// </summary>
+/// <param name="generator">Генератор сотрудников.</param>
+/// <param name="cache">Кэш Redis.</param>
+/// <param name="snsPublisher">Публикатор SNS.</param>
+/// <param name="logger">Логгер.</param>
 public class EmployeeService(
     IEmployeeGenerator generator,
     IDistributedCache cache,

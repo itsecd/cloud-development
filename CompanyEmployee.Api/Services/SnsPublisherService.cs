@@ -16,7 +16,7 @@ public class SnsPublisherService(
     private static readonly JsonSerializerOptions _jsonOptions = new() { PropertyNameCaseInsensitive = true };
 
     private readonly string _topicArn = configuration["SNS:TopicArn"]
-        ?? "arn:aws:sns:us-east-1:000000000000:employee-events";
+        ?? throw new InvalidOperationException("SNS:TopicArn is not configured. Please check your appsettings.json or environment variables.");
 
     /// <summary>
     /// Публикует данные сотрудника в SNS топик.

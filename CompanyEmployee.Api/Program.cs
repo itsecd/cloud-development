@@ -1,30 +1,22 @@
 ﻿using Amazon.SimpleNotificationService;
 using CompanyEmployee.Api.Services;
 using CompanyEmployee.ServiceDefaults;
+using LocalStack.Client.Extensions;
+using Amazon.Extensions.NETCore.Setup;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 builder.AddRedisDistributedCache("redis");
 
+builder.Services.AddLocalStack(builder.Configuration);
+
+builder.Services.AddAwsService<IAmazonSimpleNotificationService>();
+
 builder.Services.AddSingleton<IEmployeeGenerator, EmployeeGenerator>();
 builder.Services.AddSingleton<ICacheService, RedisCacheService>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
-
-var awsServiceUrl = builder.Configuration["AWS:ServiceURL"] ?? "http://localhost:4566";
-var awsRegion = builder.Configuration["AWS:Region"] ?? "us-east-1";
-
-var snsConfig = new AmazonSimpleNotificationServiceConfig
-{
-    ServiceURL = awsServiceUrl,
-    AuthenticationRegion = awsRegion,
-    UseHttp = true
-};
-
-builder.Services.AddSingleton<IAmazonSimpleNotificationService>(_ =>
-    new AmazonSimpleNotificationServiceClient("test", "test", snsConfig));
-
-builder.Services.AddSingleton<SnsPublisherService>();
+builder.Services.AddScoped<SnsPublisherService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

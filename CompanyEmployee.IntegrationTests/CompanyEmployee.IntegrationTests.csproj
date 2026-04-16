@@ -10,8 +10,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.Testing" Version="9.5.0" />
-    <PackageReference Include="AWSSDK.S3" Version="3.7.400" />
+    <PackageReference Include="Aspire.Hosting.Testing" Version="9.5.2" />
+    <PackageReference Include="AWSSDK.S3" Version="4.0.0.7" />
     <PackageReference Include="coverlet.collector" Version="6.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="9.9.0" />
