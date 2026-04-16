@@ -20,18 +20,24 @@ public class EmployeeConsumer(
 
     public async Task Consume(ConsumeContext<EmployeeMessage> context)
     { 
-        var employee= context.Message;
-        var fileName = $"employee-{employee.Id}.json";
-        var json = JsonSerializer.Serialize(employee, _jsonOptions);
-
-        await s3Client.PutObjectAsync(new PutObjectRequest
+        try
         {
-            BucketName = _bucketName,
-            Key = fileName,
-            ContentBody = json,
-            ContentType = "application/json"
-        }, context.CancellationToken);
+            var employee = context.Message;
+            var fileName = $"employee-{employee.Id}.json";
+            var json = JsonSerializer.Serialize(employee, _jsonOptions);
 
-        logger.LogInformation("Saved employee {EmployeeId} to minio with filename: {FileName}", employee.Id, fileName);
+            var response = await s3Client.PutObjectAsync(new PutObjectRequest
+            {
+                BucketName = _bucketName,
+                Key = fileName,
+                ContentBody = json,
+                ContentType = "application/json"
+            }, context.CancellationToken);
+
+            logger.LogInformation("Saved employee {EmployeeId} to minio with filename: {FileName}", employee.Id, fileName);
+        } catch (Exception ex)
+        {
+            logger.LogError(ex.Message);
+        }
     }
 }

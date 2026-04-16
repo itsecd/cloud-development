@@ -3,6 +3,7 @@ using CompanyEmployees.ServiceDefaults;
 using Serilog;
 using MassTransit;
 using Amazon.SQS;
+using LocalStack.Client.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,7 +41,7 @@ if (!string.IsNullOrEmpty(sqsServiceUrl))
                     AuthenticationRegion = "us-east-1"
                 });
             });
-            cfg.UseRawJsonSerializer();
+            cfg.UseRawJsonSerializer(RawSerializerOptions.AnyMessageType);
         });
     });
 

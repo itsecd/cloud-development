@@ -58,7 +58,7 @@ public class CompanyEmployeeService(
 
         if (employeePublisher is not null)
         {
-            var res = employeePublisher.PublishAsync(application, cancellationToken);
+            await employeePublisher.PublishAsync(application, cancellationToken);
             logger.LogInformation("Publisher complete task");
         }
 

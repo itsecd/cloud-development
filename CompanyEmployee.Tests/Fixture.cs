@@ -2,6 +2,7 @@
 using Amazon.S3;
 using Amazon.S3.Model;
 using Aspire.Hosting;
+using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Testing;
 using Xunit;
 
@@ -14,6 +15,8 @@ public class Fixture : IAsyncLifetime
 {
     public DistributedApplication App { get; private set; } = null!;
     public AmazonS3Client S3Client { get; private set; } = null!;
+    
+    public string sqsUrl = "";
 
     public async Task InitializeAsync()
     {
@@ -41,8 +44,13 @@ public class Fixture : IAsyncLifetime
 
         await Task.Delay(TimeSpan.FromSeconds(5));
 
-        using var minioClient = App.CreateHttpClient("minio", "api");
+        using var minioClient = App.CreateHttpClient("minio", "http");
         var minioUrl = minioClient.BaseAddress!.ToString().TrimEnd('/');
+
+
+        var sqsHttpClient = App.CreateHttpClient("elasticmq", "http");
+        sqsUrl = sqsHttpClient.BaseAddress?.ToString().TrimEnd('/');
+
 
         S3Client = new AmazonS3Client(
             new BasicAWSCredentials("minioadmin", "minioadmin"),
@@ -50,8 +58,20 @@ public class Fixture : IAsyncLifetime
             {
                 ServiceURL = minioUrl,
                 ForcePathStyle = true,
+                UseHttp = true,
                 AuthenticationRegion = "us-east-1"
             });
+
+        var doesExist = await Amazon.S3.Util.AmazonS3Util.DoesS3BucketExistV2Async(S3Client, "company-employee");
+
+        if (!doesExist)
+        {
+            await S3Client.PutBucketAsync(new PutBucketRequest
+            {
+                BucketName = "company-employee"
+            });
+        }
+
     }
 
     public async Task<List<S3Object>> WaitForS3ObjectAsync(string key, int maxAttempts = 15)
@@ -62,11 +82,14 @@ public class Fixture : IAsyncLifetime
             
             try
             {
-                var response = await S3Client.ListObjectsAsync(new ListObjectsRequest
-                {
-                    BucketName = "company-employee",
-                    Prefix = key
-                });
+                var doesExist = await Amazon.S3.Util.AmazonS3Util.DoesS3BucketExistV2Async(S3Client, "company-employee");
+                
+                var response = await S3Client.ListObjectsV2Async(new ListObjectsV2Request
+                    {
+                        BucketName = "company-employee",
+                        Prefix = key,
+                    }
+                );
 
                 if (response.S3Objects is not null && response.S3Objects.Count > 0)
                     return response.S3Objects;

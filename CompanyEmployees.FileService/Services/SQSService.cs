@@ -1,6 +1,6 @@
 ﻿namespace CompanyEmployees.FileService.Services;
 
-public class SQSService(IConfiguration configuration, ILogger<SQSService> logger) : IHostedService
+public class SqsService(IConfiguration configuration, ILogger<SqsService> logger) : IHostedService
 {
     public async Task StartAsync(CancellationToken cancellationToken)
     {

@@ -10,15 +10,20 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
-var minioSettings = builder.Configuration.GetSection("MinIO").Get<MinioConfiguration>() ?? new MinioConfiguration();
+var minioSettings = builder.Configuration.GetSection("MinIO");
 
-builder.Services.AddSingleton(minioSettings);
+// не до конца уверен в правильности написанного ниже, но прошу не бить сильно
+var minioAccessKey = minioSettings.Get<MinioConfiguration>()?.AccessKey;
+var minioSecretKey = minioSettings.Get<MinioConfiguration>()?.SecretKey;
+var minioEndpoint = minioSettings.Get<MinioConfiguration>()?.Endpoint;
+
+builder.Services.AddSingleton(minioSettings).Configure<MinioConfiguration>(minioSettings);
 
 builder.Services.AddSingleton<IAmazonS3>(_ => new AmazonS3Client(
-    new BasicAWSCredentials(minioSettings.AccessKey, minioSettings.SecretKey),
+    new BasicAWSCredentials(minioAccessKey, minioSecretKey),
     new AmazonS3Config
     {
-        ServiceURL = minioSettings.Endpoint,
+        ServiceURL = minioEndpoint,
         ForcePathStyle = true,
         AuthenticationRegion = "us-east-1"
     }
@@ -26,7 +31,7 @@ builder.Services.AddSingleton<IAmazonS3>(_ => new AmazonS3Client(
 
 var sqsServiceUrl = builder.Configuration["SQS:ServiceUrl"] ?? "http://localhost:9324";
 
-builder.Services.AddHostedService<SQSService>();
+builder.Services.AddHostedService<SqsService>();
 
 builder.Services.AddMassTransit(x =>
 {
