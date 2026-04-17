@@ -3,7 +3,7 @@
 /// <summary>
 /// Универсальный интерфейс сервиса для отправки генерируемых сущностей в брокер сообщений
 /// </summary>
-public interface IPublisherService<T>
+public interface IPublisherService
 {
     /// <summary>
     /// Метод для отправки сообщения в брокер
@@ -12,5 +12,5 @@ public interface IPublisherService<T>
     /// <param name="entity">Отправляемая сущность</param>
     /// <param name="cancellationToken">Токен для возможности отмены ожидания после отправки</param>
     /// <returns>Успешность операции отправки</returns>
-    public Task<bool> SendMessage(int id, T entity, CancellationToken cancellationToken = default);
+    public Task<bool> SendMessage(int id, object entity, CancellationToken cancellationToken = default);
 }

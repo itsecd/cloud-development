@@ -12,7 +12,7 @@ namespace CourseManagement.ApiService.Services;
 /// <param name="generator">Генератор курсов</param>
 /// <param name="cacheService">Сервис для взаимодействия с кэшем</param>
 /// <param name="publisherService">Сервис для отправки сообщения в брокер</param>
-public class CourseService(ILogger<CourseService> logger, ICourseGenerator generator, ICacheService<Course> cacheService, IPublisherService<Course> publisherService) : ICourseService
+public class CourseService(ILogger<CourseService> logger, ICourseGenerator generator, ICacheService<Course> cacheService, IPublisherService publisherService) : ICourseService
 {
     /// <summary>
     /// Константа для ключа кэша

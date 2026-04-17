@@ -11,7 +11,7 @@ namespace CourseManagement.ApiService.Messaging;
 /// <param name="logger"></param>
 /// <param name="client"></param>
 /// <param name="configuration"></param>
-public class SnsPublisherService<T>(ILogger<SnsPublisherService<T>> logger, IAmazonSimpleNotificationService client, IConfiguration configuration) : IPublisherService<T>
+public class SnsPublisherService(ILogger<SnsPublisherService> logger, IAmazonSimpleNotificationService client, IConfiguration configuration) : IPublisherService
 {
     /// <summary>
     /// Идентификатор топика
@@ -20,7 +20,7 @@ public class SnsPublisherService<T>(ILogger<SnsPublisherService<T>> logger, IAma
         ?? throw new KeyNotFoundException("SNS topic link was not found in configuration");
 
     /// <inheritdoc/>
-    public async Task<bool> SendMessage(int id, T entity, CancellationToken cancellationToken)
+    public async Task<bool> SendMessage(int id, object entity, CancellationToken cancellationToken)
     {
         try
         {
@@ -35,15 +35,15 @@ public class SnsPublisherService<T>(ILogger<SnsPublisherService<T>> logger, IAma
             
             if (response.HttpStatusCode == HttpStatusCode.OK)
             {
-                logger.LogInformation("{EntityType} {Id} was sent to sink via SNS", typeof(T).Name, id);
+                logger.LogInformation("{EntityType} {Id} was sent to sink via SNS", entity.GetType(), id);
                 return true;
             }
 
-            logger.LogWarning("SNS returned {StatusCode} for {EntityType} {Id}", response.HttpStatusCode, typeof(T).Name, id);
+            logger.LogWarning("SNS returned {StatusCode} for {EntityType} {Id}", response.HttpStatusCode, entity.GetType(), id);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Unable to send {EntityType} through SNS topic", typeof(T).Name);
+            logger.LogError(ex, "Unable to send {EntityType} through SNS topic", entity.GetType());
         }
 
         return false;

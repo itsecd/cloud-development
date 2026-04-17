@@ -47,7 +47,7 @@ builder.Services.AddSingleton<ICacheService<Course>, CacheService<Course>>();
 builder.Services.AddSingleton<ICourseService, CourseService>();
 
 // Сервис для публикации данных
-builder.Services.AddSingleton<IPublisherService<Course>, SnsPublisherService<Course>>();
+builder.Services.AddSingleton<IPublisherService, SnsPublisherService>();
 
 var app = builder.Build();
 
