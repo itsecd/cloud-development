@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <Sdk Name="Aspire.AppHost.Sdk" Version="9.5.2" />
 
@@ -16,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Api.Gateway\Api.Gateway.csproj" />
     <ProjectReference Include="..\..\Client.Wasm\Client.Wasm.csproj" />
     <ProjectReference Include="..\..\VehicleVault.Api\VehicleVault.Api.csproj" />
   </ItemGroup>
