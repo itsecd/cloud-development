@@ -9,7 +9,12 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+builder.Services.AddHttpClient<VehicleApiClient>(client =>
+{
+    var baseAddress = builder.Configuration["BaseAddress"] 
+        ?? throw new InvalidOperationException("BaseAddress not found in configuration.");
+    client.BaseAddress = new Uri(baseAddress);
+});
 builder.Services.AddBlazorise(options => { options.Immediate = true; })
     .AddBootstrapProviders()
     .AddFontAwesomeIcons();
