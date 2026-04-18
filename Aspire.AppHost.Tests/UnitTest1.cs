@@ -29,15 +29,6 @@ public class UnitTest1(ITestOutputHelper output) : IAsyncLifetime
         });
     }
 
-    /// <summary>
-    /// Проверяет, что вызов гейтвея:
-    /// <list type="bullet">
-    /// <item><description>В ответ отправляет сгенерированный ЗУ</description></item>
-    /// <item><description>Сериализует ЗУ в S3 хранилище</description></item>
-    /// <item><description>Проверяет, что данные из предыдущих пунктов идентичны</description></item>
-    /// </list>
-    /// </summary>
-    /// <param name="envName">Запускаемый лаунч профайл</param>
     [Theory]
     [InlineData("Development")]
     public async Task TestPipeline(string envName)
