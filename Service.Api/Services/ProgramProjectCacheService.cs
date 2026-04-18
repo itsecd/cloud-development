@@ -1,4 +1,5 @@
 ﻿using Bogus;
+using Service.Api.Broker;
 using Service.Api.Entity;
 using Service.Api.Generator;
 using Service.Api.Redis;
@@ -10,7 +11,7 @@ namespace Service.Api.Services;
 /// Provides cached access to <see cref="ProgramProject"/> instances.
 /// Generates a new project if it is not found in Redis.
 /// </summary>
-public class ProgramProjectCacheService(RedisService cacheService, Faker<ProgramProject> faker)
+public class ProgramProjectCacheService(RedisService cacheService, Faker<ProgramProject> faker, IProducerService producerService)
 {
     /// <summary>
     /// Returns a cached <see cref="ProgramProject"/> by ID,
@@ -32,6 +33,7 @@ public class ProgramProjectCacheService(RedisService cacheService, Faker<Program
         }
         var newProject = faker.Generate();
         newProject.Id = id;
+        await producerService.SendMessage(newProject);
         try
         {
             await cacheService.SetAsync(key, newProject, TimeSpan.FromHours(12));

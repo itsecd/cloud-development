@@ -3,7 +3,10 @@ using Service.Api.Entity;
 using Service.Api.Generator;
 using Service.Api.Redis;
 using Service.Api.Services;
+using Amazon.SimpleNotificationService;
+using LocalStack.Client.Extensions;
 using StackExchange.Redis;
+using Service.Api.Broker;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +27,10 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
 
 builder.Services.AddScoped<RedisService>();
 builder.Services.AddScoped<ProgramProjectCacheService>();
+
+builder.Services.AddLocalStack(builder.Configuration);
+builder.Services.AddScoped<IProducerService, SnsPublisherService>();
+builder.Services.AddAwsService<IAmazonSimpleNotificationService>();
 
 var app = builder.Build();
 
