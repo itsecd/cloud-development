@@ -1,0 +1,9 @@
+<Solution>
+  <Project Path="Client.Wasm/Client.Wasm.csproj" />
+  <Project Path="CourseManagement.ApiGateway/CourseManagement.ApiGateway.csproj" />
+  <Project Path="CourseManagement.ApiService/CourseManagement.ApiService.csproj" />
+  <Project Path="CourseManagement.AppHost.Tests/CourseManagement.AppHost.Tests.csproj" />
+  <Project Path="CourseManagement.AppHost/CourseManagement.AppHost.csproj" />
+  <Project Path="CourseManagement.ServiceDefaults/CourseManagement.ServiceDefaults.csproj" />
+  <Project Path="CourseManagement.Storage/CourseManagement.Storage.csproj" />
+</Solution>
