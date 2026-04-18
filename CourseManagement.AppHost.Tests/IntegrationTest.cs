@@ -46,11 +46,7 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
 
         using var client = new HttpClient() { Timeout = TimeSpan.FromSeconds(5) };
 
-        using var gatewayClient = new HttpClient()
-        {
-            BaseAddress = new Uri("https://localhost:5000"),
-            Timeout = TimeSpan.FromSeconds(30)
-        };
+        using var gatewayClient = _app.CreateHttpClient("course-gateway", "http");
 
         using var gatewayResponse = await gatewayClient.GetAsync($"/course-management?id={id}");
 
@@ -63,11 +59,7 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
 
         await Task.Delay(5000);
 
-        using var storageClient = new HttpClient()
-        {
-            BaseAddress = new Uri("http://localhost:5280"),
-            Timeout = TimeSpan.FromSeconds(30)
-        };
+        using var storageClient = _app.CreateHttpClient("course-storage", "http");
 
         using var listResponse = await storageClient.GetAsync("/api/s3");
         var listContent = await listResponse.Content.ReadAsStringAsync();

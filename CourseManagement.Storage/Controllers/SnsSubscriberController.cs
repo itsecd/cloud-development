@@ -1,5 +1,4 @@
 using System.Text;
-using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Mvc;
 using Amazon.SimpleNotificationService.Util;
 using CourseManagement.Storage.Services;
@@ -23,66 +22,44 @@ public class SnsSubscriberController(IS3Service s3Service, ILogger<SnsSubscriber
     public async Task<IActionResult> ReceiveMessage()
     {
         logger.LogInformation("SNS webhook was called");
-
         try
         {
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var jsonContent = await reader.ReadToEndAsync();
 
-            var json = JsonNode.Parse(jsonContent);
-            if (json == null)
+            var snsMessage = Message.ParseMessage(jsonContent);
+
+            if (snsMessage.Type == "SubscriptionConfirmation")
             {
-                logger.LogWarning("Received invalid JSON from SNS");
+                logger.LogInformation("SubscriptionConfirmation was received");
+                using var httpClient = new HttpClient();
+                var builder = new UriBuilder(new Uri(snsMessage.SubscribeURL))
+                {
+                    Scheme = "http",
+                    Host = "localhost",
+                    Port = 4566
+                };
+                var response = await httpClient.GetAsync(builder.Uri);
+                if (!response.IsSuccessStatusCode)
+                {
+                    var body = await response.Content.ReadAsStringAsync();
+                    throw new Exception($"SubscriptionConfirmation returned {response.StatusCode}: {body}");
+                }
+                logger.LogInformation("Subscription was successfully confirmed");
                 return Ok();
             }
 
-            var messageType = json["Type"]?.GetValue<string>() ?? "";
-            logger.LogInformation("SNS message type: {Type}", messageType);
-
-            if (messageType == "SubscriptionConfirmation")
+            if (snsMessage.Type == "Notification")
             {
-                var subscribeUrl = json["SubscribeURL"]?.GetValue<string>();
-                if (!string.IsNullOrEmpty(subscribeUrl))
-                {
-                    logger.LogInformation("Confirming subscription...");
-
-                    using var httpClient = new HttpClient();
-                    var response = await httpClient.GetAsync(subscribeUrl);
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        logger.LogInformation("Subscription confirmed successfully");
-                    }
-                    else
-                    {
-                        var body = await response.Content.ReadAsStringAsync();
-                        logger.LogWarning("Subscription confirmation returned {Status}: {Body}",
-                            response.StatusCode, body);
-                    }
-                }
-                return Ok();
+                await s3Service.UploadFile(snsMessage.MessageText);
+                logger.LogInformation("Notification was successfully processed");
             }
 
-            if (messageType == "Notification")
-            {
-                var messageText = json["Message"]?.GetValue<string>();
-                if (!string.IsNullOrEmpty(messageText))
-                {
-                    await s3Service.UploadFile(messageText);
-                    logger.LogInformation("Notification processed and file uploaded to S3");
-                }
-                else
-                {
-                    logger.LogWarning("Notification received but Message field is empty");
-                }
-            }
-
-            return Ok();
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Exception occurred while processing SNS notifications");
-            return Ok();
         }
+        return Ok();
     }
 }

@@ -21,12 +21,6 @@ public class S3AwsService(ILogger<S3AwsService> logger, IAmazonS3 client, IConfi
     private readonly string _bucketName = configuration["AWS:Resources:S3BucketName"]
         ?? throw new KeyNotFoundException("S3 bucket name was not found in configuration");
 
-    /// <summary>
-    /// Регион AWS
-    /// </summary>
-    private readonly string _region = configuration["AWS:Region"] 
-        ?? throw new KeyNotFoundException("AWS region was not found in configuration");
-
     ///<inheritdoc/>
     public async Task<bool> UploadFile(string fileData)
     {
@@ -126,13 +120,7 @@ public class S3AwsService(ILogger<S3AwsService> logger, IAmazonS3 client, IConfi
 
         try
         {
-            var putBucketRequest = new PutBucketRequest
-            {
-                BucketName = _bucketName,
-                BucketRegionName = _region
-            };
-
-            await client.PutBucketAsync(putBucketRequest);
+            await client.EnsureBucketExistsAsync(_bucketName);
             logger.LogInformation("{Bucket} existence ensured", _bucketName);
         }
         catch (AmazonS3Exception ex) when (ex.ErrorCode == "BucketAlreadyOwnedByYou" ||

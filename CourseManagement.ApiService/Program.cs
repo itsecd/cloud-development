@@ -4,6 +4,7 @@ using CourseManagement.ApiService.Entities;
 using CourseManagement.ApiService.Generator;
 using CourseManagement.ApiService.Messaging;
 using CourseManagement.ApiService.Services;
+using LocalStack.Client.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,22 +18,11 @@ builder.AddRedisDistributedCache("course-cache");
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
 
-// Получение конфигурации 
-var configuration = builder.Configuration;
-var snsUrl = configuration["SNS:ServiceURL"] ?? throw new KeyNotFoundException("SNS service URL was not found in configuration");
-var region = configuration["AWS:Region"] ?? throw new KeyNotFoundException("AWS region was not found in configuration");
-var accessKey = configuration["AWS:AccessKeyId"] ?? throw new KeyNotFoundException("AWS access key ID was not found in configuration");
-var secretKey = configuration["AWS:SecretAccessKey"] ?? throw new KeyNotFoundException("AWS secret access key was not found in configuration");
+// Регистрация LocalStack
+builder.Services.AddLocalStack(builder.Configuration);
 
 // Регистрация AWS сервисов
-builder.Services.AddSingleton<IAmazonSimpleNotificationService>(
-    new AmazonSimpleNotificationServiceClient(accessKey, secretKey, new AmazonSimpleNotificationServiceConfig
-    {
-        ServiceURL = snsUrl,
-        UseHttp = true,
-        AuthenticationRegion = region
-    })
-);
+builder.Services.AddAwsService<IAmazonSimpleNotificationService>();
 
 // Контроллеры
 builder.Services.AddControllers();

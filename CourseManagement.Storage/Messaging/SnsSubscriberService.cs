@@ -20,7 +20,7 @@ public class SnsSubscriberService(ILogger<SnsSubscriberService> logger, IAmazonS
     /// <summary>
     /// URL сервиса SNS
     /// </summary>
-    private readonly string _snsEndpointUrl = configuration["AWS:Resources:SNSEndpointURL"] ?? throw new KeyNotFoundException("SNS endpoint URL was not found in configuration");
+    private readonly string _snsEndpointUrl = configuration["SNS:EndpointURL"] ?? throw new KeyNotFoundException("SNS endpoint URL was not found in configuration");
 
     /// <inheritdoc/>
     public async Task<bool> SubscribeEndpoint()

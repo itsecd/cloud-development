@@ -21,4 +21,10 @@
     <ProjectReference Include="..\CourseManagement.Storage\CourseManagement.Storage.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="CloudFormation\course-template-sns-s3.yaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
