@@ -1,0 +1,29 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Cloud formation template for program-project project'
+
+Parameters:
+  TopicName:
+    Type: String
+    Description: Name for the SNS topic
+    Default: 'programproj-topic'
+
+Resources:
+  ProgramProjTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Ref TopicName
+      DisplayName: !Ref TopicName
+      Tags:
+        - Key: Name
+          Value: !Ref TopicName
+        - Key: Environment
+          Value: Sample
+
+Outputs:
+  SNSTopicName:
+    Description: Name of the SNS topic
+    Value: !GetAtt ProgramProjTopic.TopicName
+  
+  SNSTopicArn:
+    Description: ARN of the SNS topic
+    Value: !Ref ProgramProjTopic

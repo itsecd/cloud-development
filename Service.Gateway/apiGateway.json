@@ -1,0 +1,36 @@
+{
+    "Routes": [
+        {
+            "UpstreamPathTemplate": "/api/projects",
+            "UpstreamHttpMethod": [ "Get" ],
+            "DownstreamPathTemplate": "/program-proj",
+            "DownstreamScheme": "https",
+            "DownstreamHostAndPorts": [
+                {
+                    "Host": "localhost",
+                    "Port": 4441
+                },
+                {
+                    "Host": "localhost",
+                    "Port": 4442
+                },
+                {
+                    "Host": "localhost",
+                    "Port": 4443
+                },
+                {
+                    "Host": "localhost",
+                    "Port": 4444
+                },
+                {
+                    "Host": "localhost",
+                    "Port": 4445
+                }
+            ],
+            "LoadBalancerOptions": {
+                "Type": "QueryBasedLoadBalancer"
+            }
+
+        }
+    ],
+}

@@ -1,0 +1,6 @@
+@Service.Api_HostAddress = https://localhost:7262
+
+GET {{Service.Api_HostAddress}}/program-proj?id=1
+Accept: application/json
+
+###
