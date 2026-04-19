@@ -1,8 +1,8 @@
-﻿using Generator.Dto;
-using Generator.Services;
+﻿using Service.Api.Dto;
+using Service.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Generator.Controllers;
+namespace Service.Api.Controllers;
 
 /// <summary>
 /// HTTP API для получения кредитной заявки по идентификатору.

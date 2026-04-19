@@ -1,9 +1,9 @@
-﻿using CreditOrder.Gateway.Models;
+﻿using Api.Gateway.Models;
 using Ocelot.LoadBalancer.Interfaces;
 using Ocelot.Responses;
 using Ocelot.Values;
 
-namespace CreditOrder.Gateway.LoadBalancers;
+namespace Api.Gateway.LoadBalancers;
 
 /// <summary>
 /// Балансировщик нагрузки для Ocelot, работает по алгоритму weighted random.

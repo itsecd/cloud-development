@@ -1,4 +1,4 @@
-using CreditOrder.Gateway.LoadBalancers;
+using Api.Gateway.LoadBalancers;
 using Ocelot.DependencyInjection;
 using Ocelot.LoadBalancer.Interfaces;
 using Ocelot.Middleware;

@@ -1,8 +1,9 @@
-﻿using Generator.Dto;
+﻿using Amazon.SQS;
 using Microsoft.Extensions.Caching.Distributed;
+using Service.Api.Dto;
 using System.Text.Json;
 
-namespace Generator.Services;
+namespace Service.Api.Services;
 
 /// <summary>
 /// Сервис получения кредитной заявки по идентификатору.
@@ -12,6 +13,7 @@ public class CreditOrderService(
     IDistributedCache cache,
     CreditOrderGenerator generator,
     IConfiguration cfg,
+    SqsProducerService sqsProducer,
     ILogger<CreditOrderService> logger
     )
 {
@@ -23,6 +25,7 @@ public class CreditOrderService(
     /// 1) читает из кэша по ключу <c>credit-order:{id}</c>;
     /// 2) при отсутствии данных в кэше генерирует через <see cref="CreditOrderGenerator"/>;
     /// 3) сохраняет в кэш с TTL (AbsoluteExpirationRelativeToNow).
+    /// 4) отправляет сообщение в очередь.
     /// </summary>
     /// <param name="id">Идентификатор заявки (должен быть больше 0).</param>
     /// <param name="ct">Токен отмены.</param>
@@ -85,6 +88,17 @@ public class CreditOrderService(
         catch (Exception ex)
         {
             logger.LogWarning(ex, "Cache WRITE FAIL: {CacheKey} {OrderId}", cacheKey, id);
+        }
+        try
+        {
+            logger.LogInformation("Message publishing: {OrderId}", order.Id);
+            await sqsProducer.SendMessage(order);
+            logger.LogInformation("Message published: {OrderId}", order.Id);
+        }
+        catch (AmazonSQSException ex)
+        {
+            logger.LogError(ex, "SQS error while sending message {OrderId}", order.Id);
+            throw;
         }
         return order;
     }

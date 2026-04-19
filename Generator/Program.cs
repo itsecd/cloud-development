@@ -1,5 +1,7 @@
+using Amazon.SQS;
 using CloudDevelopment.ServiceDefaults;
-using Generator.Services;
+using LocalStack.Client.Extensions;
+using Service.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +29,10 @@ builder.Services.AddCors(options =>
         .WithMethods("GET")
         .AllowAnyHeader());
 });
+
+builder.Services.AddScoped<SqsProducerService>();
+builder.Services.AddLocalStack(builder.Configuration);
+builder.Services.AddAwsService<IAmazonSQS>();
 
 builder.AddRedisDistributedCache(connectionName: "RedisCache");
 

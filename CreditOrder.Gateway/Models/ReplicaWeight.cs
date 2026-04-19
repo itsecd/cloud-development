@@ -1,4 +1,4 @@
-﻿namespace CreditOrder.Gateway.Models;
+﻿namespace Api.Gateway.Models;
 
 /// <summary>
 /// Модель конфигурации реплики downstream-сервиса, используемая балансировщиком нагрузки шлюза.

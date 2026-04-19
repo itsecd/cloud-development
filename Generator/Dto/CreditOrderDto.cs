@@ -1,4 +1,4 @@
-﻿namespace Generator.Dto;
+﻿namespace Service.Api.Dto;
 
 /// <summary>
 /// DTO кредитной заявки, возвращаемый HTTP API.

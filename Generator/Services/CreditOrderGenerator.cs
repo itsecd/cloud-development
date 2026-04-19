@@ -1,7 +1,7 @@
 ﻿using Bogus;
-using Generator.Dto;
+using Service.Api.Dto;
 
-namespace Generator.Services;
+namespace Service.Api.Services;
 
 /// <summary>
 /// Генератор псевдослучайных кредитных заявок для демо/тестирования.
