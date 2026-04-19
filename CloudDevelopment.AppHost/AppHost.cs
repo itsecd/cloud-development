@@ -54,6 +54,7 @@ builder.AddProject<Projects.Client_Wasm>("credit-order-wasm")
     .WaitFor(gateway);
 
 var sink = builder.AddProject<Projects.Service_Storage>("credit-order-sink")
+    .WithHttpEndpoint(5444)
     .WithReference(awsResources)
     .WithEnvironment("Settings__MessageBroker", "SQS")
     .WithEnvironment("Settings__S3Hosting", "Minio")

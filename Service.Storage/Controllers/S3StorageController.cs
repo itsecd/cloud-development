@@ -16,7 +16,7 @@ namespace Service.Storage.Controllers;
 /// <param name="logger">Логгер</param>
 [ApiController]
 [Route("api/s3")]
-internal class S3StorageController(S3MinioService s3Service, ILogger<S3StorageController> logger) : ControllerBase
+public class S3StorageController(S3MinioService s3Service, ILogger<S3StorageController> logger) : ControllerBase
 {
     /// <summary>
     /// Метод для получения списка хранящихся в S3 файлов

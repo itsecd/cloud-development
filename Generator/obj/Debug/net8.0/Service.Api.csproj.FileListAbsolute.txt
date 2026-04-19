@@ -80,7 +80,6 @@ D:\5_year\cloud-development\Generator\obj\Debug\net8.0\staticwebassets.build.jso
 D:\5_year\cloud-development\Generator\obj\Debug\net8.0\staticwebassets.build.json.cache
 D:\5_year\cloud-development\Generator\obj\Debug\net8.0\staticwebassets.development.json
 D:\5_year\cloud-development\Generator\obj\Debug\net8.0\staticwebassets.build.endpoints.json
-D:\5_year\cloud-development\Generator\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
 D:\5_year\cloud-development\Generator\obj\Debug\net8.0\Service..E3E86275.Up2Date
 D:\5_year\cloud-development\Generator\obj\Debug\net8.0\Service.Api.dll
 D:\5_year\cloud-development\Generator\obj\Debug\net8.0\refint\Service.Api.dll
@@ -89,3 +88,4 @@ D:\5_year\cloud-development\Generator\obj\Debug\net8.0\Service.Api.genruntimecon
 D:\5_year\cloud-development\Generator\obj\Debug\net8.0\ref\Service.Api.dll
 D:\5_year\cloud-development\Generator\bin\Debug\net8.0\LocalStack.Client.dll
 D:\5_year\cloud-development\Generator\bin\Debug\net8.0\LocalStack.Client.Extensions.dll
+D:\5_year\cloud-development\Generator\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt

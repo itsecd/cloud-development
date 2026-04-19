@@ -12,7 +12,7 @@ namespace Service.Storage.Storage;
 /// <param name="client">S3 клиент</param>
 /// <param name="configuration">Конфигурация</param>
 /// <param name="logger">Логер</param>
-internal class S3MinioService(IMinioClient client, IConfiguration configuration, ILogger<S3MinioService> logger)
+public class S3MinioService(IMinioClient client, IConfiguration configuration, ILogger<S3MinioService> logger)
 {
     private readonly string _bucketName = configuration["AWS:Resources:MinioBucketName"]
         ?? throw new KeyNotFoundException("S3 bucket name was not found in configuration");
