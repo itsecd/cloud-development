@@ -33,6 +33,7 @@ try
 
     builder.AddRedisDistributedCache("redis");
 
+    builder.Services.AddSingleton<SnsPublisherService>();
     builder.Services.AddScoped<PatientService>();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen(o =>

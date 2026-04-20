@@ -1,4 +1,4 @@
-
+﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.36811.4
@@ -14,6 +14,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceDefaults", "ServiceDefaults\ServiceDefaults.csproj", "{9F0B1437-6E39-4706-8A9D-89BCE4B31AA0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiGateway", "ApiGateway\ApiGateway.csproj", "{C2D3E4F5-A6B7-8901-CDEF-234567890ABC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileService", "FileService\FileService.csproj", "{3A9D7F1C-9A6F-425E-A2F5-8BDFFA064707}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Integration.Tests", "Integration.Tests\Integration.Tests.csproj", "{6BC4650D-FEA0-4BA7-8DA7-1A8B097DAF3C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +49,14 @@ Global
 		{C2D3E4F5-A6B7-8901-CDEF-234567890ABC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C2D3E4F5-A6B7-8901-CDEF-234567890ABC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C2D3E4F5-A6B7-8901-CDEF-234567890ABC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3A9D7F1C-9A6F-425E-A2F5-8BDFFA064707}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3A9D7F1C-9A6F-425E-A2F5-8BDFFA064707}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3A9D7F1C-9A6F-425E-A2F5-8BDFFA064707}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3A9D7F1C-9A6F-425E-A2F5-8BDFFA064707}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6BC4650D-FEA0-4BA7-8DA7-1A8B097DAF3C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6BC4650D-FEA0-4BA7-8DA7-1A8B097DAF3C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6BC4650D-FEA0-4BA7-8DA7-1A8B097DAF3C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6BC4650D-FEA0-4BA7-8DA7-1A8B097DAF3C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
