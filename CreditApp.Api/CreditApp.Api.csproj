@@ -8,17 +8,16 @@
 
   <ItemGroup>
     <PackageReference Include="Aspire.StackExchange.Redis.DistributedCaching" Version="13.1.1" />
-    <PackageReference Include="AWSSDK.SQS" Version="4.0.2.22" />
+    <PackageReference Include="AWSSDK.SQS" Version="4.0.2.25" />
     <PackageReference Include="Bogus" Version="35.6.5" />
+    <PackageReference Include="LocalStack.Client" Version="2.0.0" />
+    <PackageReference Include="LocalStack.Client.Extensions" Version="2.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Client.Wasm\Client.Wasm.csproj" />
     <ProjectReference Include="..\CreditApp.Domain\CreditApp.Domain.csproj" />
-    <ProjectReference Include="..\CreditApp.Gateway\CreditApp.Gateway.csproj" />
     <ProjectReference Include="..\CreditApp.ServiceDefaults\CreditApp.ServiceDefaults.csproj" />
-    <ProjectReference Include="..\CreditApp.Messaging\CreditApp.Messaging.csproj" />
   </ItemGroup>
 
 </Project>

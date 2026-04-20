@@ -1,46 +1,24 @@
 ﻿using Amazon.S3;
 using Amazon.S3.Model;
+using System.Text.Json.Nodes;
 
-using CreditApp.FileService;
+namespace CreditApp.FileService.Services;
 
 /// <summary>
-/// Хранилище файлов в S3 (LocalStack)
+/// Служба для работы с файловым хранилищем S3
 /// </summary>
-public class S3Storage : IFileStorage
+public class S3Storage(IAmazonS3 client, IConfiguration configuration, ILogger<S3Storage> logger) : IFileStorage
 {
-    private readonly IAmazonS3 _s3Client;
-    private readonly ILogger<S3Storage> _logger;
+    private readonly string _bucketName = configuration["AWS:Resources:S3BucketName"]
+        ?? throw new KeyNotFoundException("S3 bucket name was not found in configuration");
 
-    public S3Storage(IAmazonS3 s3Client, ILogger<S3Storage> logger)
+    public async Task SaveAsync(string fileName, byte[] data, CancellationToken cancellationToken = default)
     {
-        _s3Client = s3Client;
-        _logger = logger;
-    }
-
-    /// <summary>
-    /// Сохраняет файл в S3 bucket
-    /// </summary>
-    public async Task SaveAsync(string bucketName, string fileName, byte[] data, CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            var buckets = await _s3Client.ListBucketsAsync(cancellationToken);
-            if (!buckets.Buckets.Any(b => b.BucketName == bucketName))
-            {
-                await _s3Client.PutBucketAsync(new PutBucketRequest { BucketName = bucketName }, cancellationToken);
-                _logger.LogInformation("Bucket {BucketName} created", bucketName);
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Error checking/creating bucket");
-        }
-
         using var stream = new MemoryStream(data);
 
         var request = new PutObjectRequest
         {
-            BucketName = bucketName,
+            BucketName = _bucketName,
             Key = fileName,
             InputStream = stream,
             ContentType = "application/json",
@@ -48,26 +26,31 @@ public class S3Storage : IFileStorage
             AutoCloseStream = true
         };
 
-        await _s3Client.PutObjectAsync(request, cancellationToken);
-        _logger.LogInformation("Saved {FileName} to S3 bucket {BucketName}", fileName, bucketName);
+        await client.PutObjectAsync(request, cancellationToken);
+        logger.LogInformation("Saved {FileName} to S3 bucket {BucketName}", fileName, _bucketName);
     }
 
-    /// <summary>
-    /// Получает файл из S3 bucket
-    /// </summary>
-    public async Task<byte[]?> GetAsync(string bucketName, string fileName, CancellationToken cancellationToken = default)
+    public async Task<List<string>> GetFileListAsync(CancellationToken cancellationToken = default)
     {
-        try
-        {
-            var request = new GetObjectRequest { BucketName = bucketName, Key = fileName };
-            using var response = await _s3Client.GetObjectAsync(request, cancellationToken);
-            using var ms = new MemoryStream();
-            await response.ResponseStream.CopyToAsync(ms, cancellationToken);
-            return ms.ToArray();
-        }
-        catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
-        {
-            return null;
-        }
+        var response = await client.ListObjectsV2Async(
+            new ListObjectsV2Request { BucketName = _bucketName },
+            cancellationToken);
+        return response.S3Objects?.Select(o => o.Key).ToList() ?? [];
+    }
+
+    public async Task<JsonNode> DownloadAsync(string key, CancellationToken cancellationToken = default)
+    {
+        using var response = await client.GetObjectAsync(_bucketName, key, cancellationToken);
+        using var reader = new StreamReader(response.ResponseStream);
+        var content = await reader.ReadToEndAsync(cancellationToken);
+        return JsonNode.Parse(content)
+            ?? throw new InvalidOperationException($"File {key} is not a valid JSON");
+    }
+
+    public async Task EnsureBucketExists()
+    {
+        logger.LogInformation("Checking whether {bucket} exists", _bucketName);
+        await client.EnsureBucketExistsAsync(_bucketName);
+        logger.LogInformation("{bucket} existence ensured", _bucketName);
     }
 }

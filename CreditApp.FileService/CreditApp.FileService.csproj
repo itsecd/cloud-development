@@ -9,13 +9,13 @@
   <ItemGroup>
     <PackageReference Include="AWSSDK.S3" Version="4.0.20.3" />
     <PackageReference Include="AWSSDK.SQS" Version="4.0.2.22" />
+    <PackageReference Include="LocalStack.Client" Version="2.0.0" />
+    <PackageReference Include="LocalStack.Client.Extensions" Version="2.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.24" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CreditApp.Messaging\CreditApp.Messaging.csproj" />
-    <ProjectReference Include="..\CreditApp.Domain\CreditApp.Domain.csproj" />
     <ProjectReference Include="..\CreditApp.ServiceDefaults\CreditApp.ServiceDefaults.csproj" />
   </ItemGroup>
 

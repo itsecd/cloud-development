@@ -1,34 +1,30 @@
 using Amazon.S3;
 using Amazon.SQS;
-using CreditApp.FileService;
+using CreditApp.FileService.Services;
+using CreditApp.ServiceDefaults;
+using LocalStack.Client.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.AddServiceDefaults();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-var localstackUrl = builder.Configuration["LOCALSTACK_URL"] ?? "http://localhost:4566";
-
-var s3Config = new AmazonS3Config
-{
-    ServiceURL = localstackUrl,
-    ForcePathStyle = true,
-    UseHttp = true
-};
-builder.Services.AddSingleton<IAmazonS3>(new AmazonS3Client("test", "test", s3Config));
-
-var sqsConfig = new AmazonSQSConfig
-{
-    ServiceURL = localstackUrl,
-    UseHttp = true
-};
-builder.Services.AddSingleton<IAmazonSQS>(new AmazonSQSClient("test", "test", sqsConfig));
+builder.Services.AddLocalStack(builder.Configuration);
+builder.Services.AddAwsService<IAmazonS3>();
+builder.Services.AddAwsService<IAmazonSQS>();
 
 builder.Services.AddScoped<IFileStorage, S3Storage>();
 builder.Services.AddHostedService<SqsConsumer>();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var storage = scope.ServiceProvider.GetRequiredService<IFileStorage>();
+    await storage.EnsureBucketExists();
+}
 
 if (app.Environment.IsDevelopment())
 {
@@ -36,5 +32,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.MapDefaultEndpoints();
 app.MapControllers();
 app.Run();

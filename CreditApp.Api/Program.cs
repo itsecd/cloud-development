@@ -1,6 +1,7 @@
 using Amazon.SQS;
 using CreditApp.Api.Services;
 using CreditApp.ServiceDefaults;
+using LocalStack.Client.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
@@ -11,9 +12,9 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-var localstackUrl = "http://sqs.us-east-1.localhost.localstack.cloud:4566";
-var sqsConfig = new AmazonSQSConfig { ServiceURL = localstackUrl };
-builder.Services.AddSingleton<IAmazonSQS>(new AmazonSQSClient("test", "test", sqsConfig));
+builder.Services.AddLocalStack(builder.Configuration);
+builder.Services.AddAwsService<IAmazonSQS>();
+
 builder.Services.AddScoped<ICreditService, CreditService>();
 builder.Services.AddScoped<SqsProducer>();
 

@@ -1,18 +1,27 @@
-var builder = DistributedApplication.CreateBuilder(args);
+using Amazon;
+using Aspire.Hosting.LocalStack.Container;
 
-var localstackToken = builder.Configuration["LocalStack:AuthToken"];
+var builder = DistributedApplication.CreateBuilder(args);
 
 var redis = builder.AddRedis("redis")
     .WithRedisCommander(containerName: "redis-commander");
 
-var localstack = builder.AddContainer("localstack", "localstack/localstack:latest")
-    .WithEnvironment("LOCALSTACK_AUTH_TOKEN", localstackToken)
-    .WithEnvironment("SERVICES", "s3,sqs")
-    .WithEnvironment("AWS_DEFAULT_REGION", "us-east-1")
-    .WithEnvironment("AWS_ACCESS_KEY_ID", "test")
-    .WithEnvironment("AWS_SECRET_ACCESS_KEY", "test")
-    .WithEndpoint(port: 4566, targetPort: 4566, name: "api")
-    .WithLifetime(ContainerLifetime.Persistent);
+var awsConfig = builder.AddAWSSDKConfig()
+    .WithProfile("default")
+    .WithRegion(RegionEndpoint.USEast1);
+
+var localstack = builder
+    .AddLocalStack("localstack", awsConfig: awsConfig, configureContainer: container =>
+    {
+        container.Lifetime = ContainerLifetime.Session;
+        container.DebugLevel = 1;
+        container.LogLevel = LocalStackLogLevel.Debug;
+        container.Port = 4566;
+        container.AdditionalEnvironmentVariables.Add("DEBUG", "1");
+    });
+
+var awsResources = builder.AddAWSCloudFormationTemplate("resources", "CloudFormation/credit-template.yaml", "credit")
+    .WithReference(awsConfig);
 
 var gateway = builder.AddProject<Projects.CreditApp_Gateway>("gateway")
     .WithEndpoint("https", e =>
@@ -34,19 +43,22 @@ for (var i = 0; i < 5; i++)
             e.UriScheme = "https";
         })
         .WithReference(redis)
-        .WithEnvironment("LOCALSTACK_URL", "http://localhost:4566")
+        .WithReference(awsResources)
         .WaitFor(redis)
-        .WaitFor(localstack);
+        .WaitFor(awsResources);
 
     gateway.WaitFor(api);
 }
 
 builder.AddProject<Projects.CreditApp_FileService>("fileservice")
-    .WithEnvironment("LOCALSTACK_URL", "http://localhost:4566")
-    .WaitFor(localstack);
+    .WithReference(awsResources)
+    .WaitFor(awsResources);
 
 builder.AddProject<Projects.Client_Wasm>("client")
     .WithReference(gateway)
+    .WaitFor(gateway)
     .WithExternalHttpEndpoints();
+
+builder.UseLocalStack(localstack);
 
 builder.Build().Run();

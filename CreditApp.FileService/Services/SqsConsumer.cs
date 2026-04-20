@@ -1,81 +1,72 @@
 ﻿using Amazon.SQS;
 using Amazon.SQS.Model;
-using CreditApp.FileService;
-using CreditApp.Messaging.Contracts;
 using System.Text;
-using System.Text.Json;
+using System.Text.Json.Nodes;
+
+namespace CreditApp.FileService.Services;
 
 /// <summary>
-/// Consumer для получения сообщений из очереди SQS и сохранения в S3
+/// Служба для приёма сообщений из очереди SQS и сохранения в S3
 /// </summary>
-public class SqsConsumer : BackgroundService
+public class SqsConsumer(
+    IAmazonSQS sqsClient,
+    IServiceScopeFactory scopeFactory,
+    IConfiguration configuration,
+    ILogger<SqsConsumer> logger) : BackgroundService
 {
-    private readonly IAmazonSQS _sqs;
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<SqsConsumer> _logger;
-    private readonly string _queueUrl = "http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/credit-queue";
+    private readonly string _queueName = configuration["AWS:Resources:SQSQueueName"]
+        ?? throw new KeyNotFoundException("SQS queue name was not found in configuration");
 
-    public SqsConsumer(IAmazonSQS sqs, IServiceProvider serviceProvider, ILogger<SqsConsumer> logger)
-    {
-        _sqs = sqs;
-        _serviceProvider = serviceProvider;
-        _logger = logger;
-    }
-
-    /// <summary>
-    /// Фоновый процесс получения сообщений из очереди
-    /// </summary>
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        logger.LogInformation("SQS consumer service started.");
+
         while (!stoppingToken.IsCancellationRequested)
         {
-            try
-            {
-                var receiveRequest = new ReceiveMessageRequest
+            var response = await sqsClient.ReceiveMessageAsync(
+                new ReceiveMessageRequest
                 {
-                    QueueUrl = _queueUrl,
+                    QueueUrl = _queueName,
                     MaxNumberOfMessages = 10,
-                    WaitTimeSeconds = 20
-                };
+                    WaitTimeSeconds = 5
+                }, stoppingToken);
 
-                var response = await _sqs.ReceiveMessageAsync(receiveRequest, stoppingToken);
+            if (response == null)
+            {
+                logger.LogWarning("Received null from {queue}", _queueName);
+                continue;
+            }
 
-                if (response.Messages != null)
+            logger.LogInformation("Received {count} messages", response.Messages?.Count ?? 0);
+
+            if (response.Messages != null)
+            {
+                foreach (var message in response.Messages)
                 {
-                    foreach (var message in response.Messages)
+                    try
                     {
-                        try
-                        {
-                            var creditEvent = JsonSerializer.Deserialize<CreditGeneratedEvent>(message.Body);
-                            if (creditEvent != null)
-                            {
-                                using var scope = _serviceProvider.CreateScope();
-                                var storage = scope.ServiceProvider.GetRequiredService<IFileStorage>();
+                        logger.LogInformation("Processing message: {messageId}", message.MessageId);
 
-                                var json = JsonSerializer.Serialize(creditEvent);
-                                var data = Encoding.UTF8.GetBytes(json);
-                                var fileName = $"credit_{creditEvent.Id}_{DateTime.Now:yyyyMMddHHmmss}.json";
+                        var rootNode = JsonNode.Parse(message.Body)
+                            ?? throw new ArgumentException("Message body is not a valid JSON");
+                        var id = rootNode["Id"]?.GetValue<int>()
+                            ?? throw new ArgumentException("Message JSON has no Id field");
 
-                                await storage.SaveAsync("credit-applications", fileName, data, stoppingToken);
-                                _logger.LogInformation("Saved credit {Id} to S3", creditEvent.Id);
-                            }
+                        using var scope = scopeFactory.CreateScope();
+                        var storage = scope.ServiceProvider.GetRequiredService<IFileStorage>();
+                        var data = Encoding.UTF8.GetBytes(message.Body);
+                        await storage.SaveAsync($"credit_{id}.json", data, stoppingToken);
 
-                            await _sqs.DeleteMessageAsync(_queueUrl, message.ReceiptHandle, stoppingToken);
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex, "Error processing message");
-                        }
+                        _ = await sqsClient.DeleteMessageAsync(_queueName, message.ReceiptHandle, stoppingToken);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogError(ex, "Error processing message: {messageId}", message.MessageId);
+                        continue;
                     }
                 }
+                logger.LogInformation("Batch of {count} messages processed", response.Messages.Count);
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error receiving messages");
-                await Task.Delay(5000, stoppingToken);
-            }
-
-            await Task.Delay(1000, stoppingToken);
         }
     }
 }

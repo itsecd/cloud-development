@@ -1,0 +1,62 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Cloud formation template for credit app project'
+
+Parameters:
+  BucketName:
+    Type: String
+    Description: Name for the S3 bucket
+    Default: credit-applications
+
+  QueueName:
+    Type: String
+    Description: Name for the SQS queue
+    Default: credit-queue
+
+Resources:
+  CreditBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref BucketName
+      VersioningConfiguration:
+        Status: Suspended
+      Tags:
+        - Key: Name
+          Value: !Ref BucketName
+        - Key: Environment
+          Value: Sample
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  CreditQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Ref QueueName
+      VisibilityTimeout: 30
+      MessageRetentionPeriod: 345600
+      DelaySeconds: 0
+      ReceiveMessageWaitTimeSeconds: 0
+      Tags:
+        - Key: Name
+          Value: !Ref QueueName
+        - Key: Environment
+          Value: Sample
+
+Outputs:
+  S3BucketName:
+    Description: Name of the S3 bucket
+    Value: !Ref CreditBucket
+
+  S3BucketArn:
+    Description: ARN of the S3 bucket
+    Value: !GetAtt CreditBucket.Arn
+
+  SQSQueueName:
+    Description: Name of the SQS queue
+    Value: !GetAtt CreditQueue.QueueName
+
+  SQSQueueArn:
+    Description: ARN of the SQS queue
+    Value: !GetAtt CreditQueue.Arn
