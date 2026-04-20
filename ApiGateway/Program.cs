@@ -9,7 +9,7 @@ builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange
 
 for (var i = 0; i < 3; i++)
 {
-    var url = builder.Configuration[$"services__generator-service-{i}__http__0"];
+    var url = builder.Configuration[$"services:generator-service-{i}:http:0"];
     if (url is null) break;
     var uri = new Uri(url);
     builder.Configuration[$"Routes:0:DownstreamHostAndPorts:{i}:Host"] = uri.Host;
