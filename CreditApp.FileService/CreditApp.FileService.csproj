@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="CreditApp.FileService.http" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="AWSSDK.S3" Version="4.0.20.3" />
     <PackageReference Include="AWSSDK.SQS" Version="4.0.2.22" />
     <PackageReference Include="LocalStack.Client" Version="2.0.0" />
