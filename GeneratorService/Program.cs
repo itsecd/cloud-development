@@ -44,24 +44,15 @@ try
         if (File.Exists(xmlPath))
             o.IncludeXmlComments(xmlPath);
     });
-    builder.Services.AddCors();
-
     builder.AddServiceDefaults();
 
     var app = builder.Build();
 
     app.MapDefaultEndpoints();
 
-    var allowedOrigin = builder.Configuration["Cors:AllowedOrigin"]
-        ?? throw new InvalidOperationException("Cors:AllowedOrigin is not configured");
-
     app.UseSerilogRequestLogging();
     app.UseSwagger();
     app.UseSwaggerUI();
-    app.UseCors(policy => policy
-        .WithOrigins(allowedOrigin)
-        .AllowAnyMethod()
-        .AllowAnyHeader());
 
     app.MapGet("/patient", async (int id, PatientService svc, CancellationToken ct) =>
         id <= 0
@@ -71,9 +62,6 @@ try
         .WithSummary("Возвращает медицинскую карту пациента по идентификатору")
         .Produces<MedicalPatient>()
         .ProducesProblem(400);
-
-    app.Logger.LogInformation("CORS AllowedOrigin = {Origin}",
-    builder.Configuration["Cors:AllowedOrigin"] ?? "NOT SET");
 
     app.Run();
 }
