@@ -1,21 +1,14 @@
 using ProjectApp.Api.Services.CreditApplicationService;
 using ProjectApp.Api.Options;
 using ProjectApp.ServiceDefaults;
-using Amazon.SQS;
-using Amazon.Runtime;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
-
-// SQS configuration for Localstack
-var awsCredentials = new BasicAWSCredentials("test", "test");
-var sqsConfig = new AmazonSQSConfig
+builder.Services.AddStackExchangeRedisCache(options =>
 {
-    ServiceURL = builder.Configuration["Services:localstack:HttpEndpoint"] ?? "http://localhost:4566",
-    AuthenticationRegion = "us-east-1"
-};
-builder.Services.AddSingleton<IAmazonSQS>(new AmazonSQSClient(awsCredentials, sqsConfig));
+    options.Configuration = builder.Configuration.GetConnectionString("cache");
+});
 
 builder.Services.AddCors(options =>
 {

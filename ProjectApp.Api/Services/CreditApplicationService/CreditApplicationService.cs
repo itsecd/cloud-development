@@ -1,125 +1,85 @@
-using ProjectApp.Domain.Entities;
-using Amazon.SQS;
-using Amazon.SQS.Model;
 using System.Text.Json;
+using Microsoft.Extensions.Caching.Distributed;
+using ProjectApp.Domain.Entities;
 
 namespace ProjectApp.Api.Services.CreditApplicationService;
 
 /// <summary>
-/// Сервис получения кредитной заявки с использованием SQS для кэширования
+/// Сервис получения кредитной заявки с кэшированием в Redis через IDistributedCache.
 /// </summary>
 public class CreditApplicationService(
-    IAmazonSQS sqsClient,
+    IDistributedCache cache,
     CreditApplicationGenerator generator,
     CreditApplicationValidator validator,
-    IConfiguration configuration,
     ILogger<CreditApplicationService> logger) : ICreditApplicationService
 {
-    private readonly string _queueUrl = configuration["SQS:QueueUrl"] ?? "http://localhost:4566/000000000000/credit-application-cache";
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    private static readonly TimeSpan CacheTtl = TimeSpan.FromMinutes(10);
 
     /// <summary>
     /// Возвращает кредитную заявку по идентификатору.
-    /// Если заявка найдена в SQS — возвращается из него; иначе генерируется, сохраняется в SQS и возвращается.
+    /// Если запись есть в кэше, возвращается она; иначе генерируется новая и сохраняется в кэш.
     /// </summary>
-    /// <param name="id">Идентификатор заявки</param>
-    /// <param name="cancellationToken">Токен отмены операции</param>
-    /// <returns>Кредитная заявка</returns>
+    /// <param name="id">Идентификатор заявки.</param>
+    /// <param name="cancellationToken">Токен отмены.</param>
+    /// <returns>Кредитная заявка.</returns>
     public async Task<CreditApplication> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        logger.LogInformation("Attempting to retrieve credit application {Id} from SQS", id);
+        var cacheKey = BuildCacheKey(id);
 
-        // Получаем сообщения из SQS
-        CreditApplication? application = null;
-        try
+        logger.LogInformation("Looking up credit application {Id} in Redis cache", id);
+        var cachedPayload = await cache.GetStringAsync(cacheKey, cancellationToken);
+        if (!string.IsNullOrEmpty(cachedPayload))
         {
-            var receiveRequest = new ReceiveMessageRequest
+            var cachedApplication = JsonSerializer.Deserialize<CreditApplication>(cachedPayload, JsonOptions);
+            if (cachedApplication is not null && validator.TryValidate(cachedApplication, out _))
             {
-                QueueUrl = _queueUrl,
-                MaxNumberOfMessages = 10,
-                WaitTimeSeconds = 0
-            };
+                logger.LogInformation("Cache hit for credit application {Id}", id);
+                return cachedApplication;
+            }
 
-            var response = await sqsClient.ReceiveMessageAsync(receiveRequest, cancellationToken);
-
-            foreach (var message in response.Messages)
+            if (cachedApplication is null)
             {
-                try
-                {
-                    var app = JsonSerializer.Deserialize<CreditApplication>(message.Body);
-                    if (app != null && app.Id == id)
-                    {
-                        if (!validator.TryValidate(app, out var cachedValidationError))
-                        {
-                            logger.LogWarning(
-                                "Cached credit application {Id} is invalid: {ValidationError}. Cache entry ignored.",
-                                id,
-                                cachedValidationError);
-                            continue;
-                        }
-
-                        logger.LogInformation("Credit application {Id} found in SQS", id);
-                        
-                        // Удаляем сообщение после получения
-                        await sqsClient.DeleteMessageAsync(new DeleteMessageRequest
-                        {
-                            QueueUrl = _queueUrl,
-                            ReceiptHandle = message.ReceiptHandle
-                        }, cancellationToken);
-                        
-                        return app;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    logger.LogWarning(ex, "Failed to deserialize message from SQS");
-                }
+                logger.LogWarning("Cache entry for credit application {Id} cannot be deserialized. Regenerating value.", id);
+            }
+            else
+            {
+                validator.TryValidate(cachedApplication, out var cacheValidationError);
+                logger.LogWarning(
+                    "Cache entry for credit application {Id} is invalid: {ValidationError}. Regenerating value.",
+                    id,
+                    cacheValidationError);
             }
         }
-        catch (Exception ex)
-        {
-            logger.LogWarning(ex, "Failed to receive messages from SQS (error ignored)");
-        }
 
-        // Если в SQS нет или ошибка — генерируем новую заявку
-        logger.LogInformation("Credit application {Id} not found in SQS or SQS unavailable, generating a new one", id);
-        application = generator.Generate();
-        application.Id = id;
+        logger.LogInformation("Cache miss for credit application {Id}. Generating new value.", id);
+        var generatedApplication = generator.Generate();
+        generatedApplication.Id = id;
 
-        if (!validator.TryValidate(application, out var generatedValidationError))
+        if (!validator.TryValidate(generatedApplication, out var generatedValidationError))
         {
             throw new InvalidOperationException($"Generated application is invalid: {generatedValidationError}");
         }
 
-        // Попытка сохранить в SQS
-        try
-        {
-            logger.LogInformation("Saving credit application {Id} to SQS", id);
-
-            var sendRequest = new SendMessageRequest
+        var payload = JsonSerializer.Serialize(generatedApplication, JsonOptions);
+        await cache.SetStringAsync(
+            cacheKey,
+            payload,
+            new DistributedCacheEntryOptions
             {
-                QueueUrl = _queueUrl,
-                MessageBody = JsonSerializer.Serialize(application),
-                MessageAttributes = new Dictionary<string, MessageAttributeValue>
-                {
-                    { "ApplicationId", new MessageAttributeValue { StringValue = id.ToString(), DataType = "String" } }
-                }
-            };
+                AbsoluteExpirationRelativeToNow = CacheTtl
+            },
+            cancellationToken);
 
-            await sqsClient.SendMessageAsync(sendRequest, cancellationToken);
+        logger.LogInformation(
+            "Generated and cached credit application {Id}: CreditType={CreditType}, RequestedAmount={RequestedAmount}, Status={Status}",
+            generatedApplication.Id,
+            generatedApplication.CreditType,
+            generatedApplication.RequestedAmount,
+            generatedApplication.Status);
 
-            logger.LogInformation(
-                "Credit application generated and sent to SQS: Id={Id}, CreditType={CreditType}, RequestedAmount={RequestedAmount}, Status={Status}, ApprovedAmount={ApprovedAmount}",
-                application.Id,
-                application.CreditType,
-                application.RequestedAmount,
-                application.Status,
-                application.ApprovedAmount);
-        }
-        catch (Exception ex)
-        {
-            logger.LogWarning(ex, "Failed to send credit application {Id} to SQS (error ignored)", id);
-        }
-
-        return application;
+        return generatedApplication;
     }
+
+    private static string BuildCacheKey(int id) => $"credit-application:{id}";
 }
