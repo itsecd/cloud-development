@@ -2,10 +2,19 @@ using ProjectApp.Domain.Entities;
 
 namespace ProjectApp.Api.Services.CreditApplicationService;
 
+/// <summary>
+/// Валидатор инвариантов кредитной заявки.
+/// </summary>
 public class CreditApplicationValidator
 {
     private static readonly HashSet<string> TerminalStatuses = ["Одобрена", "Отклонена"];
 
+    /// <summary>
+    /// Проверяет корректность заявки по бизнес-правилам.
+    /// </summary>
+    /// <param name="application">Проверяемая заявка.</param>
+    /// <param name="error">Текст ошибки при неуспехе.</param>
+    /// <returns>True, если заявка валидна.</returns>
     public bool TryValidate(CreditApplication application, out string error)
     {
         if (string.IsNullOrWhiteSpace(application.CreditType))

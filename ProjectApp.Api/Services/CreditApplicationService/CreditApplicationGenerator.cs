@@ -5,6 +5,9 @@ using ProjectApp.Domain.Entities;
 
 namespace ProjectApp.Api.Services.CreditApplicationService;
 
+/// <summary>
+/// Генератор кредитных заявок на основе Bogus.
+/// </summary>
 public class CreditApplicationGenerator
 {
     private readonly Faker<CreditApplication> _faker;
@@ -71,5 +74,9 @@ public class CreditApplicationGenerator
             });
     }
 
+    /// <summary>
+    /// Генерирует одну заявку.
+    /// </summary>
+    /// <returns>Сгенерированная кредитная заявка.</returns>
     public CreditApplication Generate() => _faker.Generate();
 }

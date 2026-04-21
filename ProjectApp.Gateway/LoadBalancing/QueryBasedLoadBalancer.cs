@@ -7,6 +7,9 @@ using Ocelot.Values;
 
 namespace ProjectApp.Gateway.LoadBalancing;
 
+/// <summary>
+/// Балансировщик Ocelot, выбирающий реплику по query-параметру id.
+/// </summary>
 public class QueryBasedLoadBalancer(IServiceDiscoveryProvider serviceProvider) : ILoadBalancer
 {
     public string Type => "QueryBased";

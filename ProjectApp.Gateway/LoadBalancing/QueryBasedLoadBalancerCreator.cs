@@ -5,6 +5,9 @@ using Ocelot.ServiceDiscovery.Providers;
 
 namespace ProjectApp.Gateway.LoadBalancing;
 
+/// <summary>
+/// Фабрика кастомного Query Based балансировщика для Ocelot.
+/// </summary>
 public class QueryBasedLoadBalancerCreator : ILoadBalancerCreator
 {
     public string Type => "QueryBased";
