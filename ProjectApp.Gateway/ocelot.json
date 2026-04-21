@@ -1,0 +1,21 @@
+{
+  "Routes": [
+    {
+      "UpstreamPathTemplate": "/api/creditapplication",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DownstreamPathTemplate": "/api/creditapplication",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "localhost", "Port": 7001 },
+        { "Host": "localhost", "Port": 7002 },
+        { "Host": "localhost", "Port": 7003 }
+      ],
+      "LoadBalancerOptions": {
+        "Type": "QueryBased"
+      }
+    }
+  ],
+  "GlobalConfiguration": {
+    "BaseUrl": "http://localhost:7000"
+  }
+}
