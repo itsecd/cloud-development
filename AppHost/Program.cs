@@ -25,6 +25,7 @@ for (var i = 0; i < 3; i++)
         .WithHttpEndpoint(port: 15000 + i)
         .WithReference(redis)
         .WaitFor(redis)
+        .WaitFor(localstack)
         .WithEnvironment("AWS__ServiceURL", localstack.GetEndpoint("http"));
     gateway.WithReference(replica).WaitFor(replica);
 }
@@ -32,6 +33,8 @@ for (var i = 0; i < 3; i++)
 builder.AddProject<Projects.FileService>("file-service")
     .WithHttpEndpoint(port: 5300, name: "http")
     .WithEnvironment("AWS__ServiceURL", localstack.GetEndpoint("http"))
-    .WithEnvironment("Minio__ServiceUrl", minio.GetEndpoint("api"));
+    .WithEnvironment("Minio__ServiceUrl", minio.GetEndpoint("api"))
+    .WaitFor(localstack)
+    .WaitFor(minio);
 
 builder.Build().Run();

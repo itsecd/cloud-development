@@ -8,6 +8,7 @@ public sealed class MinioStorageService : IDisposable
 {
     private readonly IAmazonS3 _s3;
     private readonly string _bucket;
+    private int _bucketEnsured;
 
     public MinioStorageService(IConfiguration configuration)
     {
@@ -39,6 +40,8 @@ public sealed class MinioStorageService : IDisposable
 
     public async Task SavePatientAsync(string patientJson, int patientId, CancellationToken ct = default)
     {
+        if (Interlocked.CompareExchange(ref _bucketEnsured, 1, 0) == 0)
+            await EnsureBucketExistsAsync(ct);
         var key = $"patient-{patientId}-{DateTime.UtcNow:yyyyMMddHHmmss}.json";
         await _s3.PutObjectAsync(new PutObjectRequest
         {

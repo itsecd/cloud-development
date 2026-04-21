@@ -29,7 +29,6 @@ public sealed class SqsPollingService(
         {
             try
             {
-                await storage.EnsureBucketExistsAsync(stoppingToken);
                 await SetupAsync(sns, sqs, stoppingToken);
                 break;
             }

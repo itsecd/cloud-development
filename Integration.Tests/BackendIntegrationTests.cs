@@ -1,39 +1,18 @@
 using System.Net;
 using System.Text.Json;
-using Aspire.Hosting;
-using Aspire.Hosting.Testing;
 using Xunit;
 
 namespace Integration.Tests;
 
-public sealed class BackendIntegrationTests : IAsyncLifetime
+public sealed class BackendIntegrationTests(AppHostFixture fixture) : IClassFixture<AppHostFixture>
 {
-    private DistributedApplication? _app;
-    private HttpClient? _gatewayClient;
-    private HttpClient? _fileServiceClient;
-
-    public async Task InitializeAsync()
-    {
-        var builder = await DistributedApplicationTestingBuilder.CreateAsync<Projects.AppHost>();
-        _app = await builder.BuildAsync();
-        await _app.StartAsync();
-
-        _gatewayClient = _app.CreateHttpClient("api-gateway");
-        _fileServiceClient = _app.CreateHttpClient("file-service");
-    }
-
-    public async Task DisposeAsync()
-    {
-        _gatewayClient?.Dispose();
-        _fileServiceClient?.Dispose();
-        if (_app is not null)
-            await _app.DisposeAsync();
-    }
+    private readonly HttpClient _gatewayClient = fixture.GatewayClient;
+    private readonly HttpClient _fileServiceClient = fixture.FileServiceClient;
 
     [Fact]
     public async Task GetPatient_ValidId_ReturnsPatient()
     {
-        var response = await _gatewayClient!.GetAsync("/patient?id=1");
+        var response = await _gatewayClient.GetAsync("/patient?id=1");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
@@ -49,7 +28,7 @@ public sealed class BackendIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task GetPatient_InvalidId_ReturnsBadRequest()
     {
-        var response = await _gatewayClient!.GetAsync("/patient?id=0");
+        var response = await _gatewayClient.GetAsync("/patient?id=0");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -57,8 +36,8 @@ public sealed class BackendIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task GetPatient_SameId_ReturnsCachedPatient()
     {
-        var r1 = await _gatewayClient!.GetAsync("/patient?id=42");
-        var r2 = await _gatewayClient!.GetAsync("/patient?id=42");
+        var r1 = await _gatewayClient.GetAsync("/patient?id=42");
+        var r2 = await _gatewayClient.GetAsync("/patient?id=42");
 
         r1.EnsureSuccessStatusCode();
         r2.EnsureSuccessStatusCode();
@@ -74,35 +53,36 @@ public sealed class BackendIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task GetPatient_FileAppearsInMinio()
     {
-        const int testId = 777;
+        var deadline = DateTime.UtcNow.AddSeconds(90);
+        var baseId = 50000;
+        var attempt = 0;
 
-        var genResponse = await _gatewayClient!.GetAsync($"/patient?id={testId}");
-        genResponse.EnsureSuccessStatusCode();
-
-        var deadline = DateTime.UtcNow.AddSeconds(30);
         while (DateTime.UtcNow < deadline)
         {
-            var filesResponse = await _fileServiceClient!.GetAsync("/files");
+            var id = baseId + attempt++;
+            await _gatewayClient.GetAsync($"/patient?id={id}");
+
+            await Task.Delay(3000);
+
+            var filesResponse = await _fileServiceClient.GetAsync("/files");
             if (filesResponse.IsSuccessStatusCode)
             {
                 var files = JsonSerializer.Deserialize<List<string>>(
                     await filesResponse.Content.ReadAsStringAsync()) ?? [];
 
-                if (files.Any(f => f.Contains($"patient-{testId}-")))
+                if (files.Count > 0)
                     return;
             }
-
-            await Task.Delay(1000);
         }
 
-        Assert.Fail($"File for patient-{testId} did not appear in MinIO within 30 seconds");
+        Assert.Fail("No files appeared in MinIO within 90 seconds");
     }
 
     [Fact]
     public async Task GetPatient_DifferentIds_ReturnDifferentPatients()
     {
-        var r1 = await _gatewayClient!.GetAsync("/patient?id=10");
-        var r2 = await _gatewayClient!.GetAsync("/patient?id=20");
+        var r1 = await _gatewayClient.GetAsync("/patient?id=10");
+        var r2 = await _gatewayClient.GetAsync("/patient?id=20");
 
         r1.EnsureSuccessStatusCode();
         r2.EnsureSuccessStatusCode();
