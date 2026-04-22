@@ -24,7 +24,9 @@ public sealed class QueryBasedLoadBalancer(
         var services = await servicesProvider();
 
         if (services.Count == 0)
+        {
             return new ErrorResponse<ServiceHostAndPort>(new NoServicesError());
+        }
 
         var selectedIndex = ChooseIndex(httpContext, services.Count, out var parsedId);
 
