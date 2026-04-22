@@ -1,8 +1,5 @@
 ﻿using Microsoft.Extensions.Caching.Distributed;
 using Service.Api.Entities;
-using StackExchange.Redis;
-using System.Reflection.Emit;
-using System.Runtime.CompilerServices;
 using System.Text.Json;
 namespace Service.Api.Generator;
 

@@ -38,7 +38,6 @@ public static class EmployeeGenerator
     {
         _faker = new Faker<Employee>("ru")
 
-            .RuleFor(e => e.Id, f => f.IndexFaker + 1)
 
             // ФИО
             .RuleFor(e => e.FullName, f =>
@@ -99,10 +98,7 @@ public static class EmployeeGenerator
                 if (!e.IsFired)
                     return null;
 
-                return DateOnly.FromDateTime(
-                    f.Date.Between(
-                        e.HireDate.ToDateTime(TimeOnly.MinValue),
-                        DateTime.Now));
+                return f.Date.BetweenDateOnly(e.HireDate, DateOnly.FromDateTime(DateTime.Now));
             });
     }
 
