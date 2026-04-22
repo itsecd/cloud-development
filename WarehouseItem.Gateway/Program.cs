@@ -12,7 +12,7 @@ builder.AddServiceDefaults();
 builder.Services.AddCors(static options =>
 {
     options.AddPolicy(CorsPolicyName, static policy =>
-        policy.AllowAnyOrigin()
+        policy.WithOrigins("http://localhost:5127", "https://localhost:7282")
             .WithHeaders("Content-Type")
             .WithMethods("GET"));
 });

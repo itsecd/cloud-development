@@ -7,16 +7,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
 builder.AddRedisDistributedCache("warehouse-item-cache");
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowLocalDev", policy =>
-    {
-        policy
-            .AllowAnyOrigin()
-            .WithHeaders("Content-Type")
-            .WithMethods("GET");
-    });
-});
 
 builder.Services.AddSingleton<WarehouseItemGenerator>();
 builder.Services.AddSingleton<IWarehouseItemCache, WarehouseItemCache>();
@@ -28,7 +18,6 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-app.UseCors("AllowLocalDev");
 
 if (app.Environment.IsDevelopment())
 {

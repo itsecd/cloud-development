@@ -23,6 +23,3 @@ builder.AddProject<Projects.Client_Wasm>("client")
     .WaitFor(gateway);
 
 builder.Build().Run();
-
-
-

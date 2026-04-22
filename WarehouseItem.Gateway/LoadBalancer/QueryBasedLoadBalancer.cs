@@ -1,4 +1,5 @@
-﻿using Ocelot.LoadBalancer.Interfaces;
+﻿using Ocelot.Errors;
+using Ocelot.LoadBalancer.Interfaces;
 using Ocelot.Responses;
 using Ocelot.Values;
 
@@ -21,6 +22,9 @@ public sealed class QueryBasedLoadBalancer(
     public async Task<Response<ServiceHostAndPort>> LeaseAsync(HttpContext httpContext)
     {
         var services = await servicesProvider();
+
+        if (services.Count == 0)
+            return new ErrorResponse<ServiceHostAndPort>(new NoServicesError());
 
         var selectedIndex = ChooseIndex(httpContext, services.Count, out var parsedId);
 
@@ -63,3 +67,5 @@ public sealed class QueryBasedLoadBalancer(
         return !string.IsNullOrWhiteSpace(raw) && int.TryParse(raw, out id) && id >= 0;
     }
 }
+
+internal sealed class NoServicesError() : Error("No services available", OcelotErrorCode.UnableToFindDownstreamRouteError, 503);
