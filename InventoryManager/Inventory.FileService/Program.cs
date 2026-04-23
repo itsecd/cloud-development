@@ -3,6 +3,7 @@ using Amazon.SimpleNotificationService;
 using Inventory.FileService.Messaging;
 using Inventory.FileService.Storage;
 using Inventory.ServiceDefaults;
+using LocalStack.Client.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,35 +13,38 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddHttpClient();
+builder.Services.AddLocalStack(builder.Configuration);
 
 builder.Services.AddAWSService<IAmazonS3>();
 builder.Services.AddAWSService<IAmazonSimpleNotificationService>();
 
-builder.Services.AddScoped<IS3Service, S3AwsService>();
-builder.Services.AddScoped<ISubscriberService, SnsSubscriberService>();
+builder.Services.AddSingleton<IS3Service, S3AwsService>();
+builder.Services.AddSingleton<ISubscriberService, SnsSubscriberService>();
 
 var app = builder.Build();
 
-app.UseSwagger();
-app.UseSwaggerUI();
-
-app.MapControllers();
-app.MapDefaultEndpoints();
+app.Logger.LogInformation("AWS ServiceURL: {ServiceUrl}", builder.Configuration["AWS:ServiceURL"]);
+app.Logger.LogInformation("AWS Region: {Region}", builder.Configuration["AWS:Region"]);
+app.Logger.LogInformation("S3 Bucket: {Bucket}", builder.Configuration["AWS:Resources:S3BucketName"]);
+app.Logger.LogInformation("SNS TopicArn: {TopicArn}", builder.Configuration["AWS:Resources:SNSTopicArn"]);
+app.Logger.LogInformation("SNS EndpointURL: {Endpoint}", builder.Configuration["SNS:EndpointURL"]);
 
 using (var scope = app.Services.CreateScope())
 {
     var s3Service = scope.ServiceProvider.GetRequiredService<IS3Service>();
     await s3Service.EnsureBucketExists();
 
-    var brokerType = app.Configuration["Settings:MessageBroker"]
-        ?? app.Configuration["Settings__MessageBroker"];
-
-    if (string.Equals(brokerType, "SNS", StringComparison.OrdinalIgnoreCase))
-    {
-        var subscriberService = scope.ServiceProvider.GetRequiredService<ISubscriberService>();
-        await subscriberService.SubscribeEndpoint();
-    }
+    var subscriberService = scope.ServiceProvider.GetRequiredService<ISubscriberService>();
+    await subscriberService.SubscribeEndpoint();
 }
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.MapControllers();
+app.MapDefaultEndpoints();
 
 await app.RunAsync();

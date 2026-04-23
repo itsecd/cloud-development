@@ -3,14 +3,25 @@ using Aspire.Hosting.AWS;
 using Aspire.Hosting.LocalStack;
 using Aspire.Hosting.LocalStack.Container;
 using LocalStack.Client.Enums;
+using Microsoft.Extensions.Configuration;
 
 var builder = DistributedApplication.CreateBuilder(args);
+
+var apiServiceConfig = builder.Configuration.GetSection("ApiService");
+var ports = apiServiceConfig.GetSection("Ports").Get<int[]>() ?? [];
+
+var apiGatewayConfig = builder.Configuration.GetSection("ApiGateway");
+var gatewayPort = apiGatewayConfig.GetValue<int>("Port");
+
+var localStackPort = builder.Configuration.GetSection("LocalStack").GetValue<int>("Port");
+var cloudFormationTemplate = builder.Configuration.GetSection("LocalStack").GetValue<string>("CloudFormationTemplate") ?? "";
+var snsEndpointUrl = builder.Configuration.GetSection("SNS").GetValue<string>("EndpointURL") ?? "";
 
 var cache = builder.AddRedis("cache")
     .WithRedisCommander();
 
 var gateway = builder.AddProject<Projects.Inventory_Gateway>("apigateway")
-    .WithHttpsEndpoint(port: 7000, name: "gateway")
+    .WithHttpsEndpoint(port: gatewayPort, name: "gateway")
     .WithExternalHttpEndpoints();
 
 var awsConfig = builder.AddAWSSDKConfig()
@@ -22,58 +33,50 @@ var localstack = builder.AddLocalStack("inventory-localstack", awsConfig: awsCon
     container.Lifetime = ContainerLifetime.Session;
     container.DebugLevel = 1;
     container.LogLevel = LocalStackLogLevel.Debug;
-    container.Port = 4566;
-
+    container.Port = localStackPort;
     container.EagerLoadedServices =
     [
         AwsService.CloudFormation,
         AwsService.S3,
         AwsService.Sns
     ];
-
     container.AdditionalEnvironmentVariables.Add("DEBUG", "1");
     container.AdditionalEnvironmentVariables.Add("SNS_CERT_URL_HOST", "sns.eu-central-1.amazonaws.com");
 }) ?? throw new InvalidOperationException("LocalStack resource could not be created.");
 
 var awsResources = builder.AddAWSCloudFormationTemplate(
         "resources",
-        "CloudFormation/inventory-template-sns-s3.yaml",
+        cloudFormationTemplate,
         "inventory")
-    .WithReference(localstack)
     .WithReference(awsConfig);
 
-var apis = new List<IResourceBuilder<ProjectResource>>();
-var basePort = 7001;
+var storage = builder.AddProject<Projects.Inventory_FileService>("inventory-files")
+    .WithReference(awsConfig)
+    .WithReference(awsResources)
+    .WithEnvironment("SNS__EndpointURL", snsEndpointUrl)
+    .WaitFor(localstack)
+    .WaitFor(awsResources);
 
-for (var i = 0; i < 5; i++)
+var serviceId = 1;
+foreach (var port in ports)
 {
-    var port = basePort + i;
-
-    var api = builder.AddProject<Projects.Inventory_ApiService>($"apiservice-{i + 1}", launchProfileName: null)
+    var api = builder.AddProject<Projects.Inventory_ApiService>($"apiservice-{serviceId++}", launchProfileName: null)
         .WithReference(cache, "RedisCache")
-        .WithReference(localstack)
+        .WithHttpsEndpoint(port: port, name: "api-endpoint")
+        .WithReference(awsConfig)
         .WithReference(awsResources)
         .WithEnvironment("Settings__MessageBroker", "SNS")
-        .WaitFor(cache)
         .WaitFor(localstack)
-        .WaitFor(awsResources)
-        .WithHttpsEndpoint(port: port, name: $"api{i + 1}");
+        .WaitFor(cache)
+        .WaitFor(storage);
 
-    apis.Add(api);
     gateway.WaitFor(api);
 }
 
+// comment client nếu type project chưa đúng
 builder.AddProject<Projects.Client_Wasm>("client-wasm")
     .WithExternalHttpEndpoints()
     .WaitFor(gateway);
-
-builder.AddProject<Projects.Inventory_FileService>("inventory-files")
-    .WithReference(localstack)
-    .WithReference(awsResources)
-    .WithEnvironment("Settings__MessageBroker", "SNS")
-    .WithEnvironment("AWS__Resources__SNSUrl", "http://host.docker.internal:5280/api/sns")
-    .WaitFor(localstack)
-    .WaitFor(awsResources);
 
 builder.UseLocalStack(localstack);
 

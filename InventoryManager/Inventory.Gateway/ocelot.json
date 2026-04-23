@@ -2,11 +2,9 @@
   "Routes": [
     {
       "UpstreamPathTemplate": "/api/inventory",
-      "UpstreamHttpMethod": [ "GET" ],
-
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
       "DownstreamPathTemplate": "/api/inventory",
       "DownstreamScheme": "https",
-
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
@@ -29,9 +27,39 @@
           "Port": 7005
         }
       ],
-
       "DangerousAcceptAnyServerCertificateValidator": true,
-
+      "LoadBalancerOptions": {
+        "Type": "WeightedRandom"
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/inventory/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "DownstreamPathTemplate": "/api/inventory/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7001
+        },
+        {
+          "Host": "localhost",
+          "Port": 7002
+        },
+        {
+          "Host": "localhost",
+          "Port": 7003
+        },
+        {
+          "Host": "localhost",
+          "Port": 7004
+        },
+        {
+          "Host": "localhost",
+          "Port": 7005
+        }
+      ],
+      "DangerousAcceptAnyServerCertificateValidator": true,
       "LoadBalancerOptions": {
         "Type": "WeightedRandom"
       }
@@ -39,10 +67,8 @@
     {
       "UpstreamPathTemplate": "/health",
       "UpstreamHttpMethod": [ "GET" ],
-
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "https",
-
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
@@ -65,15 +91,12 @@
           "Port": 7005
         }
       ],
-
       "DangerousAcceptAnyServerCertificateValidator": true,
-
       "LoadBalancerOptions": {
         "Type": "WeightedRandom"
       }
     }
   ],
-
   "GlobalConfiguration": {
     "BaseUrl": "https://localhost:7000",
     "RequestIdKey": "Gateway-Request-Id"

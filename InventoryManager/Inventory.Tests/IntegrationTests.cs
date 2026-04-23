@@ -32,37 +32,55 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
     [Fact]
     public async Task TestPipeline()
     {
-        var cancellationToken = CancellationToken.None;
+        Assert.NotNull(_builder);
 
-        _app = await _builder!.BuildAsync(cancellationToken);
-        await _app.StartAsync(cancellationToken);
+        _app = await _builder.BuildAsync();
+        await _app.StartAsync();
 
-        var random = new Random();
-        var id = random.Next(1, 100);
+        await Task.Delay(10000);
+
+        var id = Random.Shared.Next(1, 100);
 
         using var gatewayClient = _app.CreateHttpClient("apigateway", "https");
-        using var gatewayResponse = await gatewayClient.GetAsync($"/api/inventory?id={id}", cancellationToken);
+        using var gatewayResponse = await gatewayClient.GetAsync($"/api/inventory?id={id}");
 
-        var apiProduct = JsonSerializer.Deserialize<Product>(
-            await gatewayResponse.Content.ReadAsStringAsync(cancellationToken));
+        var gatewayContent = await gatewayResponse.Content.ReadAsStringAsync();
+        Assert.True(
+            gatewayResponse.IsSuccessStatusCode,
+            $"Gateway failed: {gatewayResponse.StatusCode} - {gatewayContent}");
 
-        await Task.Delay(5000, cancellationToken);
-
-        using var sinkClient = _app.CreateHttpClient("inventory-files", "http");
-
-        using var listResponse = await sinkClient.GetAsync("/api/s3", cancellationToken);
-        var inventoryList = JsonSerializer.Deserialize<List<string>>(
-            await listResponse.Content.ReadAsStringAsync(cancellationToken));
-
-        using var s3Response = await sinkClient.GetAsync($"/api/s3/inventory_{id}.json", cancellationToken);
-        var s3Product = JsonSerializer.Deserialize<Product>(
-            await s3Response.Content.ReadAsStringAsync(cancellationToken));
-
-        Assert.NotNull(inventoryList);
-        Assert.Single(inventoryList);
+        var apiProduct = JsonSerializer.Deserialize<Product>(gatewayContent);
         Assert.NotNull(apiProduct);
+        Assert.Equal(id, apiProduct.Id);
+
+        await Task.Delay(5000);
+
+        using var storageClient = _app.CreateHttpClient("inventory-files", "http");
+
+        using var listResponse = await storageClient.GetAsync("/api/s3");
+        var listContent = await listResponse.Content.ReadAsStringAsync();
+
+        Assert.True(
+            listResponse.IsSuccessStatusCode,
+            $"Storage list failed: {listResponse.StatusCode} - {listContent}");
+
+        var inventoryList = JsonSerializer.Deserialize<List<string>>(listContent);
+        Assert.NotNull(inventoryList);
+        Assert.NotEmpty(inventoryList);
+
+        var matchingFile = inventoryList.FirstOrDefault(f => f.Contains($"inventory_{id}"));
+        Assert.NotNull(matchingFile);
+
+        using var s3Response = await storageClient.GetAsync($"/api/s3/{matchingFile}");
+        var s3Content = await s3Response.Content.ReadAsStringAsync();
+
+        Assert.True(
+            s3Response.IsSuccessStatusCode,
+            $"Storage read failed: {s3Response.StatusCode} - {s3Content}");
+
+        var s3Product = JsonSerializer.Deserialize<Product>(s3Content);
         Assert.NotNull(s3Product);
-        Assert.Equal(id, s3Product!.Id);
+        Assert.Equal(id, s3Product.Id);
         Assert.Equivalent(apiProduct, s3Product);
     }
 
@@ -75,6 +93,8 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
         }
 
         if (_builder != null)
+        {
             await _builder.DisposeAsync();
+        }
     }
 }
