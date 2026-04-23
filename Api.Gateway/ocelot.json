@@ -1,0 +1,23 @@
+{
+  "Routes": [
+    {
+      "UpstreamPathTemplate": "/employee",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DownstreamPathTemplate": "/employee",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        { "Host": "localhost", "Port": 7170 },
+        { "Host": "localhost", "Port": 7171 },
+        { "Host": "localhost", "Port": 7172 },
+        { "Host": "localhost", "Port": 7173 },
+        { "Host": "localhost", "Port": 7174 }
+      ],
+      "LoadBalancerOptions": {
+        "Type": "WeightedRandom"
+      }
+    }
+  ],
+  "GlobalConfiguration": {
+    "BaseUrl": "https://localhost:7099"
+  }
+}
