@@ -124,6 +124,10 @@ public class IntegrationTests(AppHostFixture fixture) : IClassFixture<AppHostFix
         Assert.NotEmpty(objects);
     }
 
+    /// <summary>
+    /// Расширенный сквозной тест, проверяет не только наличие файла в Minio,
+    /// но и соответствие его содержимого данным, возвращённым API.
+    /// </summary>
     [Fact]
     public async Task Minio_FileContentMatchesApiResponse()
     {

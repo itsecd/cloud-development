@@ -1,5 +1,3 @@
-using Aspire.Hosting;
-
 var builder = DistributedApplication.CreateBuilder(args);
 
 var cache = builder.AddRedis("cache").WithRedisCommander();
@@ -41,7 +39,7 @@ foreach (var generator in generators)
 }
 
 // Файловый сервис
-var fileService = builder.AddProject<Projects.ProgramProject_FileService>("programproject-fileservice")
+builder.AddProject<Projects.ProgramProject_FileService>("programproject-fileservice")
     .WithExternalHttpEndpoints()
     .WithEnvironment("SQS__ServiceURL", sqs.GetEndpoint("http"))
     .WithEnvironment("Minio__Endpoint", minio.GetEndpoint("api"))
