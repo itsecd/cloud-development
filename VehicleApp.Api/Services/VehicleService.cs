@@ -1,16 +1,25 @@
 using System.Text.Json;
 using Microsoft.Extensions.Caching.Distributed;
 using VehicleApp.Api.Models;
+using VehicleApp.Api.Services.Messaging;
 
 namespace VehicleApp.Api.Services;
 
 /// <summary>
 /// Сервис для получения информации о транспортном средстве
 /// </summary>
-public class VehicleService(IDistributedCache cache, IConfiguration configuration,
-                ILogger<VehicleService> logger) : IVehicleService
+/// <param name="cache">Распределённый кэш</param>
+/// <param name="publisher">Публикатор ТС в брокер сообщений</param>
+/// <param name="configuration">Конфигурация приложения</param>
+/// <param name="logger">Логгер</param>
+public class VehicleService(
+    IDistributedCache cache,
+    IVehiclePublisher publisher,
+    IConfiguration configuration,
+    ILogger<VehicleService> logger) : IVehicleService
 {
     private readonly int _expirationMinutes = configuration.GetValue("CacheSettings:ExpirationMinutes", 15);
+
     /// <inheritdoc />
     public async Task<Vehicle> GetVehicle(int id)
     {
@@ -23,7 +32,6 @@ public class VehicleService(IDistributedCache cache, IConfiguration configuratio
             try
             {
                 var cachedVehicle = JsonSerializer.Deserialize<Vehicle>(cachedData);
-
                 if (cachedVehicle != null)
                 {
                     logger.LogInformation("Vehicle {VehicleId} retrieved from cache", id);
@@ -41,8 +49,10 @@ public class VehicleService(IDistributedCache cache, IConfiguration configuratio
 
         var vehicle = VehicleGenerator.GenerateVehicle(id);
 
+        await publisher.Publish(vehicle);
+
         try
-        {  
+        {
             var cacheOptions = new DistributedCacheEntryOptions
             {
                 AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(_expirationMinutes)

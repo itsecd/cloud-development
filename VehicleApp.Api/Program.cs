@@ -1,9 +1,16 @@
+using Amazon.SimpleNotificationService;
+using LocalStack.Client.Extensions;
 using VehicleApp.Api.Services;
+using VehicleApp.Api.Services.Messaging;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 builder.AddRedisDistributedCache("redis");
+
+builder.Services.AddLocalStack(builder.Configuration);
+builder.Services.AddAwsService<IAmazonSimpleNotificationService>();
+builder.Services.AddScoped<IVehiclePublisher, SnsVehiclePublisher>();
 
 builder.Services.AddScoped<IVehicleService, VehicleService>();
 

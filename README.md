@@ -36,6 +36,34 @@
 
 Из query-параметра `id` вычисляется остаток от деления на количество реплик. Результат — индекс реплики, обрабатывающей запрос.
 
+---
+
+## Лабораторная работа №3 — «Брокер сообщений и объектное хранилище»
+
+### Описание
+
+Расширен пайплайн генерации ТС: после генерации нового ТС сервис публикует его в брокер сообщений, отдельный файловый сервис забирает сообщение и кладёт JSON в объектное хранилище.
+
+Вариант **47** — **SNS + Minio**: брокер сообщений AWS SNS (эмулируется через LocalStack), хранилище — Minio с S3-совместимым API.
+
+### Что реализовано
+
+- **`VehicleApp.Api`** — при генерации нового ТС публикует JSON в SNS-топик (`SnsVehiclePublisher`). Если ТС взято из Redis — публикации нет.
+- **`File.Service`** — новый сервис:
+  - `SnsSubscriptionService` подписывает эндпоинт `http://host.docker.internal:5280/api/sns` на SNS-топик при старте;
+  - `SnsWebhookController` принимает `SubscriptionConfirmation` и `Notification`;
+  - `MinioS3Service` создаёт бакет `vehicle-bucket` и складывает ТС под ключом `vehicle_{id}.json`;
+  - `S3Controller` отдаёт список ключей (`GET /api/s3`) и содержимое файла (`GET /api/s3/{key}`).
+- **`VehicleApp.AppHost`** — добавлены контейнеры LocalStack (SNS, порт 4566) и Minio, CloudFormation-шаблон `CloudFormation/vehicle-sns.yaml` создаёт SNS-топик `vehicle-topic`, ARN пробрасывается в реплики API и в File.Service через `AWS:Resources:SNSTopicArn`.
+- **`VehicleApp.AppHost.Tests`** — интеграционный тест `GatewayRequest_PublishesVehicleToMinio`: стучится в **гейтвей** с конкретным `id`, затем поллит `/api/s3/vehicle_{id}.json` в File.Service и сверяет содержимое с ответом гейтвея.
+
+### Стек технологий (дополнение)
+
+- LocalStack 2.x (эмуляция AWS SNS)
+- AWSSDK.SimpleNotificationService
+- Minio (.NET клиент `CommunityToolkit.Aspire.Minio.Client`)
+- Aspire.Hosting CloudFormation (создание SNS-топика)
+
 ## Стек технологий
 
 - .NET 8
@@ -50,9 +78,11 @@
 
 | Проект | Описание |
 |---|---|
-| `VehicleApp.Api` | API-сервис генерации транспортных средств (7 реплик) |
+| `VehicleApp.Api` | API-сервис генерации транспортных средств (7 реплик), публикует ТС в SNS |
 | `VehicleApp.Gateway` | API Gateway на Ocelot с балансировкой Query Based |
-| `VehicleApp.AppHost` | Aspire-оркестратор |
+| `File.Service` | Подписчик SNS, сохраняет JSON в Minio |
+| `VehicleApp.AppHost` | Aspire-оркестратор (Redis + LocalStack + Minio + сервисы) |
+| `VehicleApp.AppHost.Tests` | Интеграционные тесты пайплайна |
 | `VehicleApp.ServiceDefaults` | Общие настройки сервисов (OpenTelemetry, health checks) |
 | `Client.Wasm` | Blazor WebAssembly клиент |
 

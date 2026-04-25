@@ -13,6 +13,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VehicleApp.Api", "VehicleAp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VehicleApp.Gateway", "VehicleApp.Gateway\VehicleApp.Gateway.csproj", "{CBFDC59A-3449-C88A-3139-3F56883062A4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VehicleApp.AppHost.Tests", "VehicleApp.AppHost.Tests\VehicleApp.AppHost.Tests.csproj", "{D88DD2ED-1E2A-4997-80D5-BE76658A927B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "File.Service", "File.Service\File.Service.csproj", "{DF944664-05C9-E01F-B262-C8B381C1EFE1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +43,14 @@ Global
 		{CBFDC59A-3449-C88A-3139-3F56883062A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CBFDC59A-3449-C88A-3139-3F56883062A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CBFDC59A-3449-C88A-3139-3F56883062A4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D88DD2ED-1E2A-4997-80D5-BE76658A927B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D88DD2ED-1E2A-4997-80D5-BE76658A927B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D88DD2ED-1E2A-4997-80D5-BE76658A927B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D88DD2ED-1E2A-4997-80D5-BE76658A927B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DF944664-05C9-E01F-B262-C8B381C1EFE1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF944664-05C9-E01F-B262-C8B381C1EFE1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DF944664-05C9-E01F-B262-C8B381C1EFE1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DF944664-05C9-E01F-B262-C8B381C1EFE1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
