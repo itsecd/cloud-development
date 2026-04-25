@@ -13,6 +13,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CompanyEmployee.ServiceDefa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CompanyEmployee.ApiGateway", "CompanyEmployee.ApiGateway\CompanyEmployee.ApiGateway.csproj", "{00432BCA-E982-451B-9D3F-648FE20FF285}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CompanyEmployee.EventSink", "CompanyEmployee.EventSink\CompanyEmployee.EventSink.csproj", "{6EF5D762-90CB-48CA-8D24-1AC90560660F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CompanyEmployee.Tests", "CompanyEmployee.Tests\CompanyEmployee.Tests.csproj", "{28BC6A02-0734-45B8-89E9-EE44E9927921}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +43,14 @@ Global
 		{00432BCA-E982-451B-9D3F-648FE20FF285}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{00432BCA-E982-451B-9D3F-648FE20FF285}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{00432BCA-E982-451B-9D3F-648FE20FF285}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6EF5D762-90CB-48CA-8D24-1AC90560660F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6EF5D762-90CB-48CA-8D24-1AC90560660F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6EF5D762-90CB-48CA-8D24-1AC90560660F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6EF5D762-90CB-48CA-8D24-1AC90560660F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{28BC6A02-0734-45B8-89E9-EE44E9927921}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{28BC6A02-0734-45B8-89E9-EE44E9927921}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{28BC6A02-0734-45B8-89E9-EE44E9927921}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{28BC6A02-0734-45B8-89E9-EE44E9927921}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

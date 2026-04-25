@@ -16,6 +16,7 @@ public class CompanyEmployeeGenerator(
     
     private static readonly string[] _grade = ["Junior", "Middle", "Senior"];
     
+    /// <inheritdoc/>
     public CompanyEmployeeDto Generate(int employeeId)
     {
         var faker = new Faker<CompanyEmployeeDto>("ru")

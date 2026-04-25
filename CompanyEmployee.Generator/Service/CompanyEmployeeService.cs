@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using CompanyEmployee.Generator.Dto;
+using CompanyEmployee.Generator.Messaging;
 using Microsoft.Extensions.Caching.Distributed;
 
 namespace CompanyEmployee.Generator.Service;
@@ -8,11 +9,13 @@ namespace CompanyEmployee.Generator.Service;
 /// Сервис получения сотрудника компании
 /// </summary>
 /// <param name="generator">Генератор сотрудника по идентификатору</param>
+/// <param name="producerService">Служба отправки сообщений в брокер</param>
 /// <param name="cache">Сервис кэширования</param>
 /// <param name="configuration">Конфигурация приложения</param>
 /// <param name="logger">Логгер</param>
 public class CompanyEmployeeService(
     ICompanyEmployeeGenerator generator,
+    IProducerService producerService,
     IDistributedCache cache,
     IConfiguration configuration,
     ILogger<CompanyEmployeeService> logger
@@ -22,6 +25,7 @@ public class CompanyEmployeeService(
     
     private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web);
     
+    /// <inheritdoc/>
     public async Task<CompanyEmployeeDto> GetByIdAsync(int employeeId, CancellationToken token)
     {
         var cacheKey = _companyEmployeeCachePrefix + employeeId;
@@ -47,6 +51,8 @@ public class CompanyEmployeeService(
         }
 
         companyEmployee = generator.Generate(employeeId);
+
+        await producerService.SendMessage(companyEmployee);
         
         var ttlSeconds = configuration.GetValue("CompanyEmployeeCache:TtlSeconds", 600);
         var cacheOpts = new DistributedCacheEntryOptions
