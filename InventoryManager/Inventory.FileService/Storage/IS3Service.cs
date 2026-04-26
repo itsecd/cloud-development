@@ -10,7 +10,7 @@ public interface IS3Service
     /// <summary>
     /// Отправляет файл в хранилище
     /// </summary>
-    /// <param name="fileData">Строковая репрезентация сохраняемого файла</param>
+    /// <param name="fileData"> Строковая репрезентация сохраняемого файла</param>
     public Task<bool> UploadFile(string fileData);
 
     /// <summary>
@@ -22,7 +22,7 @@ public interface IS3Service
     /// <summary>
     /// Получает строковую репрезентацию файла из хранилища
     /// </summary>
-    /// <param name="filePath">Путь к файлу в бакете</param>
+    /// <param name="filePath"> Путь к файлу в бакете</param>
     /// <returns>Строковая репрезентация прочтенного файла</returns>
     public Task<JsonNode> DownloadFile(string filePath);
 

@@ -8,8 +8,8 @@ namespace Inventory.FileService.Controllers;
 /// <summary>
 /// Контроллер для работы с файлами, хранящимися в S3-хранилище
 /// </summary>
-/// <param name="s3Service">Сервис для выполнения операций с S3-хранилищем</param>
-/// <param name="logger">Сервис логирования работы контроллера</param>
+/// <param name="s3Service"> Сервис для выполнения операций с S3-хранилищем</param>
+/// <param name="logger"> Сервис логирования работы контроллера</param>
 [ApiController]
 [Route("api/s3")]
 public class S3StorageController(IS3Service s3Service, ILogger<S3StorageController> logger) : ControllerBase
@@ -17,7 +17,7 @@ public class S3StorageController(IS3Service s3Service, ILogger<S3StorageControll
     /// <summary>
     /// Получает список всех файлов из S3-хранилища
     /// </summary>
-    /// <returns>Список ключей файлов, находящихся в S3-хранилище</returns>
+    /// <returns> Список ключей файлов, находящихся в S3-хранилище</returns>
     [HttpGet]
     [ProducesResponseType(200)]
     [ProducesResponseType(500)]
@@ -41,8 +41,8 @@ public class S3StorageController(IS3Service s3Service, ILogger<S3StorageControll
     /// <summary>
     /// Получает содержимое JSON-файла из S3-хранилища по его ключу
     /// </summary>
-    /// <param name="key">Ключ файла в S3-хранилище</param>
-    /// <returns>Содержимое файла в формате JSON</returns>
+    /// <param name="key"> Ключ файла в S3-хранилище</param>
+    /// <returns> Содержимое файла в формате JSON</returns>
     [HttpGet("{key}")]
     [ProducesResponseType(200)]
     [ProducesResponseType(500)]

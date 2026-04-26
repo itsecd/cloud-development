@@ -24,12 +24,10 @@ builder.Services.AddLocalStack(builder.Configuration);
 // SNS client
 builder.Services.AddSingleton<IAmazonSimpleNotificationService>(_ =>
 {
-    var serviceUrl =
-        builder.Configuration["AWS:ServiceURL"]
+    var serviceUrl = builder.Configuration["AWS:ServiceURL"]
         ?? "http://localhost:4566";
 
-    var region =
-        builder.Configuration["AWS:Region"]
+    var region = builder.Configuration["AWS:Region"]
         ?? builder.Configuration["AWS_REGION"]
         ?? builder.Configuration["AWS_DEFAULT_REGION"]
         ?? "eu-central-1";
@@ -40,10 +38,7 @@ builder.Services.AddSingleton<IAmazonSimpleNotificationService>(_ =>
         AuthenticationRegion = region
     };
 
-    return new AmazonSimpleNotificationServiceClient(
-        new BasicAWSCredentials("test", "test"),
-        config
-    );
+    return new AmazonSimpleNotificationServiceClient(new BasicAWSCredentials("test", "test"),config);
 });
 
 // Controllers

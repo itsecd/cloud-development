@@ -7,9 +7,9 @@ namespace Inventory.FileService.Messaging;
 /// <summary>
 /// Сервис для подписки HTTP-endpoint на SNS-топик
 /// </summary>
-/// <param name="snsClient">Клиент Amazon SNS для отправки запроса на подписку</param>
-/// <param name="configuration">Конфигурация приложения, содержащая ARN SNS-топика и URL endpoint</param>
-/// <param name="logger">Сервис логирования процесса подписки</param>
+/// <param name="snsClient"> Клиент Amazon SNS для отправки запроса на подписку</param>
+/// <param name="configuration"> Конфигурация приложения, содержащая ARN SNS-топика и URL endpoint</param>
+/// <param name="logger"> Сервис логирования процесса подписки</param>
 public class SnsSubscriberService(IAmazonSimpleNotificationService snsClient, IConfiguration configuration,
                                   ILogger<SnsSubscriberService> logger) : ISubscriberService
 {
@@ -28,7 +28,7 @@ public class SnsSubscriberService(IAmazonSimpleNotificationService snsClient, IC
     /// <summary>
     /// Отправляет запрос на подписку HTTP-endpoint на указанный SNS-топик
     /// </summary>
-    /// <returns>Асинхронная операция подписки endpoint на SNS-топик</returns>
+    /// <returns> Асинхронная операция подписки endpoint на SNS-топик</returns>
     /// <exception cref="InvalidOperationException">
     /// Возникает, если запрос на подписку завершился с неуспешным HTTP-статусом
     /// </exception>

@@ -10,9 +10,9 @@ namespace Inventory.FileService.Storage;
 /// <summary>
 /// Cлужба для манипуляции файлами в объектном хранилище
 /// </summary>
-/// <param name="client">S3 клиент</param>
-/// <param name="configuration">Конфигурация</param>
-/// <param name="logger">Логер</param>
+/// <param name="client"> S3 клиент</param>
+/// <param name="configuration"> Конфигурация</param>
+/// <param name="logger"> Логер</param>
 public class S3AwsService(IAmazonS3 client, IConfiguration configuration, ILogger<S3AwsService> logger) : IS3Service
 {
     private readonly string _bucketName = configuration["AWS:Resources:S3BucketName"]
@@ -152,21 +152,17 @@ public class S3AwsService(IAmazonS3 client, IConfiguration configuration, ILogge
             logger.LogInformation("{bucket} does not exist, creating it", _bucketName);
         }
 
-        var region =
-            configuration["AWS:Region"]
+        var region = configuration["AWS:Region"]
             ?? configuration["AWS_REGION"]
             ?? configuration["AWS_DEFAULT_REGION"]
             ?? "eu-central-1";
 
-        var request = new PutBucketRequest
-        {
+        var request = new PutBucketRequest{
             BucketName = _bucketName
         };
 
         if (!string.Equals(region, "us-east-1", StringComparison.OrdinalIgnoreCase))
-        {
             request.BucketRegionName = region;
-        }
 
         try
         {
