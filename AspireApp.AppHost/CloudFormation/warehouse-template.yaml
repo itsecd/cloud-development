@@ -1,0 +1,42 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudFormation template for warehouse project: SQS queue + S3 bucket'
+
+Parameters:
+  BucketName:
+    Type: String
+    Default: 'warehouse-bucket'
+  QueueName:
+    Type: String
+    Default: 'warehouse-queue'
+
+Resources:
+  WarehouseBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref BucketName
+      VersioningConfiguration:
+        Status: Suspended
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  WarehouseQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Ref QueueName
+      VisibilityTimeout: 30
+      MessageRetentionPeriod: 345600
+      DelaySeconds: 0
+      ReceiveMessageWaitTimeSeconds: 0
+
+Outputs:
+  S3BucketName:
+    Value: !Ref WarehouseBucket
+  S3BucketArn:
+    Value: !GetAtt WarehouseBucket.Arn
+  SQSQueueName:
+    Value: !GetAtt WarehouseQueue.QueueName
+  SQSQueueArn:
+    Value: !GetAtt WarehouseQueue.Arn

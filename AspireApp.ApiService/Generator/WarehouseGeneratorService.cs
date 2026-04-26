@@ -1,21 +1,28 @@
 using AspireApp.ApiService.Entities;
+using AspireApp.ApiService.Messaging;
 
 namespace AspireApp.ApiService.Generator;
 
 /// <summary>
 /// Служба для запуска юзкейса по обработке товаров на складе
 /// </summary>
+/// <param name="warehouseCache">Служба кэширования</param>
+/// <param name="producer">Служба-публикатор сообщений в SQS</param>
+/// <param name="logger">Логгер</param>
+/// <param name="generator">Генератор товаров</param>
 public class WarehouseGeneratorService(
     IWarehouseCache warehouseCache,
+    SqsProducerService producer,
     ILogger<WarehouseGeneratorService> logger,
     WarehouseGenerator generator) : IWarehouseGeneratorService
 {
+    /// <inheritdoc/>
     public async Task<Warehouse> ProcessWarehouse(int id)
     {
         logger.LogInformation("Обработка товара с Id = {Id} начата", id);
 
         // Получаем товар из кэша
-        Warehouse? warehouse = null;
+        Warehouse? warehouse;
         try
         {
             warehouse = await warehouseCache.GetAsync(id);
@@ -34,6 +41,9 @@ public class WarehouseGeneratorService(
         logger.LogInformation("Товар {Id} в кэше не найден или кэш недоступен, запуск генерации", id);
         warehouse = generator.Generate();
         warehouse.Id = id;
+
+        // Отправка в брокер только при генерации нового объекта
+        await producer.SendMessage(warehouse);
 
         // Попытка сохранить в кэш
         try

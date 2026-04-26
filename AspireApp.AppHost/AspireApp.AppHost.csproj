@@ -13,11 +13,20 @@
   <ItemGroup>
     <ProjectReference Include="..\AspireApp.ApiGateway\AspireApp.ApiGateway.csproj" />
     <ProjectReference Include="..\AspireApp.ApiService\AspireApp.ApiService.csproj" />
+    <ProjectReference Include="..\AspireApp.FileService\AspireApp.FileService.csproj" />
     <ProjectReference Include="..\Client.Wasm\Client.Wasm.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.AppHost" Version="9.5.2" />
-    <PackageReference Include="Aspire.Hosting.Redis" Version="9.5.2" />
+    <None Update="CloudFormation\warehouse-template.yaml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.AppHost" Version="13.2.4" />
+    <PackageReference Include="Aspire.Hosting.Redis" Version="13.2.4" />
+    <PackageReference Include="LocalStack.Aspire.Hosting" Version="13.1.0" />
+    <PackageReference Include="AWSSDK.Core" Version="4.0.4" />
   </ItemGroup>
 </Project>
