@@ -56,8 +56,18 @@ public class S3AwsService(IAmazonS3 client, IConfiguration configuration, ILogge
     ///<inheritdoc/>
     public async Task<bool> UploadFile(string fileData)
     {
-        var rootNode = JsonNode.Parse(fileData) ?? throw new ArgumentException("Passed string is not a valid JSON");
-        var id = rootNode["id"]?.GetValue<int>() ?? throw new ArgumentException("Passed JSON has invalid structure");
+        var rootNode = JsonNode.Parse(fileData)
+            ?? throw new ArgumentException("Passed string is not a valid JSON");
+
+        var idNode = rootNode["id"] ?? rootNode["Id"];
+
+        if (idNode is null)
+        {
+            logger.LogError("SNS message JSON has no id/Id field. Payload: {Payload}", fileData);
+            throw new ArgumentException("Passed JSON has invalid structure");
+        }
+
+        var id = idNode.GetValue<int>();
 
         using var stream = new MemoryStream();
         JsonSerializer.Serialize(stream, rootNode);
@@ -126,8 +136,49 @@ public class S3AwsService(IAmazonS3 client, IConfiguration configuration, ILogge
 
         try
         {
-            await client.EnsureBucketExistsAsync(_bucketName);
-            logger.LogInformation("{bucket} existence ensured", _bucketName);
+            await client.GetBucketLocationAsync(new GetBucketLocationRequest
+            {
+                BucketName = _bucketName
+            });
+
+            logger.LogInformation("{bucket} already exists", _bucketName);
+            return;
+        }
+        catch (AmazonS3Exception ex) when (
+            ex.StatusCode == HttpStatusCode.NotFound ||
+            ex.ErrorCode == "NoSuchBucket" ||
+            ex.ErrorCode == "NotFound")
+        {
+            logger.LogInformation("{bucket} does not exist, creating it", _bucketName);
+        }
+
+        var region =
+            configuration["AWS:Region"]
+            ?? configuration["AWS_REGION"]
+            ?? configuration["AWS_DEFAULT_REGION"]
+            ?? "eu-central-1";
+
+        var request = new PutBucketRequest
+        {
+            BucketName = _bucketName
+        };
+
+        if (!string.Equals(region, "us-east-1", StringComparison.OrdinalIgnoreCase))
+        {
+            request.BucketRegionName = region;
+        }
+
+        try
+        {
+            await client.PutBucketAsync(request);
+            logger.LogInformation("{bucket} created in region {region}", _bucketName, region);
+        }
+        catch (AmazonS3Exception ex) when (
+            ex.ErrorCode == "BucketAlreadyOwnedByYou" ||
+            ex.ErrorCode == "BucketAlreadyExists" ||
+            ex.StatusCode == HttpStatusCode.Conflict)
+        {
+            logger.LogInformation("{bucket} already exists", _bucketName);
         }
         catch (Exception ex)
         {

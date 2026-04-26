@@ -5,10 +5,19 @@ using System.Text;
 
 namespace Inventory.FileService.Controllers;
 
+/// <summary>
+/// Контроллер для получения и обработки сообщений из SNS
+/// </summary>
+/// <param name="s3Service">Сервис для работы с S3-хранилищем</param>
+/// <param name="logger">Сервис логирования работы контроллера</param>
 [ApiController]
 [Route("api/sns")]
 public class SnsSubscriberController(IS3Service s3Service, ILogger<SnsSubscriberController> logger) : ControllerBase
 {
+    /// <summary>
+    /// Принимает входящее сообщение от SNS, подтверждает подписку или обрабатывает уведомление
+    /// </summary>
+    /// <returns>Результат обработки входящего SNS-сообщения</returns>
     [HttpPost]
     [ProducesResponseType(200)]
     public async Task<IActionResult> ReceiveMessage()

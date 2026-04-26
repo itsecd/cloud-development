@@ -1,3 +1,4 @@
+using Amazon.Runtime;
 using Amazon.SimpleNotificationService;
 using Inventory.ApiService.Cache;
 using Inventory.ApiService.Generation;
@@ -17,11 +18,33 @@ builder.AddRedisDistributedCache("cache");
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
 
-// LocalStack
+// LocalStack config
 builder.Services.AddLocalStack(builder.Configuration);
 
-// AWS SNS
-builder.Services.AddAWSService<IAmazonSimpleNotificationService>();
+// SNS client
+builder.Services.AddSingleton<IAmazonSimpleNotificationService>(_ =>
+{
+    var serviceUrl =
+        builder.Configuration["AWS:ServiceURL"]
+        ?? "http://localhost:4566";
+
+    var region =
+        builder.Configuration["AWS:Region"]
+        ?? builder.Configuration["AWS_REGION"]
+        ?? builder.Configuration["AWS_DEFAULT_REGION"]
+        ?? "eu-central-1";
+
+    var config = new AmazonSimpleNotificationServiceConfig
+    {
+        ServiceURL = serviceUrl,
+        AuthenticationRegion = region
+    };
+
+    return new AmazonSimpleNotificationServiceClient(
+        new BasicAWSCredentials("test", "test"),
+        config
+    );
+});
 
 // Controllers
 builder.Services.AddControllers();
@@ -33,6 +56,10 @@ builder.Services.AddSingleton<IInventoryService, InventoryService>();
 builder.Services.AddSingleton<IProducerService, SnsPublisherService>();
 
 var app = builder.Build();
+
+app.Logger.LogInformation("SNS ServiceURL: {ServiceURL}", builder.Configuration["AWS:ServiceURL"]);
+app.Logger.LogInformation("SNS Region: {Region}", builder.Configuration["AWS:Region"]);
+app.Logger.LogInformation("SNS TopicArn: {TopicArn}", builder.Configuration["AWS:Resources:SNSTopicArn"]);
 
 app.UseExceptionHandler();
 

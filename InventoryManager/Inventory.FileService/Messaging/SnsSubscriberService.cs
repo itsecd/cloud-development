@@ -4,19 +4,34 @@ using System.Net;
 
 namespace Inventory.FileService.Messaging;
 
-public class SnsSubscriberService(
-    IAmazonSimpleNotificationService snsClient,
-    IConfiguration configuration,
-    ILogger<SnsSubscriberService> logger) : ISubscriberService
+/// <summary>
+/// Сервис для подписки HTTP-endpoint на SNS-топик
+/// </summary>
+/// <param name="snsClient">Клиент Amazon SNS для отправки запроса на подписку</param>
+/// <param name="configuration">Конфигурация приложения, содержащая ARN SNS-топика и URL endpoint</param>
+/// <param name="logger">Сервис логирования процесса подписки</param>
+public class SnsSubscriberService(IAmazonSimpleNotificationService snsClient, IConfiguration configuration,
+                                  ILogger<SnsSubscriberService> logger) : ISubscriberService
 {
-    private readonly string _topicArn =
-        configuration["AWS:Resources:SNSTopicArn"]
+    /// <summary>
+    /// ARN SNS-топика, на который должен быть подписан endpoint
+    /// </summary>
+    private readonly string _topicArn = configuration["AWS:Resources:SNSTopicArn"]
         ?? throw new KeyNotFoundException("SNS topic ARN was not found in configuration");
 
-    private readonly string _endpoint =
-        configuration["SNS:EndpointURL"]
+    /// <summary>
+    /// URL HTTP-endpoint, который будет получать уведомления от SNS
+    /// </summary>
+    private readonly string _endpoint = configuration["SNS:EndpointURL"]
         ?? throw new KeyNotFoundException("SNS endpoint URL was not found in configuration");
 
+    /// <summary>
+    /// Отправляет запрос на подписку HTTP-endpoint на указанный SNS-топик
+    /// </summary>
+    /// <returns>Асинхронная операция подписки endpoint на SNS-топик</returns>
+    /// <exception cref="InvalidOperationException">
+    /// Возникает, если запрос на подписку завершился с неуспешным HTTP-статусом
+    /// </exception>
     public async Task SubscribeEndpoint()
     {
         logger.LogInformation("Sending subscribe request for {topic}", _topicArn);
