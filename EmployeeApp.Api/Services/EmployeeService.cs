@@ -1,13 +1,17 @@
 using EmployeeApp.Api.Entities;
+using EmployeeApp.Api.Messaging;
 using Microsoft.Extensions.Caching.Distributed;
 using System.Text.Json;
 
 namespace EmployeeApp.Api.Services;
 
 /// <summary>
-/// Реализация сервиса генерации данных сотрудников с кешированием
+/// Реализация сервиса генерации данных сотрудников с кешированием и публикацией в брокер
 /// </summary>
-public class EmployeeService(IDistributedCache cache, ILogger<EmployeeService> logger, IConfiguration configuration) : IEmployeeService
+public class EmployeeService(IDistributedCache cache,
+    IProducerService producer,
+    ILogger<EmployeeService> logger,
+    IConfiguration configuration) : IEmployeeService
 {
     private readonly DistributedCacheEntryOptions _cacheOptions = new()
     {
@@ -27,6 +31,7 @@ public class EmployeeService(IDistributedCache cache, ILogger<EmployeeService> l
 
         var employee = EmployeeGenerator.Generate(id);
 
+        await producer.SendMessage(employee);
         await SetToCache(id, employee);
 
         return employee;

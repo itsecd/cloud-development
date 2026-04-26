@@ -7,21 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.StackExchange.Redis.DistributedCaching" Version="9.5.2" />
+    <PackageReference Include="AWSSDK.S3" Version="4.0.18.7" />
     <PackageReference Include="AWSSDK.SimpleNotificationService" Version="4.0.2.17" />
-    <PackageReference Include="Bogus" Version="35.6.5" />
     <PackageReference Include="LocalStack.Client" Version="2.0.0" />
     <PackageReference Include="LocalStack.Client.Extensions" Version="2.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\EmployeeApp\EmployeeApp.ServiceDefaults\EmployeeApp.ServiceDefaults.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Services\" />
-    <Folder Include="Entities\" />
-    <Folder Include="Messaging\" />
+    <ProjectReference Include="..\EmployeeApp.Api\EmployeeApp.Api.csproj" />
   </ItemGroup>
 
 </Project>

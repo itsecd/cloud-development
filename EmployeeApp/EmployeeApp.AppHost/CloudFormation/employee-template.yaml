@@ -1,0 +1,59 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Cloud formation template for employee project'
+
+Parameters:
+  BucketName:
+    Type: String
+    Description: Name for the S3 bucket
+    Default: 'employee-bucket'
+
+  TopicName:
+    Type: String
+    Description: Name for the SNS topic
+    Default: 'employee-topic'
+
+Resources:
+  EmployeeBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref BucketName
+      VersioningConfiguration:
+        Status: Suspended
+      Tags:
+        - Key: Name
+          Value: !Ref BucketName
+        - Key: Environment
+          Value: Lab
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  EmployeeTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Ref TopicName
+      DisplayName: !Ref TopicName
+      Tags:
+        - Key: Name
+          Value: !Ref TopicName
+        - Key: Environment
+          Value: Lab
+
+Outputs:
+  S3BucketName:
+    Description: Name of the S3 bucket
+    Value: !Ref EmployeeBucket
+
+  S3BucketArn:
+    Description: ARN of the S3 bucket
+    Value: !GetAtt EmployeeBucket.Arn
+
+  SNSTopicName:
+    Description: Name of the SNS topic
+    Value: !GetAtt EmployeeTopic.TopicName
+
+  SNSTopicArn:
+    Description: ARN of the SNS topic
+    Value: !Ref EmployeeTopic
