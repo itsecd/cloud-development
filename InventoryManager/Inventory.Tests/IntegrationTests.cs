@@ -26,8 +26,7 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
     private DistributedApplication? _app;
 
     /// <summary>
-    /// Инициализирует тестовое распределённое приложение Aspire, настраивает логирование
-    /// и запускает приложение для выполнения интеграционных тестов
+    /// Инициализирует тестовое распределённое приложение Aspire, настраивает логирование и запускает приложение для выполнения интеграционных тестов
     /// </summary>
     /// <returns>Асинхронная операция инициализации тестовой среды</returns>
     public async Task InitializeAsync()
@@ -55,17 +54,16 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
     [Fact]
     public async Task GenerateInventory_ThroughGateway_ShouldPublishToSns_AndSaveToS3()
     {
-        Assert.NotNull(_app);
+        var app = _app ?? throw new InvalidOperationException("Test application was not initialized.");
 
         var id = Random.Shared.Next(1, 10_000);
 
-        using var gatewayClient = _app.CreateHttpClient("apigateway", "https");
+        using var gatewayClient = app.CreateHttpClient("apigateway", "https");
         using var gatewayResponse = await gatewayClient.GetAsync($"/api/inventory?id={id}");
 
         var gatewayContent = await gatewayResponse.Content.ReadAsStringAsync();
 
-        Assert.True(
-            gatewayResponse.IsSuccessStatusCode,
+        Assert.True(gatewayResponse.IsSuccessStatusCode,
             $"Gateway failed: {(int)gatewayResponse.StatusCode} {gatewayResponse.StatusCode}. Body: {gatewayContent}");
 
         var apiProduct = JsonSerializer.Deserialize<Product>(gatewayContent, _jsonOptions);
@@ -73,7 +71,7 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
         Assert.NotNull(apiProduct);
         Assert.Equal(id, apiProduct.Id);
 
-        using var fileServiceClient = _app.CreateHttpClient("inventory-files", "http");
+        using var fileServiceClient = app.CreateHttpClient("inventory-files", "http");
 
         var matchingFile = await WaitUntilInventoryFileAppearsAsync(fileServiceClient, id, timeout: TimeSpan.FromSeconds(30));
 
@@ -82,7 +80,8 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
         using var s3Response = await fileServiceClient.GetAsync($"/api/s3/{matchingFile}");
         var s3Content = await s3Response.Content.ReadAsStringAsync();
 
-        Assert.True(s3Response.IsSuccessStatusCode, $"S3 read failed: {(int)s3Response.StatusCode} {s3Response.StatusCode}. Body: {s3Content}");
+        Assert.True(s3Response.IsSuccessStatusCode,
+            $"S3 read failed: {(int)s3Response.StatusCode} {s3Response.StatusCode}. Body: {s3Content}");
 
         var s3Product = JsonSerializer.Deserialize<Product>(s3Content, _jsonOptions);
 
@@ -94,10 +93,10 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
     /// <summary>
     /// Ожидает появления файла инвентаря в S3-хранилище в течение заданного времени
     /// </summary>
-    /// <param name="fileServiceClient"> HTTP-клиент сервиса файлов для обращения к S3 API</param>
-    /// <param name="id"> Идентификатор продукта, файл которого необходимо найти</param>
-    /// <param name="timeout"> Максимальное время ожидания появления файла</param>
-    /// <returns> Имя найденного файла инвентаря</returns>
+    /// <param name="fileServiceClient">HTTP-клиент сервиса файлов для обращения к S3 API</param>
+    /// <param name="id">Идентификатор продукта, файл которого необходимо найти</param>
+    /// <param name="timeout">Максимальное время ожидания появления файла</param>
+    /// <returns>Имя найденного файла инвентаря</returns>
     /// <exception cref="TimeoutException">
     /// Возникает, если файл с указанным идентификатором не появился в S3 за отведённое время
     /// </exception>
