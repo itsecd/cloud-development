@@ -18,7 +18,6 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
         PropertyNameCaseInsensitive = true
     };
 
-    private IDistributedApplicationTestingBuilder? _builder;
     private DistributedApplication? _app;
     private HttpClient? _gatewayClient;
     private HttpClient? _s3Client;
@@ -28,9 +27,9 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
     {
         var cancellationToken = CancellationToken.None;
 
-        _builder = await DistributedApplicationTestingBuilder.CreateAsync<CompanyEmployee_AppHost>(cancellationToken);
-        _builder.Configuration["DcpPublisher:RandomizePorts"] = "false";
-        _builder.Services.AddLogging(logging =>
+        var builder = await DistributedApplicationTestingBuilder.CreateAsync<CompanyEmployee_AppHost>(cancellationToken);
+        builder.Configuration["DcpPublisher:RandomizePorts"] = "false";
+        builder.Services.AddLogging(logging =>
         {
             logging.AddXUnit(output);
             logging.SetMinimumLevel(LogLevel.Debug);
@@ -38,7 +37,7 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
             logging.AddFilter("Aspire.Hosting", LogLevel.Debug);
         });
 
-        _app = await _builder.BuildAsync(cancellationToken);
+        _app = await builder.BuildAsync(cancellationToken);
         await _app.StartAsync(cancellationToken);
 
         _gatewayClient = _app.CreateHttpClient("api-gateway", "http");
@@ -50,7 +49,6 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
     {
         await _app!.StopAsync();
         await _app.DisposeAsync();
-        await _builder!.DisposeAsync();
     }
     
     /// <summary>

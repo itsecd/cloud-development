@@ -23,10 +23,9 @@ var app = builder.Build();
 
 var scope = app.Services.CreateScope();
 var snsService = scope.ServiceProvider.GetRequiredService<SnsSubscriptionService>();
-await snsService.SubscribeEndpoint();
-
-scope = app.Services.CreateScope();
 var s3Service = scope.ServiceProvider.GetRequiredService<IS3Service>();
+
+await snsService.SubscribeEndpoint();
 await s3Service.EnsureBucketExists();
 
 app.MapDefaultEndpoints();
