@@ -1,4 +1,4 @@
-using Amazon.Runtime;
+п»їusing Amazon.Runtime;
 using Amazon.SQS;
 using Minio;
 using ProgramProject.FileService.Services;
@@ -10,7 +10,7 @@ Console.OutputEncoding = System.Text.Encoding.UTF8;
 
 builder.AddServiceDefaults();
 
-// SQS — читаем из переменной окружения (которая приходит из AppHost)
+// SQS вЂ” С‡РёС‚Р°РµРј РёР· РїРµСЂРµРјРµРЅРЅРѕР№ РѕРєСЂСѓР¶РµРЅРёСЏ (РєРѕС‚РѕСЂР°СЏ РїСЂРёС…РѕРґРёС‚ РёР· AppHost)
 var sqsServiceUrl = builder.Configuration["SQS:ServiceURL"] ?? "http://localhost:9324";
 var sqsConfig = new AmazonSQSConfig
 {
@@ -20,7 +20,7 @@ var sqsConfig = new AmazonSQSConfig
 };
 builder.Services.AddSingleton<IAmazonSQS>(sp => new AmazonSQSClient(new AnonymousAWSCredentials(), sqsConfig));
 
-// Minio — читаем из переменных окружения
+// Minio вЂ” С‡РёС‚Р°РµРј РёР· РїРµСЂРµРјРµРЅРЅС‹С… РѕРєСЂСѓР¶РµРЅРёСЏ
 var minioEndpoint = builder.Configuration["Minio:Endpoint"] ?? "http://localhost:9000";
 var minioAccessKey = builder.Configuration["Minio:AccessKey"] ?? "minioadmin";
 var minioSecretKey = builder.Configuration["Minio:SecretKey"] ?? "minioadmin";
