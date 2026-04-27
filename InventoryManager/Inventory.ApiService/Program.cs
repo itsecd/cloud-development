@@ -52,9 +52,7 @@ builder.Services.AddSingleton<IProducerService, SnsPublisherService>();
 
 var app = builder.Build();
 
-app.Logger.LogInformation("SNS ServiceURL: {ServiceURL}", builder.Configuration["AWS:ServiceURL"]);
 app.Logger.LogInformation("SNS Region: {Region}", builder.Configuration["AWS:Region"]);
-app.Logger.LogInformation("SNS TopicArn: {TopicArn}", builder.Configuration["AWS:Resources:SNSTopicArn"]);
 
 app.UseExceptionHandler();
 

@@ -28,8 +28,6 @@ var app = builder.Build();
 
 app.Logger.LogInformation("AWS Region: {Region}", builder.Configuration["AWS:Region"]);
 app.Logger.LogInformation("S3 Bucket: {Bucket}", builder.Configuration["AWS:Resources:S3BucketName"]);
-app.Logger.LogInformation("SNS TopicArn: {TopicArn}", builder.Configuration["AWS:Resources:SNSTopicArn"]);
-app.Logger.LogInformation("SNS EndpointURL: {Endpoint}", builder.Configuration["SNS:EndpointURL"]);
 
 using (var scope = app.Services.CreateScope())
 {

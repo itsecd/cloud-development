@@ -10,8 +10,7 @@ using Xunit.Abstractions;
 namespace Inventory.Tests;
 
 /// <summary>
-/// Интеграционные тесты для проверки полного сценария генерации инвентаря,
-/// публикации сообщения в SNS и сохранения результата в S3
+/// Интеграционные тесты для проверки полного сценария генерации инвентаря, публикации сообщения в SNS и сохранения результата в S3
 /// </summary>
 /// <param name="output">Объект для вывода логов теста в xUnit</param>
 public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
@@ -24,41 +23,39 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
         PropertyNameCaseInsensitive = true
     };
 
-    private IDistributedApplicationTestingBuilder? _builder;
     private DistributedApplication? _app;
 
     /// <summary>
-    /// Инициализирует тестовое распределённое приложение Aspire и настраивает логирование
+    /// Инициализирует тестовое распределённое приложение Aspire, настраивает логирование
+    /// и запускает приложение для выполнения интеграционных тестов
     /// </summary>
     /// <returns>Асинхронная операция инициализации тестовой среды</returns>
     public async Task InitializeAsync()
     {
-        _builder = await DistributedApplicationTestingBuilder
-            .CreateAsync<Projects.Inventory_AppHost>();
+        var builder = await DistributedApplicationTestingBuilder.CreateAsync<Projects.Inventory_AppHost>();
 
-        _builder.Configuration["DcpPublisher:RandomizePorts"] = "false";
+        builder.Configuration["DcpPublisher:RandomizePorts"] = "false";
 
-        _builder.Services.AddLogging(logging =>
+        builder.Services.AddLogging(logging =>
         {
             logging.AddXUnit(output);
             logging.SetMinimumLevel(LogLevel.Debug);
             logging.AddFilter("Aspire.Hosting.Dcp", LogLevel.Debug);
             logging.AddFilter("Aspire.Hosting", LogLevel.Debug);
         });
+
+        _app = await builder.BuildAsync();
+        await _app.StartAsync();
     }
 
     /// <summary>
-    /// Проверяет, что запрос генерации инвентаря через API Gateway публикует сообщение в SNS
-    /// и сохраняет полученный продукт в S3-хранилище
+    /// Проверяет, что запрос генерации инвентаря через API Gateway публикует сообщение в SNS и сохраняет полученный продукт в S3-хранилище
     /// </summary>
     /// <returns>Асинхронная операция выполнения интеграционного теста</returns>
     [Fact]
     public async Task GenerateInventory_ThroughGateway_ShouldPublishToSns_AndSaveToS3()
     {
-        Assert.NotNull(_builder);
-
-        _app = await _builder.BuildAsync();
-        await _app.StartAsync();
+        Assert.NotNull(_app);
 
         var id = Random.Shared.Next(1, 10_000);
 
@@ -78,19 +75,14 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
 
         using var fileServiceClient = _app.CreateHttpClient("inventory-files", "http");
 
-        var matchingFile = await WaitUntilInventoryFileAppearsAsync(
-            fileServiceClient,
-            id,
-            timeout: TimeSpan.FromSeconds(30));
+        var matchingFile = await WaitUntilInventoryFileAppearsAsync(fileServiceClient, id, timeout: TimeSpan.FromSeconds(30));
 
         Assert.False(string.IsNullOrWhiteSpace(matchingFile));
 
         using var s3Response = await fileServiceClient.GetAsync($"/api/s3/{matchingFile}");
         var s3Content = await s3Response.Content.ReadAsStringAsync();
 
-        Assert.True(
-            s3Response.IsSuccessStatusCode,
-            $"S3 read failed: {(int)s3Response.StatusCode} {s3Response.StatusCode}. Body: {s3Content}");
+        Assert.True(s3Response.IsSuccessStatusCode, $"S3 read failed: {(int)s3Response.StatusCode} {s3Response.StatusCode}. Body: {s3Content}");
 
         var s3Product = JsonSerializer.Deserialize<Product>(s3Content, _jsonOptions);
 
@@ -102,10 +94,10 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
     /// <summary>
     /// Ожидает появления файла инвентаря в S3-хранилище в течение заданного времени
     /// </summary>
-    /// <param name="fileServiceClient">HTTP-клиент сервиса файлов для обращения к S3 API</param>
-    /// <param name="id">Идентификатор продукта, файл которого необходимо найти</param>
-    /// <param name="timeout">Максимальное время ожидания появления файла</param>
-    /// <returns>Имя найденного файла инвентаря</returns>
+    /// <param name="fileServiceClient"> HTTP-клиент сервиса файлов для обращения к S3 API</param>
+    /// <param name="id"> Идентификатор продукта, файл которого необходимо найти</param>
+    /// <param name="timeout"> Максимальное время ожидания появления файла</param>
+    /// <returns> Имя найденного файла инвентаря</returns>
     /// <exception cref="TimeoutException">
     /// Возникает, если файл с указанным идентификатором не появился в S3 за отведённое время
     /// </exception>
@@ -161,13 +153,7 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
     {
         if (_app is not null)
         {
-            await _app.StopAsync();
             await _app.DisposeAsync();
-        }
-
-        if (_builder is not null)
-        {
-            await _builder.DisposeAsync();
         }
     }
 }
