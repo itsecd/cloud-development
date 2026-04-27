@@ -31,7 +31,11 @@ public class WeightedRoundRobin(
 
         lock (_lock)
         {
-            if (_index >= pool.Count) _index = 0;
+            if (_index >= pool.Count)
+            {
+                _index = 0;
+                _used = 0;
+            }
 
             if (_used >= Weight(_index))
             {
