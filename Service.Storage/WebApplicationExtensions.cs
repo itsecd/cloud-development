@@ -10,17 +10,6 @@ namespace Service.Storage;
 internal static class WebApplicationExtensions
 {
     /// <summary>
-    /// Конфигурирует клиенские службы для взаимодействия с брокером сообщений
-    /// </summary>
-    /// <param name="app">Билдер</param>
-    /// <returns>Билдер</returns>
-    /// <exception cref="KeyNotFoundException">Если настройки не найдены</exception>
-    public static WebApplication UseConsumer(this WebApplication app)
-    {
-        return app;
-    }
-
-    /// <summary>
     /// Конфигурирует клиенские службы для взаимодействия с S3
     /// </summary>
     /// <param name="app">Билдер</param>

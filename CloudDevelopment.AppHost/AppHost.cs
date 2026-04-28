@@ -1,4 +1,4 @@
-using Amazon;
+﻿using Amazon;
 using Amazon.CDK.AWS.Servicecatalog;
 using Aspire.Hosting.LocalStack.Container;
 using LocalStack.Client.Enums;
@@ -50,11 +50,11 @@ for (var i = 0; i < ports.Length; i++)
     gateway.WaitFor(generator);
 }
 
-builder.AddProject<Projects.Client_Wasm>("credit-order-wasm")
+builder.AddProject<Projects.Client_Wasm>("client-wasm")
     .WaitFor(gateway);
 
-var sink = builder.AddProject<Projects.Service_Storage>("credit-order-sink")
-    .WithHttpEndpoint(5444)
+var storage = builder.AddProject<Projects.Service_Storage>("service-storage")
+    .WithHttpEndpoint(5444, name: "storege-http")
     .WithReference(awsResources)
     .WithEnvironment("Settings__MessageBroker", "SQS")
     .WithEnvironment("Settings__S3Hosting", "Minio")
@@ -62,7 +62,7 @@ var sink = builder.AddProject<Projects.Service_Storage>("credit-order-sink")
 
 var minio = builder.AddMinioContainer("credit-order-minio");
 
-sink.WithEnvironment("AWS__Resources__MinioBucketName", "credit-order-bucket")
+storage.WithEnvironment("AWS__Resources__MinioBucketName", "credit-order-bucket")
     .WithReference(minio)
     .WaitFor(minio);
 

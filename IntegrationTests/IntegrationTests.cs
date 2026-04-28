@@ -1,4 +1,4 @@
-using Aspire.Hosting;
+п»їusing Aspire.Hosting;
 using Microsoft.Extensions.Logging;
 using Service.Api.Dto;
 using System.Net.Http.Json;
@@ -8,58 +8,56 @@ using Xunit.Abstractions;
 namespace IntegrationTests;
 
 /// <summary>
-/// Интеграционные тесты для проверки микросервисного пайплайна
+/// РРЅС‚РµРіСЂР°С†РёРѕРЅРЅС‹Рµ С‚РµСЃС‚С‹ РґР»СЏ РїСЂРѕРІРµСЂРєРё РјРёРєСЂРѕСЃРµСЂРІРёСЃРЅРѕРіРѕ РїР°Р№РїР»Р°Р№РЅР°
 /// </summary>
-/// <param name="output">Служба журналирования юнит-тестов</param>
+/// <param name="output">РЎР»СѓР¶Р±Р° Р¶СѓСЂРЅР°Р»РёСЂРѕРІР°РЅРёСЏ СЋРЅРёС‚-С‚РµСЃС‚РѕРІ</param>
 public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
 {
-    private IDistributedApplicationTestingBuilder? _builder;
     private DistributedApplication? _app;
+    private CancellationToken _cancellationToken;
 
     /// <inheritdoc/>
     public async Task InitializeAsync()
     {
-        var cancellationToken = CancellationToken.None;
-        _builder = await DistributedApplicationTestingBuilder.CreateAsync<Projects.CloudDevelopment_AppHost>(cancellationToken);
-        _builder.Configuration["DcpPublisher:RandomizePorts"] = "false";
-        _builder.Services.AddLogging(logging =>
+        _cancellationToken = CancellationToken.None;
+        var builder = await DistributedApplicationTestingBuilder.CreateAsync<Projects.CloudDevelopment_AppHost>(_cancellationToken);
+        builder.Configuration["DcpPublisher:RandomizePorts"] = "false";
+        builder.Services.AddLogging(logging =>
         {
             logging.AddXUnit(output);
             logging.SetMinimumLevel(LogLevel.Debug);
             logging.AddFilter("Aspire.Hosting.Dcp", LogLevel.Debug);
             logging.AddFilter("Aspire.Hosting", LogLevel.Debug);
         });
+
+        builder.Environment.EnvironmentName = "Development";
+        _app = await builder.BuildAsync(_cancellationToken);
+        await _app.StartAsync(_cancellationToken);
     }
 
     /// <summary>
-    /// Проверяет, что вызов гейтвея:
+    /// РџСЂРѕРІРµСЂСЏРµС‚, С‡С‚Рѕ РІС‹Р·РѕРІ РіРµР№С‚РІРµСЏ:
     /// <list type="bullet">
-    /// <item><description>В ответ отправляет сгенерированный ЗУ</description></item>
-    /// <item><description>Сериализует ЗУ в S3 хранилище</description></item>
-    /// <item><description>Проверяет, что данные из предыдущих пунктов идентичны</description></item>
+    /// <item><description>Р’ РѕС‚РІРµС‚ РѕС‚РїСЂР°РІР»СЏРµС‚ СЃРіРµРЅРµСЂРёСЂРѕРІР°РЅРЅС‹Р№ Р—РЈ</description></item>
+    /// <item><description>РЎРµСЂРёР°Р»РёР·СѓРµС‚ Р—РЈ РІ S3 С…СЂР°РЅРёР»РёС‰Рµ</description></item>
+    /// <item><description>РџСЂРѕРІРµСЂСЏРµС‚, С‡С‚Рѕ РґР°РЅРЅС‹Рµ РёР· РїСЂРµРґС‹РґСѓС‰РёС… РїСѓРЅРєС‚РѕРІ РёРґРµРЅС‚РёС‡РЅС‹</description></item>
     /// </list>
     /// </summary>
-    [Theory]
-    [InlineData("Development")]
-    public async Task TestPipeline(string envName)
+    [Fact]
+    public async Task TestPipeline()
     {
-        var cancellationToken = CancellationToken.None;
-        _builder!.Environment.EnvironmentName = envName;
-        _app = await _builder.BuildAsync(cancellationToken);
-        await _app.StartAsync(cancellationToken);
-
         var random = new Random();
         var id = random.Next(1, 100);
         using var gatewayClient = _app.CreateHttpClient("gateway", "http");
         using var gatewayResponse = await gatewayClient!.GetAsync($"/api/orders?id={id}");
-        var api = await gatewayResponse.Content.ReadFromJsonAsync<CreditOrderDto>(cancellationToken: cancellationToken);
+        var api = await gatewayResponse.Content.ReadFromJsonAsync<CreditOrderDto>(cancellationToken: _cancellationToken);
 
         await Task.Delay(5000);
-        using var sinkClient = _app.CreateHttpClient("credit-order-sink", "http");
+        using var sinkClient = _app.CreateHttpClient("service-storage", "http");
         using var listResponse = await sinkClient!.GetAsync($"/api/s3");
-        var ppList = await listResponse.Content.ReadFromJsonAsync<List<string>>(cancellationToken: cancellationToken);
+        var ppList = await listResponse.Content.ReadFromJsonAsync<List<string>>(cancellationToken: _cancellationToken);
         using var s3Response = await sinkClient!.GetAsync($"/api/s3/credit-order_{id}.json");
-        var s3 = await s3Response.Content.ReadFromJsonAsync<CreditOrderDto>(cancellationToken: cancellationToken);
+        var s3 = await s3Response.Content.ReadFromJsonAsync<CreditOrderDto>(cancellationToken: _cancellationToken);
 
         Assert.NotNull(ppList);
         Assert.Single(ppList);
@@ -74,6 +72,5 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
     {
         await _app!.StopAsync();
         await _app.DisposeAsync();
-        await _builder!.DisposeAsync();
     }
 }
