@@ -14,22 +14,27 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
 {
     private static readonly JsonSerializerOptions _jsonOptions = new() { PropertyNameCaseInsensitive = true };
 
-    private IDistributedApplicationTestingBuilder? _builder;
     private DistributedApplication? _app;
+    private HttpClient? _gatewayClient;
+    private HttpClient? _sinkClient;
 
     /// <inheritdoc/>
     public async Task InitializeAsync()
     {
         var cancellationToken = CancellationToken.None;
-        _builder = await DistributedApplicationTestingBuilder.CreateAsync<Projects.EmployeeApp_AppHost>(cancellationToken);
-        _builder.Configuration["DcpPublisher:RandomizePorts"] = "false";
-        _builder.Services.AddLogging(logging =>
+        var builder = await DistributedApplicationTestingBuilder.CreateAsync<Projects.EmployeeApp_AppHost>(cancellationToken);
+        builder.Configuration["DcpPublisher:RandomizePorts"] = "false";
+        builder.Services.AddLogging(logging =>
         {
             logging.AddXUnit(output);
             logging.SetMinimumLevel(LogLevel.Debug);
             logging.AddFilter("Aspire.Hosting.Dcp", LogLevel.Debug);
             logging.AddFilter("Aspire.Hosting", LogLevel.Debug);
         });
+        _app = await builder.BuildAsync(cancellationToken);
+        await _app.StartAsync(cancellationToken);
+        _gatewayClient = _app.CreateHttpClient("api-gateway", "http");
+        _sinkClient = _app.CreateHttpClient("file-service", "http");
     }
 
     /// <summary>
@@ -43,22 +48,16 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
     [Fact]
     public async Task TestPipeline()
     {
-        var cancellationToken = CancellationToken.None;
-        _app = await _builder!.BuildAsync(cancellationToken);
-        await _app.StartAsync(cancellationToken);
-
         var id = new Random().Next(1, 100);
 
-        using var gatewayClient = _app.CreateHttpClient("api-gateway", "http");
-        using var gatewayResponse = await gatewayClient.GetAsync($"/employees?id={id}");
+        using var gatewayResponse = await _gatewayClient!.GetAsync($"/employees?id={id}");
         var apiEmployee = JsonSerializer.Deserialize<Employee>(await gatewayResponse.Content.ReadAsStringAsync(), _jsonOptions);
 
         await Task.Delay(5000);
 
-        using var sinkClient = _app.CreateHttpClient("file-service", "http");
-        using var listResponse = await sinkClient.GetAsync("/api/s3");
+        using var listResponse = await _sinkClient!.GetAsync("/api/s3");
         var employeeList = JsonSerializer.Deserialize<List<string>>(await listResponse.Content.ReadAsStringAsync());
-        using var s3Response = await sinkClient.GetAsync($"/api/s3/employee_{id}.json");
+        using var s3Response = await _sinkClient.GetAsync($"/api/s3/employee_{id}.json");
         var s3Employee = JsonSerializer.Deserialize<Employee>(await s3Response.Content.ReadAsStringAsync(), _jsonOptions);
 
         Assert.NotNull(employeeList);
@@ -80,22 +79,16 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
     [Fact]
     public async Task TestCacheHitDoesNotDuplicateS3File()
     {
-        var cancellationToken = CancellationToken.None;
-        _app = await _builder!.BuildAsync(cancellationToken);
-        await _app.StartAsync(cancellationToken);
-
         var id = new Random().Next(200, 300);
 
-        using var gatewayClient = _app.CreateHttpClient("api-gateway", "http");
-        using var firstResponse = await gatewayClient.GetAsync($"/employees?id={id}");
+        using var firstResponse = await _gatewayClient!.GetAsync($"/employees?id={id}");
         var firstEmployee = JsonSerializer.Deserialize<Employee>(await firstResponse.Content.ReadAsStringAsync(), _jsonOptions);
-        using var secondResponse = await gatewayClient.GetAsync($"/employees?id={id}");
+        using var secondResponse = await _gatewayClient.GetAsync($"/employees?id={id}");
         var secondEmployee = JsonSerializer.Deserialize<Employee>(await secondResponse.Content.ReadAsStringAsync(), _jsonOptions);
 
         await Task.Delay(5000);
 
-        using var sinkClient = _app.CreateHttpClient("file-service", "http");
-        using var listResponse = await sinkClient.GetAsync("/api/s3");
+        using var listResponse = await _sinkClient!.GetAsync("/api/s3");
         var employeeList = JsonSerializer.Deserialize<List<string>>(await listResponse.Content.ReadAsStringAsync());
 
         Assert.NotNull(firstEmployee);
@@ -116,24 +109,18 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
     [Fact]
     public async Task TestMultipleIdsProduceDistinctS3Objects()
     {
-        var cancellationToken = CancellationToken.None;
-        _app = await _builder!.BuildAsync(cancellationToken);
-        await _app.StartAsync(cancellationToken);
-
         var ids = Enumerable.Range(0, 3).Select(_ => new Random().Next(400, 500)).Distinct().ToArray();
 
-        using var gatewayClient = _app.CreateHttpClient("api-gateway", "http");
         var apiEmployees = new Dictionary<int, Employee?>();
         foreach (var id in ids)
         {
-            using var response = await gatewayClient.GetAsync($"/employees?id={id}");
+            using var response = await _gatewayClient!.GetAsync($"/employees?id={id}");
             apiEmployees[id] = JsonSerializer.Deserialize<Employee>(await response.Content.ReadAsStringAsync(), _jsonOptions);
         }
 
         await Task.Delay(5000);
 
-        using var sinkClient = _app.CreateHttpClient("file-service", "http");
-        using var listResponse = await sinkClient.GetAsync("/api/s3");
+        using var listResponse = await _sinkClient!.GetAsync("/api/s3");
         var employeeList = JsonSerializer.Deserialize<List<string>>(await listResponse.Content.ReadAsStringAsync());
 
         Assert.NotNull(employeeList);
@@ -141,7 +128,7 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
 
         foreach (var id in ids)
         {
-            using var s3Response = await sinkClient.GetAsync($"/api/s3/employee_{id}.json");
+            using var s3Response = await _sinkClient.GetAsync($"/api/s3/employee_{id}.json");
             var s3Employee = JsonSerializer.Deserialize<Employee>(await s3Response.Content.ReadAsStringAsync(), _jsonOptions);
 
             Assert.Contains($"employee_{id}.json", employeeList);
@@ -157,12 +144,7 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
     [Fact]
     public async Task TestMissingS3KeyReturnsError()
     {
-        var cancellationToken = CancellationToken.None;
-        _app = await _builder!.BuildAsync(cancellationToken);
-        await _app.StartAsync(cancellationToken);
-
-        using var sinkClient = _app.CreateHttpClient("file-service", "http");
-        using var response = await sinkClient.GetAsync("/api/s3/employee_nonexistent.json");
+        using var response = await _sinkClient!.GetAsync("/api/s3/employee_nonexistent.json");
 
         Assert.NotEqual(HttpStatusCode.OK, response.StatusCode);
     }
@@ -174,14 +156,9 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
     [Fact]
     public async Task TestGatewayRoutesRequestForEveryReplica()
     {
-        var cancellationToken = CancellationToken.None;
-        _app = await _builder!.BuildAsync(cancellationToken);
-        await _app.StartAsync(cancellationToken);
-
-        using var gatewayClient = _app.CreateHttpClient("api-gateway", "http");
         foreach (var id in Enumerable.Range(1, 5))
         {
-            using var response = await gatewayClient.GetAsync($"/employees?id={id}");
+            using var response = await _gatewayClient!.GetAsync($"/employees?id={id}");
             var employee = JsonSerializer.Deserialize<Employee>(await response.Content.ReadAsStringAsync(), _jsonOptions);
 
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -193,8 +170,9 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
     /// <inheritdoc/>
     public async Task DisposeAsync()
     {
+        _gatewayClient?.Dispose();
+        _sinkClient?.Dispose();
         await _app!.StopAsync();
         await _app.DisposeAsync();
-        await _builder!.DisposeAsync();
     }
 }
