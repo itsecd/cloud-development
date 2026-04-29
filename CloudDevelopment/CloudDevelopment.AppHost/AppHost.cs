@@ -1,6 +1,9 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-var redis = builder.AddRedis("redis");
+var redis = builder.AddRedis("redis")
+    .WithRedisInsight();
+
+builder.AddProject<Projects.Client_Wasm>("client-wasm");
 
 var generation1 = builder.AddProject<Projects.GenerationService>("generation-service-1")
     .WithReference(redis)
