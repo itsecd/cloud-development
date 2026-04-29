@@ -21,12 +21,14 @@ builder.Services.AddSingleton<IS3Service, S3MinioService>();
 
 var app = builder.Build();
 
-var scope = app.Services.CreateScope();
-var snsService = scope.ServiceProvider.GetRequiredService<SnsSubscriptionService>();
-var s3Service = scope.ServiceProvider.GetRequiredService<IS3Service>();
+using (var scope = app.Services.CreateScope())
+{
+    var snsService = scope.ServiceProvider.GetRequiredService<SnsSubscriptionService>();
+    var s3Service = scope.ServiceProvider.GetRequiredService<IS3Service>();
 
-await snsService.SubscribeEndpoint();
-await s3Service.EnsureBucketExists();
+    await snsService.SubscribeEndpoint();
+    await s3Service.EnsureBucketExists();
+}
 
 app.MapDefaultEndpoints();
 
