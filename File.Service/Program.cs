@@ -18,14 +18,12 @@ builder.Services.AddScoped<SnsSubscriptionService>();
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
-{
-    var s3Service = scope.ServiceProvider.GetRequiredService<IS3Service>();
-    await s3Service.EnsureBucketExists();
+using var scope = app.Services.CreateScope();
+var s3Service = scope.ServiceProvider.GetRequiredService<IS3Service>();
+await s3Service.EnsureBucketExists();
 
-    var subscriptionService = scope.ServiceProvider.GetRequiredService<SnsSubscriptionService>();
-    await subscriptionService.SubscribeEndpoint();
-}
+var subscriptionService = scope.ServiceProvider.GetRequiredService<SnsSubscriptionService>();
+await subscriptionService.SubscribeEndpoint();
 
 app.MapDefaultEndpoints();
 app.MapControllers();

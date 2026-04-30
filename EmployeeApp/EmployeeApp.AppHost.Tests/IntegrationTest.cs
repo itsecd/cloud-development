@@ -170,8 +170,6 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
     /// <inheritdoc/>
     public async Task DisposeAsync()
     {
-        _gatewayClient?.Dispose();
-        _sinkClient?.Dispose();
         await _app!.StopAsync();
         await _app.DisposeAsync();
     }
