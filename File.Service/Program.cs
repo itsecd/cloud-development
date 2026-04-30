@@ -2,10 +2,16 @@ using Amazon.SimpleNotificationService;
 using File.Service.Messaging;
 using File.Service.Storage;
 using LocalStack.Client.Extensions;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
+builder.Services.AddSwaggerGen(options =>
+{
+    var assembly = Assembly.GetExecutingAssembly();
+    options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, $"{assembly.GetName().Name}.xml"));
+});
 
 builder.Services.AddControllers();
 
@@ -17,6 +23,12 @@ builder.AddMinioClient("vehicle-minio");
 builder.Services.AddScoped<IS3Service, MinioS3Service>();
 
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 app.MapDefaultEndpoints();
 
@@ -30,5 +42,4 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.MapControllers();
-
 app.Run();

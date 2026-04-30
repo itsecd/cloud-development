@@ -42,8 +42,7 @@ for (var i = 0; i < 7; i++)
 builder.AddProject<Projects.Client_Wasm>("client-wasm")
     .WaitFor(gateway);
 
-builder.AddProject<Projects.File_Service>("file-service", launchProfileName: null)
-    .WithHttpEndpoint(port: 5280)
+builder.AddProject<Projects.File_Service>("file-service")
     .WithReference(awsResources)
     .WithReference(minio)
     .WithEnvironment("AWS__Resources__MinioBucketName", "vehicle-bucket")

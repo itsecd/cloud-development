@@ -13,6 +13,7 @@
     <PackageReference Include="CommunityToolkit.Aspire.Minio.Client" Version="9.9.0" />
     <PackageReference Include="LocalStack.Client" Version="2.0.0" />
     <PackageReference Include="LocalStack.Client.Extensions" Version="2.0.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.4" />
   </ItemGroup>
 
   <ItemGroup>
