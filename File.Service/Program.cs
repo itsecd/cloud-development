@@ -32,14 +32,13 @@ if (app.Environment.IsDevelopment())
 
 app.MapDefaultEndpoints();
 
-using (var scope = app.Services.CreateScope())
-{
-    var s3 = scope.ServiceProvider.GetRequiredService<IS3Service>();
-    await s3.EnsureBucketExists();
+using var scope = app.Services.CreateScope();
 
-    var subscription = scope.ServiceProvider.GetRequiredService<SnsSubscriptionService>();
-    await subscription.SubscribeEndpoint();
-}
+var s3 = scope.ServiceProvider.GetRequiredService<IS3Service>();
+await s3.EnsureBucketExists();
+var subscription = scope.ServiceProvider.GetRequiredService<SnsSubscriptionService>();
+await subscription.SubscribeEndpoint();
+
 
 app.MapControllers();
 app.Run();
