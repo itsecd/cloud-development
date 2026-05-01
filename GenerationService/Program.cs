@@ -1,81 +1,50 @@
-using System.Text.Json;
-using GenerationService.Models;
 using GenerationService.Services;
-using Microsoft.Extensions.Caching.Distributed;
 using Serilog;
 using Serilog.Formatting.Compact;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
 builder.AddServiceDefaults();
 
-
-// 2. Настраиваем Serilog — структурное логирование
 builder.Host.UseSerilog((context, configuration) =>
     configuration
         .ReadFrom.Configuration(context.Configuration)
-        .WriteTo.Console(new CompactJsonFormatter())); // JSON формат в консоль
+        .WriteTo.Console(new CompactJsonFormatter()));
 
-
-// 3. Подключаем Redis для кэширования
 builder.AddRedisDistributedCache("redis");
 
-
-// 4. Регистрируем наш генератор как сервис
 builder.Services.AddSingleton<ContractGeneratorService>();
+builder.Services.AddScoped<ContractCacheService>();
 
+// CORS — разрешаем запросы от клиента
+builder.Services.AddCors(options =>
+    options.AddDefaultPolicy(policy =>
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader()));
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+app.UseCors();
 app.UseSwagger();
 app.UseSwaggerUI();
 
-
-// 5. Эндпоинт GET /contracts/{id}
-app.MapGet("/contracts/{id}", async (
-    string id,                          
-    IDistributedCache cache,            
-    ContractGeneratorService generator, 
-    ILogger<Program> logger) =>         
+// GET /contracts/{id} — получить контракт по id (с кэшированием)
+app.MapGet("/contracts/{id:int}", async (
+    int id,
+    ContractCacheService cacheService) =>
 {
-    var cacheKey = $"contract:{id}"; 
-
-    // Пробуем достать из кэша
-    var cached = await cache.GetStringAsync(cacheKey);
-
-    if (cached is not null)
-    {
-        logger.LogInformation("Cache HIT для ключа {CacheKey}", cacheKey);
-        var cachedContract = JsonSerializer.Deserialize<SoftwareProjectContract>(cached);
-        return Results.Ok(cachedContract);
-    }
-
-    
-    logger.LogInformation("Cache MISS для ключа {CacheKey}. Генерация нового контракта...", cacheKey);
-    var contract = generator.Generate();
-
-    
-    var options = new DistributedCacheEntryOptions
-    {
-        AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
-    };
-    await cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(contract), options);
-
-    logger.LogInformation("Контракт {ContractId} сохранён в кэш", contract.Id);
+    var contract = await cacheService.GetOrCreateAsync(id);
     return Results.Ok(contract);
 });
 
-
-app.MapGet("/contracts", (
-    ContractGeneratorService generator,
-    ILogger<Program> logger) =>
+// GET /contracts — сгенерировать случайный контракт
+app.MapGet("/contracts", (ContractGeneratorService generator) =>
 {
-    logger.LogInformation("Генерация нового контракта по запросу");
-    var contract = generator.Generate();
+    var contract = generator.Generate(Random.Shared.Next(1, 100000));
     return Results.Ok(contract);
 });
 
