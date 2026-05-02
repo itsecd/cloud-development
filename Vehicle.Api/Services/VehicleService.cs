@@ -2,13 +2,14 @@
 using Vehicle.Api.Cache;
 using Vehicle.Api.Entities;
 using Vehicle.Api.Generation;
+using Vehicle.Api.Messaging;
 
 namespace Vehicle.Api.Services;
 
 /// <summary>
 /// Сервис для работы с транспортными средствами (генерация и получение по ID)
 /// </summary>
-public class VehicleService(VehicleGenerator generator, IVehicleCache vehicleCache, ILogger<VehicleService> logger)
+public class VehicleService(VehicleGenerator generator, IVehicleCache vehicleCache, IProducerService producerService, ILogger<VehicleService> logger)
 {
     /// <summary>
     /// Получает транспортное средство по ID (из кэша или генерирует новое)
@@ -16,53 +17,36 @@ public class VehicleService(VehicleGenerator generator, IVehicleCache vehicleCac
     /// <param name="id">Идентификатор транспортного средства</param>
     /// <param name="cancellationToken">Токен отмены операции</param>
     /// <returns>Транспортное средство с указанным ID</returns>
-    public async Task<VehicleEntity> GetByIdAsync(
-        int id,
-        CancellationToken cancellationToken = default)
+    public async Task<VehicleEntity> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         var cacheKey = $"vehicle:{id}";
         var stopwatch = Stopwatch.StartNew();
 
         var cachedVehicle = await TryReadCacheAsync(
-            () => vehicleCache.GetOneAsync(cacheKey, cancellationToken),
-            "Failed to read vehicle from cache. Key: {CacheKey}",
-            cacheKey);
+            () => vehicleCache.GetOneAsync(cacheKey, cancellationToken), "Failed to read vehicle from cache. Key: {CacheKey}", cacheKey);
 
         if (cachedVehicle is not null)
         {
             stopwatch.Stop();
-
-            logger.LogInformation(
-                "Cache hit for key {CacheKey}. Returned vehicle with id {Id} in {ElapsedMs} ms",
-                cacheKey,
-                id,
-                stopwatch.ElapsedMilliseconds);
-
+            logger.LogInformation("Cache hit for key {CacheKey}. Returned vehicle with id {Id} in {ElapsedMs} ms", cacheKey, id, stopwatch.ElapsedMilliseconds);
             return cachedVehicle;
         }
 
-        logger.LogInformation(
-            "Cache miss for key {CacheKey}. Generating vehicle with id {Id}",
-            cacheKey,
-            id);
+        logger.LogInformation("Cache miss for key {CacheKey}. Generating vehicle with id {Id}", cacheKey, id);
 
         var vehicle = generator.Generate(id);
 
         await TryWriteCacheAsync(
-            () => vehicleCache.SetOneAsync(
-                cacheKey,
-                vehicle,
-                TimeSpan.FromMinutes(5),
-                cancellationToken),
-            "Failed to write vehicle to cache. Key: {CacheKey}",
-            cacheKey);
+            () => vehicleCache.SetOneAsync(cacheKey, vehicle, TimeSpan.FromMinutes(5), cancellationToken),
+            "Failed to write vehicle to cache. Key: {CacheKey}", cacheKey);
+
+        await TryPublishAsync(
+            () => producerService.SendMessageAsync(vehicle, cancellationToken),
+            "Failed to publish generated vehicle to SNS. Vehicle id: {VehicleId}", id);
 
         stopwatch.Stop();
 
-        logger.LogInformation(
-            "Generated vehicle with id {Id} in {ElapsedMs} ms",
-            id,
-            stopwatch.ElapsedMilliseconds);
+        logger.LogInformation("Generated vehicle with id {Id} in {ElapsedMs} ms", id, stopwatch.ElapsedMilliseconds);
 
         return vehicle;
     }
@@ -70,10 +54,7 @@ public class VehicleService(VehicleGenerator generator, IVehicleCache vehicleCac
     /// <summary>
     /// Безопасно читает данные из кэша.
     /// </summary>
-    private async Task<T?> TryReadCacheAsync<T>(
-        Func<Task<T?>> action,
-        string warningMessage,
-        string cacheKey)
+    private async Task<T?> TryReadCacheAsync<T>(Func<Task<T?>> action, string warningMessage, string cacheKey)
     {
         try
         {
@@ -89,10 +70,7 @@ public class VehicleService(VehicleGenerator generator, IVehicleCache vehicleCac
     /// <summary>
     /// Безопасно записывает данные в кэш.
     /// </summary>
-    private async Task TryWriteCacheAsync(
-        Func<Task> action,
-        string warningMessage,
-        string cacheKey)
+    private async Task TryWriteCacheAsync(Func<Task> action, string warningMessage, string cacheKey)
     {
         try
         {
@@ -101,6 +79,21 @@ public class VehicleService(VehicleGenerator generator, IVehicleCache vehicleCac
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             logger.LogWarning(ex, warningMessage, cacheKey);
+        }
+    }
+
+    /// <summary>
+    /// Безопасно публикует данные о сгенерированном транспортном средстве в брокер сообщений.
+    /// </summary>
+    private async Task TryPublishAsync(Func<Task> action, string warningMessage, int vehicleId)
+    {
+        try
+        {
+            await action();
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            logger.LogWarning(ex, warningMessage, vehicleId);
         }
     }
 }
