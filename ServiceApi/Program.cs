@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging.Console;
 using Service.Api.Generator;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -5,8 +6,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
 builder.AddRedisDistributedCache("RedisCache");
 
-builder.Logging.ClearProviders();
-builder.Logging.AddJsonConsole(options =>
+builder.Services.Configure<ConsoleLoggerOptions>(options =>
+{
+    options.FormatterName = ConsoleFormatterNames.Json;
+});
+
+builder.Services.Configure<JsonConsoleFormatterOptions>(options =>
 {
     options.IncludeScopes = true;
     options.TimestampFormat = "yyyy-MM-ddTHH:mm:ss.fffZ ";
@@ -27,6 +32,8 @@ builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
 var app = builder.Build();
 
 app.MapDefaultEndpoints();
+
+app.UseCors();
 
 app.MapGet("/", () => Results.Ok(new
 {
@@ -54,7 +61,5 @@ app.MapGet("/employee/{id:int}", async (IEmployeeGeneratorService service, int i
 
     return Results.Ok(await service.ProcessEmployee(id, cancellationToken));
 });
-
-app.UseCors();
 
 app.Run();
