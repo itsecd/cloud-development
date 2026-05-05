@@ -13,11 +13,10 @@ namespace Vehicle.AppHost.Tests;
 public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
 {
     private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web);
-
-    private IDistributedApplicationTestingBuilder? _builder;
     private DistributedApplication? _app;
-    private HttpClient? _gatewayClient;
-    private HttpClient? _eventSinkClient;
+    private DistributedApplication App => _app ?? throw new InvalidOperationException("Test application was not initialized.");
+    private HttpClient CreateGatewayClient() => App.CreateHttpClient("vehicle-gateway", "vehicle-gateway-lb");
+    private HttpClient CreateEventSinkClient() => App.CreateHttpClient("vehicle-event-sink", "event-sink-http");
 
     /// <summary>
     /// Инициализирует тестовое распределенное приложение Aspire, запускает все сервисы и подготавливает HTTP-клиенты.
@@ -26,12 +25,11 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
     {
         var cancellationToken = CancellationToken.None;
 
-        _builder = await DistributedApplicationTestingBuilder
-            .CreateAsync<Projects.Vehicle_AppHost>(cancellationToken);
+        var builder = await DistributedApplicationTestingBuilder.CreateAsync<Projects.Vehicle_AppHost>(cancellationToken);
 
-        _builder.Configuration["DcpPublisher:RandomizePorts"] = "false";
+        builder.Configuration["DcpPublisher:RandomizePorts"] = "false";
 
-        _builder.Services.AddLogging(logging =>
+        builder.Services.AddLogging(logging =>
         {
             logging.AddXUnit(output);
             logging.SetMinimumLevel(LogLevel.Debug);
@@ -39,19 +37,13 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
             logging.AddFilter("Aspire.Hosting", LogLevel.Debug);
         });
 
-        _app = await _builder.BuildAsync(cancellationToken);
+        _app = await builder.BuildAsync(cancellationToken);
         await _app.StartAsync(cancellationToken);
 
-        _gatewayClient = _app.CreateHttpClient(
-            "vehicle-gateway",
-            "vehicle-gateway-lb");
-
-        _eventSinkClient = _app.CreateHttpClient(
-            "vehicle-event-sink",
-            "event-sink-http");
+        var eventSinkClient = CreateEventSinkClient();
 
         await WaitUntilEventSinkIsReadyAsync(
-            _eventSinkClient,
+            eventSinkClient,
             TimeSpan.FromSeconds(60),
             cancellationToken);
 
@@ -66,13 +58,11 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
     {
         var cancellationToken = CancellationToken.None;
 
-        var gatewayClient = _gatewayClient
-            ?? throw new InvalidOperationException("Gateway client was not initialized.");
+        var gatewayClient = CreateGatewayClient();
 
-        var eventSinkClient = _eventSinkClient
-            ?? throw new InvalidOperationException("EventSink client was not initialized.");
+        var eventSinkClient = CreateEventSinkClient();
 
-        var id = Random.Shared.Next(100_000, 999_999);
+        var id = Random.Shared.Next(100, 100_000);
 
         using var gatewayResponse = await gatewayClient.GetAsync($"/gateway/Vehicles?id={id}", cancellationToken);
 
@@ -94,7 +84,7 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
         var s3Content = await s3Response.Content.ReadAsStringAsync(cancellationToken);
 
         Assert.True(
-            s3Response.IsSuccessStatusCode, 
+            s3Response.IsSuccessStatusCode,
             $"EventSink returned {(int)s3Response.StatusCode}: {s3Content}");
 
         var s3Vehicle = JsonSerializer.Deserialize<VehicleEntity>(s3Content, _jsonOptions);
@@ -113,20 +103,18 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
     {
         var cancellationToken = CancellationToken.None;
 
-        var gatewayClient = _gatewayClient
-            ?? throw new InvalidOperationException("Gateway client was not initialized.");
+        var gatewayClient = CreateGatewayClient();
 
-        var eventSinkClient = _eventSinkClient 
-            ?? throw new InvalidOperationException("EventSink client was not initialized.");
+        var eventSinkClient = CreateEventSinkClient();
 
-        var id = Random.Shared.Next(100_000, 999_999);
+        var id = Random.Shared.Next(100, 100_000);
 
         using var firstResponse = await gatewayClient.GetAsync($"/gateway/Vehicles?id={id}", cancellationToken);
 
         var firstContent = await firstResponse.Content.ReadAsStringAsync(cancellationToken);
 
         Assert.True(
-            firstResponse.IsSuccessStatusCode, 
+            firstResponse.IsSuccessStatusCode,
             $"First gateway request failed: {firstContent}");
 
         var firstVehicle = JsonSerializer.Deserialize<VehicleEntity>(firstContent, _jsonOptions);
@@ -140,7 +128,7 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
         var secondContent = await secondResponse.Content.ReadAsStringAsync(cancellationToken);
 
         Assert.True(
-            secondResponse.IsSuccessStatusCode, 
+            secondResponse.IsSuccessStatusCode,
             $"Second gateway request failed: {secondContent}");
 
         var secondVehicle = JsonSerializer.Deserialize<VehicleEntity>(secondContent, _jsonOptions);
@@ -161,7 +149,7 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
     }
 
     /// <summary>
-    /// Ждет, пока Vehicle.EventSink начнет отвечать на запросы к /api/s3.
+    /// Ждет, пока Vehicle.EventSink начнет отвечать на запросы к /api/s3
     /// </summary>
     private static async Task WaitUntilEventSinkIsReadyAsync(HttpClient eventSinkClient, TimeSpan timeout, CancellationToken cancellationToken)
     {
@@ -192,7 +180,7 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
     }
 
     /// <summary>
-    /// Ожидает появления JSON-файла vehicle_{id}_*.json в Minio.
+    /// Ожидает появления JSON-файла vehicle_{id}_*.json в Minio
     /// </summary>
     private static async Task<string> WaitUntilVehicleFileAppearsAsync(HttpClient eventSinkClient, int vehicleId, TimeSpan timeout, CancellationToken cancellationToken)
     {
@@ -228,7 +216,7 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
     }
 
     /// <summary>
-    /// Получает список файлов из Minio через Vehicle.EventSink.
+    /// Получает список файлов из Minio через Vehicle.EventSink
     /// </summary>
     private static async Task<List<string>> GetFileListAsync(HttpClient eventSinkClient, CancellationToken cancellationToken)
     {
@@ -248,18 +236,10 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
     /// </summary>
     public async Task DisposeAsync()
     {
-        _gatewayClient?.Dispose();
-        _eventSinkClient?.Dispose();
-
         if (_app is not null)
         {
             await _app.StopAsync();
             await _app.DisposeAsync();
-        }
-
-        if (_builder is not null)
-        {
-            await _builder.DisposeAsync();
         }
     }
 }

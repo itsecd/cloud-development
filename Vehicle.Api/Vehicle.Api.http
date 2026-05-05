@@ -1,6 +1,6 @@
 ﻿@Vehicle.Api_HostAddress = https://localhost:7200
 
-GET {{Vehicle.Api_HostAddress}}/gateway/Vehicles?id=2
+GET {{Vehicle.Api_HostAddress}}/gateway/Vehicles?id=3
 Accept: application/json
 
 ###

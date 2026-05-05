@@ -1,27 +1,27 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Vehicle.AppHost.Extensions;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
 const string awsRegion = "us-east-1";
 
-var apiPorts = RequiredIntArray("ApiService:Ports");
-var gatewayPort = RequiredInt("Gateway:Port");
+var apiPorts = builder.Configuration.GetRequiredIntArray("ApiService:Ports");
+var gatewayPort = builder.Configuration.GetRequiredInt("Gateway:Port");
 
-var localStackPort = RequiredInt("LocalStack:Port");
-var localStackServiceUrl = RequiredString("LocalStack:ServiceUrl");
+var localStackPort = builder.Configuration.GetRequiredInt("LocalStack:Port");
+var localStackServiceUrl = builder.Configuration.GetRequiredString("LocalStack:ServiceUrl");
 
-var snsTopicArn = RequiredString("SNS:TopicArn");
-var snsEndpointUrl = RequiredString("SNS:EndpointUrl");
+var snsTopicArn = builder.Configuration.GetRequiredString("SNS:TopicArn");
+var snsEndpointUrl = builder.Configuration.GetRequiredString("SNS:EndpointUrl");
 
-var eventSinkPort = RequiredInt("EventSink:Port");
-var eventSinkUrls = RequiredString("EventSink:Urls");
+var eventSinkPort = builder.Configuration.GetRequiredInt("EventSink:Port");
+var eventSinkUrls = builder.Configuration.GetRequiredString("EventSink:Urls");
 
-var minioApiPort = RequiredInt("Minio:ApiPort");
-var minioConsolePort = RequiredInt("Minio:ConsolePort");
-var minioEndpoint = RequiredString("Minio:Endpoint");
-var minioAccessKey = RequiredString("Minio:AccessKey");
-var minioSecretKey = RequiredString("Minio:SecretKey");
-var minioBucketName = RequiredString("Minio:BucketName");
+var minioApiPort = builder.Configuration.GetRequiredInt("Minio:ApiPort");
+var minioConsolePort = builder.Configuration.GetRequiredInt("Minio:ConsolePort");
+var minioEndpoint = builder.Configuration.GetRequiredString("Minio:Endpoint");
+var minioAccessKey = builder.Configuration.GetRequiredString("Minio:AccessKey");
+var minioSecretKey = builder.Configuration.GetRequiredString("Minio:SecretKey");
+var minioBucketName = builder.Configuration.GetRequiredString("Minio:BucketName");
 
 var redis = builder.AddRedis("redis")
     .WithRedisCommander();
@@ -81,18 +81,3 @@ builder.AddProject<Projects.Client_Wasm>("client")
     .WaitFor(gateway);
 
 builder.Build().Run();
-
-string RequiredString(string key)
-{
-    return builder.Configuration[key] ?? throw new InvalidOperationException($"{key} is not configured.");
-}
-
-int RequiredInt(string key)
-{
-    return builder.Configuration.GetValue<int?>(key) ?? throw new InvalidOperationException($"{key} is not configured.");
-}
-
-int[] RequiredIntArray(string key)
-{
-    return builder.Configuration.GetSection(key).Get<int[]>() ?? throw new InvalidOperationException($"{key} is not configured.");
-}

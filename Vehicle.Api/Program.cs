@@ -1,9 +1,9 @@
-﻿using Vehicle.Api.Cache;
-using Vehicle.Api.Generation;
-using Vehicle.Api.Services;
-using Amazon.Runtime;
+﻿using Amazon.Runtime;
 using Amazon.SimpleNotificationService;
+using Vehicle.Api.Cache;
+using Vehicle.Api.Generation;
 using Vehicle.Api.Messaging;
+using Vehicle.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
