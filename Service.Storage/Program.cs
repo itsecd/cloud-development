@@ -28,17 +28,16 @@ app.UseSwaggerUI(options =>
     options.RoutePrefix = "swagger";
 });
 
-using (var scope = app.Services.CreateScope())
-{
-    var snsSubscriptionService = scope.ServiceProvider
-        .GetRequiredService<SnsSubscriptionService>();
+await using var scope = app.Services.CreateAsyncScope();
 
-    var s3Service = scope.ServiceProvider
-        .GetRequiredService<IS3Service>();
+var snsSubscriptionService = scope.ServiceProvider
+    .GetRequiredService<SnsSubscriptionService>();
 
-    await snsSubscriptionService.SubscribeEndpoint();
-    await s3Service.EnsureBucketExists();
-}
+var s3Service = scope.ServiceProvider
+    .GetRequiredService<IS3Service>();
+
+await snsSubscriptionService.SubscribeEndpoint();
+await s3Service.EnsureBucketExists();
 
 app.MapDefaultEndpoints();
 app.MapControllers();
