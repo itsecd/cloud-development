@@ -13,6 +13,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CourseApp.Api", "CourseApp.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Api.Gateway", "Api.Gateway\Api.Gateway.csproj", "{C99E72F4-9BA7-7D56-C88E-FB28534EFCB6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CourseApp.AppHost.Tests", "CourseApp\CourseApp.AppHost.Tests\CourseApp.AppHost.Tests.csproj", "{5B3B2F7D-35EF-4EBB-9AD2-12136E833FDB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CourseApp.FileService", "CourseApp.FileService\CourseApp.FileService.csproj", "{FC9159EC-39F4-3146-F993-EF1EB3A20385}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +43,14 @@ Global
 		{C99E72F4-9BA7-7D56-C88E-FB28534EFCB6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C99E72F4-9BA7-7D56-C88E-FB28534EFCB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C99E72F4-9BA7-7D56-C88E-FB28534EFCB6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5B3B2F7D-35EF-4EBB-9AD2-12136E833FDB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5B3B2F7D-35EF-4EBB-9AD2-12136E833FDB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5B3B2F7D-35EF-4EBB-9AD2-12136E833FDB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5B3B2F7D-35EF-4EBB-9AD2-12136E833FDB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC9159EC-39F4-3146-F993-EF1EB3A20385}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC9159EC-39F4-3146-F993-EF1EB3A20385}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC9159EC-39F4-3146-F993-EF1EB3A20385}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC9159EC-39F4-3146-F993-EF1EB3A20385}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
