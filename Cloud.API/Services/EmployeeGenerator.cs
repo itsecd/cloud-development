@@ -14,7 +14,6 @@ public class EmployeeGenerator(
     ) : IEmployeeGenerator
 {
     private static readonly string[] _professions = { "Developer", "Manager", "Analyst", "Designer", "QA" };
-    private static readonly string[] _suffixes = { "Junior", "Middle", "Senior", "Lead" };
 
     private static readonly Dictionary<string, decimal> _baseSalaryBySuffix = new()
     {
@@ -33,7 +32,7 @@ public class EmployeeGenerator(
                    $"{f.Name.FirstName(Name.Gender.Male)}{(gender == Name.Gender.Male ? "ович" : "овна")}";
 
         })
-        .RuleFor(e => e.Position, f => $"{f.PickRandom(_suffixes)} {f.PickRandom(_professions)}")
+        .RuleFor(e => e.Position, f => $"{f.PickRandom(_baseSalaryBySuffix.Keys.ToArray())} {f.PickRandom(_professions)}")
         .RuleFor(e => e.Department, f => f.Commerce.Department())
         .RuleFor(e => e.HireDate, f => DateOnly.FromDateTime(f.Date.Past(10)))
         .RuleFor(e => e.Salary, (f, e) =>
