@@ -13,37 +13,33 @@ public class EmployeeGenerator(
     ILogger<EmployeeGenerator> logger
     ) : IEmployeeGenerator
 {
+    private static readonly string[] _professions = { "Developer", "Manager", "Analyst", "Designer", "QA" };
+    private static readonly string[] _suffixes = { "Junior", "Middle", "Senior", "Lead" };
+
+    private static readonly Dictionary<string, decimal> _baseSalaryBySuffix = new()
+    {
+        ["Junior"] = 50000,
+        ["Middle"] = 100000,
+        ["Senior"] = 150000,
+        ["Lead"] = 200000
+    };
+
     private readonly Faker<Employee> _faker = new Faker<Employee>("ru")
         .RuleFor(e => e.Id, _ => 0)
         .RuleFor(e => e.FullName, f =>
         {
             var gender = f.PickRandom<Name.Gender>();
-            var firstName = f.Name.FirstName(gender);
-            var lastName = f.Name.LastName(gender);
-            var patronymic = $"{f.Name.FirstName(Name.Gender.Male)}{(gender == Name.Gender.Male ? "ович" : "овна")}";
-            return $"{lastName} {firstName} {patronymic}";
+            return $"{f.Name.LastName(gender)} {f.Name.FirstName(gender)} " +
+                   $"{f.Name.FirstName(Name.Gender.Male)}{(gender == Name.Gender.Male ? "ович" : "овна")}";
+
         })
-        .RuleFor(e => e.Position, f =>
-        {
-            var professions = new[] { "Developer", "Manager", "Analyst", "Designer", "QA" };
-            var suffixes = new[] { "Junior", "Middle", "Senior", "Lead" };
-            var suffix = f.PickRandom(suffixes);
-            var profession = f.PickRandom(professions);
-            return $"{suffix} {profession}";
-        })
+        .RuleFor(e => e.Position, f => $"{f.PickRandom(_suffixes)} {f.PickRandom(_professions)}")
         .RuleFor(e => e.Department, f => f.Commerce.Department())
         .RuleFor(e => e.HireDate, f => DateOnly.FromDateTime(f.Date.Past(10)))
         .RuleFor(e => e.Salary, (f, e) =>
         {
             var suffix = e.Position.Split(' ')[0];
-            decimal baseSalary = suffix switch
-            {
-                "Junior" => 50000,
-                "Middle" => 100000,
-                "Senior" => 150000,
-                "Lead" => 200000,
-                _ => 70000
-            };
+            var baseSalary = _baseSalaryBySuffix.GetValueOrDefault(suffix, 70000);
             return Math.Round(baseSalary + f.Random.Decimal(-5000, 25000), 2);
         })
         .RuleFor(e => e.Email, (f, e) => f.Internet.Email(e.FullName))

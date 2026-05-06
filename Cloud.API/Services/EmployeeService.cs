@@ -18,13 +18,13 @@ public class EmployeeService(
     IConfiguration configuration,
     ILogger<EmployeeService> logger) : IEmployeeService
 {
-    private const string CacheKeyPrefix = "employee";
+    private readonly string _cacheKeyPrefix = configuration.GetValue("CacheKeyPrefix", "employee");
     private readonly TimeSpan _cacheTtl = TimeSpan.FromMinutes(configuration.GetValue("CacheTtlMinutes", 30));
 
     /// <inheritdoc />
     public async Task<Employee> GetOrGenerateAsync(int id)
     {
-        var cacheKey = $"{CacheKeyPrefix}:{id}";
+        var cacheKey = $"{_cacheKeyPrefix}:{id}";
 
         var cached = await GetFromCache(cacheKey);
         if (cached is not null)

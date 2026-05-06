@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="Client.Wasm/Client.Wasm.csproj" />
+  <Project Path="Cloud.API/Cloud.API.csproj" />
+  <Project Path="Cloud.AppHost/Cloud.AppHost.csproj" />
+  <Project Path="Cloud.ServiceDefaults/Cloud.ServiceDefaults.csproj" />
+</Solution>
