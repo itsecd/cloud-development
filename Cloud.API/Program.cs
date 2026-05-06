@@ -18,7 +18,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("LocalPolicy", policy =>
     {
         policy
-            .AllowAnyOrigin()
+            .SetIsOriginAllowed(origin => origin.StartsWith("https://localhost"))
             .WithHeaders("Content-Type")
             .WithMethods("GET");
     });
