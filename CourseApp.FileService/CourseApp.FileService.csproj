@@ -18,7 +18,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CourseApp\CourseApp.ServiceDefaults\CourseApp.ServiceDefaults.csproj" />
-    <ProjectReference Include="..\CourseApp.Api\CourseApp.Api.csproj" />
   </ItemGroup>
 
 </Project>

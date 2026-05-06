@@ -16,6 +16,11 @@ public sealed class SqsProducerService(
     IConfiguration configuration,
     ILogger<SqsProducerService> logger) : IProducerService
 {
+    private static readonly JsonSerializerOptions _jsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+
     private readonly string _queueName = configuration["AWS:Resources:SQSQueueName"]
         ?? throw new KeyNotFoundException("SQS queue name was not found in configuration");
 
@@ -24,7 +29,7 @@ public sealed class SqsProducerService(
     {
         try
         {
-            var json = JsonSerializer.Serialize(course);
+            var json = JsonSerializer.Serialize(course, _jsonOptions);
             var response = await client.SendMessageAsync(_queueName, json);
             if (response.HttpStatusCode == HttpStatusCode.OK)
                 logger.LogInformation("Course {Id} was sent to SQS", course.Id);

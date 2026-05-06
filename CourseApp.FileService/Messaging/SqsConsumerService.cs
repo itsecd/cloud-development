@@ -1,7 +1,5 @@
-using System.Text.Json;
 using Amazon.SQS;
 using Amazon.SQS.Model;
-using CourseApp.Api.Models;
 using CourseApp.FileService.Storage;
 
 namespace CourseApp.FileService.Messaging;
@@ -50,12 +48,9 @@ public sealed class SqsConsumerService(
             {
                 try
                 {
-                    var course = JsonSerializer.Deserialize<Course>(message.Body)
-                        ?? throw new InvalidOperationException("Message body is not a valid Course");
-
                     using var scope = scopeFactory.CreateScope();
                     var s3 = scope.ServiceProvider.GetRequiredService<IS3Service>();
-                    await s3.UploadFile(course);
+                    await s3.UploadFile(message.Body);
 
                     await sqsClient.DeleteMessageAsync(_queueName, message.ReceiptHandle, stoppingToken);
                 }

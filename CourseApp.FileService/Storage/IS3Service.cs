@@ -1,4 +1,4 @@
-using CourseApp.Api.Models;
+using System.Text.Json.Nodes;
 
 namespace CourseApp.FileService.Storage;
 
@@ -8,11 +8,11 @@ namespace CourseApp.FileService.Storage;
 public interface IS3Service
 {
     /// <summary>
-    /// Сериализует курс в JSON и загружает его в бакет под ключом course_{id}.json
+    /// Загружает JSON курса в бакет под ключом course_{id}.json
     /// </summary>
-    /// <param name="course">Курс, полученный из брокера сообщений</param>
+    /// <param name="fileData">Сырое тело сообщения в формате JSON</param>
     /// <returns>true, если PUT прошёл успешно</returns>
-    public Task<bool> UploadFile(Course course);
+    public Task<bool> UploadFile(string fileData);
 
     /// <summary>
     /// Возвращает список ключей всех объектов в бакете
@@ -20,10 +20,10 @@ public interface IS3Service
     public Task<List<string>> GetFileList();
 
     /// <summary>
-    /// Скачивает объект из бакета и десериализует его в Course
+    /// Скачивает объект из бакета и возвращает его как JsonNode
     /// </summary>
     /// <param name="key">Ключ объекта (например, course_42.json)</param>
-    public Task<Course> DownloadFile(string key);
+    public Task<JsonNode> DownloadFile(string key);
 
     /// <summary>
     /// Создаёт бакет, если он ещё не существует

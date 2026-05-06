@@ -1,4 +1,4 @@
-using CourseApp.Api.Models;
+using System.Text.Json.Nodes;
 using CourseApp.FileService.Storage;
 using Microsoft.AspNetCore.Mvc;
 
@@ -32,12 +32,12 @@ public sealed class S3StorageController(IS3Service s3Service, ILogger<S3StorageC
     }
 
     /// <summary>
-    /// Возвращает десериализованный курс по ключу объекта
+    /// Возвращает JSON-документ по ключу объекта
     /// </summary>
     /// <param name="key">Ключ объекта в S3 (например, course_42.json)</param>
-    /// <returns>200 с Course; 500 при ошибке</returns>
+    /// <returns>200 с телом JSON; 500 при ошибке</returns>
     [HttpGet("{key}")]
-    public async Task<ActionResult<Course>> GetFile(string key)
+    public async Task<ActionResult<JsonNode>> GetFile(string key)
     {
         try
         {
