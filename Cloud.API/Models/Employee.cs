@@ -1,4 +1,4 @@
-﻿namespace Cloud.API.Models;
+﻿namespace Cloud.Api.Models;
 
 /// <summary>
 /// Информация о сотруднике компании

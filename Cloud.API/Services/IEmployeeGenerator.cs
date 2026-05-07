@@ -1,6 +1,6 @@
-﻿using Cloud.API.Models;
+﻿using Cloud.Api.Models;
 
-namespace Cloud.API.Services;
+namespace Cloud.Api.Services;
 
 /// <summary>
 /// Интерфейс генератора сотрудника компании по id
