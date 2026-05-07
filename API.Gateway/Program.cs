@@ -1,4 +1,4 @@
-using API.Gateway.LoadBalancers;
+using Api.Gateway.LoadBalancers;
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
 

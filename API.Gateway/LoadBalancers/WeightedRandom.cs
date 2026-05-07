@@ -2,7 +2,7 @@
 using Ocelot.Responses;
 using Ocelot.Values;
 
-namespace API.Gateway.LoadBalancers;
+namespace Api.Gateway.LoadBalancers;
 
 /// <summary>
 /// Балансировщик нагрузки на основе взвешенного случайного выбора (Weighted Random).

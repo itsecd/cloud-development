@@ -1,5 +1,4 @@
 using Cloud.Api.Services;
-using Cloud.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 

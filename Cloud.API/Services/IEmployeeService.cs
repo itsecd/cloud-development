@@ -1,6 +1,6 @@
-﻿using Cloud.API.Models;
+﻿using Cloud.Api.Models;
 
-namespace Cloud.API.Services;
+namespace Cloud.Api.Services;
 
 /// <summary>
 /// Интерфейс сервис для получения сотрудника компании по id с кэшированием

@@ -1,8 +1,8 @@
-using Cloud.API.Services;
-using Cloud.API.Models;
+using Cloud.Api.Services;
+using Cloud.Api.Models;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Cloud.API.Controllers;
+namespace Cloud.Api.Controllers;
 
 /// <summary>
 /// Контроллер для получения сотрудника компании по id

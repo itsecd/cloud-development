@@ -1,7 +1,7 @@
 using Bogus;
 using Bogus.DataSets;
-using Cloud.API.Models;
-using Cloud.API.Services;
+using Cloud.Api.Models;
+using Cloud.Api.Services;
 
 namespace Cloud.Api.Services;
 

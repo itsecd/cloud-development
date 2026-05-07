@@ -1,5 +1,5 @@
-﻿using Cloud.API.Models;
-using Cloud.API.Services;
+﻿using Cloud.Api.Models;
+using Cloud.Api.Services;
 using Microsoft.Extensions.Caching.Distributed;
 using System.Text.Json;
 
