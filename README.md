@@ -47,3 +47,29 @@
 Возвращает транспортное средство по идентификатору.
 При первом запросе — генерирует и сохраняет в кэш.
 При повторном запросе — возвращает из кэша (TTL 15 минут).
+
+---
+
+# Лабораторная работа №2 — «Балансировка нагрузки»
+
+**Вариант алгоритма:** Weighted Round Robin
+
+---
+
+## Цель работы
+
+Настроить оркестрацию на запуск нескольких реплик сервиса генерации, реализовать API Gateway на основе Ocelot и имплементировать алгоритм балансировки нагрузки Weighted Round Robin.
+
+## Что было сделано
+
+### 1. Несколько реплик сервиса генерации
+
+В [VehicleApp.AppHost/AppHost.cs](VehicleApp/VehicleApp.AppHost/AppHost.cs) поднимается **5 реплик** сервиса `vehicleapp-api-{0..4}` на портах 5250–5254. Каждая реплика подключена к общему Redis-кэшу. Gateway получает ссылки на все реплики через `.WithReference(api)` — Aspire прокидывает их адреса в gateway через переменные окружения `services__vehicleapp-api-{i}__https__0`.
+
+### 2. API Gateway на Ocelot
+
+Проект [Api.Gateway](Api.Gateway/) — единая точка входа для клиента. Маршрут описан в [ocelot.json](Api.Gateway/ocelot.json):
+
+- **Upstream:** `GET /vehicle` → **Downstream:** `/api/vehicle` на одну из реплик
+- `LoadBalancerOptions.Type` = `WeightedRoundRobinLoadBalancer`
+- `DangerousAcceptAnyServerCertificateValidator: true` — принимаем dev-сертификаты реплик

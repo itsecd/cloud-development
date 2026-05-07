@@ -1,0 +1,35 @@
+{
+  "Routes": [
+    {
+      "UpstreamPathTemplate": "/vehicle",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DownstreamPathTemplate": "/api/vehicle",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 0
+        },
+        {
+          "Host": "localhost",
+          "Port": 0
+        },
+        {
+          "Host": "localhost",
+          "Port": 0
+        },
+        {
+          "Host": "localhost",
+          "Port": 0
+        },
+        {
+          "Host": "localhost",
+          "Port": 0
+        }
+      ],
+      "LoadBalancerOptions": {
+        "Type": "WeightedRoundRobinLoadBalancer"
+      }
+    }
+  ]
+}
