@@ -9,26 +9,24 @@ namespace Cloud.EventSink.S3;
 /// <summary>
 /// Служба, реализующая интерфейс IS3Service для Minio
 /// </summary>
-public class S3Service : IS3Service
+/// <param name="client">Клиент Minio</param>
+/// <param name="configuration">Конфигурация приложения</param>
+/// <param name="logger">Логгер</param>
+public class S3Service(
+    IMinioClient client,
+    IConfiguration configuration,
+    ILogger<S3Service> logger
+    ) : IS3Service
 {
-    private readonly string _bucketName;
-    private readonly IMinioClient _client;
-    private readonly ILogger<S3Service> _logger;
-
-    public S3Service(IMinioClient client, IConfiguration configuration, ILogger<S3Service> logger)
-    {
-        _client = client;
-        _logger = logger;
-        _bucketName = configuration["AWS:Resources:MinioBucketName"]
-                      ?? throw new KeyNotFoundException("S3 bucket name not found in configuration");
-    }
+    private readonly string _bucketName = configuration["AWS:Resources:MinioBucketName"]
+        ?? throw new KeyNotFoundException("S3 bucket name not found in configuration");
 
     /// <inheritdoc />
     public async Task<List<string>> GetFileList()
     {
-        _logger.LogInformation("Listing files in bucket {BucketName}", _bucketName);
+        logger.LogInformation("Listing files in bucket {BucketName}", _bucketName);
         var request = new ListObjectsArgs().WithBucket(_bucketName).WithPrefix("").WithRecursive(true);
-        var items = _client.ListObjectsEnumAsync(request);
+        var items = client.ListObjectsEnumAsync(request);
         var list = new List<string>();
         await foreach (var item in items)
             list.Add(item.Key);
@@ -49,21 +47,21 @@ public class S3Service : IS3Service
             .WithObjectSize(bytes.Length)
             .WithObject($"cloud_employee_{id}.json");
 
-        _logger.LogInformation("Uploading employee {Id} to bucket {BucketName}", id, _bucketName);
-        var response = await _client.PutObjectAsync(putRequest);
+        logger.LogInformation("Uploading employee {Id} to bucket {BucketName}", id, _bucketName);
+        var response = await client.PutObjectAsync(putRequest);
         if (response.ResponseStatusCode != HttpStatusCode.OK)
         {
-            _logger.LogError("Upload failed for employee {Id}, status {StatusCode}", id, response.ResponseStatusCode);
+            logger.LogError("Upload failed for employee {Id}, status {StatusCode}", id, response.ResponseStatusCode);
             return false;
         }
-        _logger.LogInformation("Successfully uploaded employee {Id}", id);
+        logger.LogInformation("Successfully uploaded employee {Id}", id);
         return true;
     }
 
     /// <inheritdoc />
     public async Task<JsonNode> DownloadFile(string filePath)
     {
-        _logger.LogInformation("Downloading {FilePath} from {BucketName}", filePath, _bucketName);
+        logger.LogInformation("Downloading {FilePath} from {BucketName}", filePath, _bucketName);
         var memoryStream = new MemoryStream();
         var getRequest = new GetObjectArgs()
             .WithBucket(_bucketName)
@@ -74,7 +72,7 @@ public class S3Service : IS3Service
                 memoryStream.Seek(0, SeekOrigin.Begin);
             });
 
-        await _client.GetObjectAsync(getRequest);
+        await client.GetObjectAsync(getRequest);
         using var reader = new StreamReader(memoryStream, Encoding.UTF8);
         var content = reader.ReadToEnd();
         return JsonNode.Parse(content) ?? throw new InvalidOperationException("Downloaded file is not valid JSON");
@@ -83,17 +81,17 @@ public class S3Service : IS3Service
     /// <inheritdoc />
     public async Task EnsureBucketExists()
     {
-        _logger.LogInformation("Checking bucket existence: {BucketName}", _bucketName);
+        logger.LogInformation("Checking bucket existence: {BucketName}", _bucketName);
         var existsArgs = new BucketExistsArgs().WithBucket(_bucketName);
-        var exists = await _client.BucketExistsAsync(existsArgs);
+        var exists = await client.BucketExistsAsync(existsArgs);
         if (!exists)
         {
-            _logger.LogInformation("Creating bucket: {BucketName}", _bucketName);
-            await _client.MakeBucketAsync(new MakeBucketArgs().WithBucket(_bucketName));
+            logger.LogInformation("Creating bucket: {BucketName}", _bucketName);
+            await client.MakeBucketAsync(new MakeBucketArgs().WithBucket(_bucketName));
         }
         else
         {
-            _logger.LogInformation("Bucket already exists: {BucketName}", _bucketName);
+            logger.LogInformation("Bucket already exists: {BucketName}", _bucketName);
         }
     }
 }

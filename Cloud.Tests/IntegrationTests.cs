@@ -12,7 +12,7 @@ namespace Cloud.Tests;
 /// <summary>
 /// Интеграционные тесты для проверки микросервисного пайплайна
 /// </summary>
-public class IntegrationTests : IAsyncLifetime
+public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
 {
     private static readonly JsonSerializerOptions _jsonOptions = new()
     {
@@ -23,13 +23,6 @@ public class IntegrationTests : IAsyncLifetime
     private HttpClient? _gatewayClient;
     private HttpClient? _s3Client;
 
-    private readonly ITestOutputHelper _output;
-
-    public IntegrationTests(ITestOutputHelper output)
-    {
-        _output = output;
-    }
-
     /// <inheritdoc/>
     public async ValueTask InitializeAsync()
     {
@@ -39,7 +32,7 @@ public class IntegrationTests : IAsyncLifetime
         builder.Configuration["DcpPublisher:RandomizePorts"] = "false";
         builder.Services.AddLogging(logging =>
         {
-            logging.AddXUnit(_output);
+            logging.AddXUnit(output);
             logging.SetMinimumLevel(LogLevel.Debug);
             logging.AddFilter("Aspire.Hosting.Dcp", LogLevel.Debug);
             logging.AddFilter("Aspire.Hosting", LogLevel.Debug);

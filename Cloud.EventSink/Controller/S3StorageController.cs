@@ -7,19 +7,15 @@ namespace Cloud.EventSink.Controller;
 /// <summary>
 /// Контроллер для получения списка файлов и скачивания файлов из объектного хранилища
 /// </summary>
+/// <param name="s3Service">Сервис для работы с S3 хранилищем</param>
+/// <param name="logger">Логгер</param>
 [ApiController]
 [Route("api/s3")]
-public class S3StorageController : ControllerBase
+public class S3StorageController(
+    IS3Service s3Service, 
+    ILogger<S3StorageController> logger
+    ) : ControllerBase
 {
-    private readonly IS3Service _s3Service;
-    private readonly ILogger<S3StorageController> _logger;
-
-    public S3StorageController(IS3Service s3Service, ILogger<S3StorageController> logger)
-    {
-        _s3Service = s3Service;
-        _logger = logger;
-    }
-
     /// <summary>
     /// Метод получения списка названий всех файлов в S3 хранилище
     /// </summary>
@@ -32,12 +28,12 @@ public class S3StorageController : ControllerBase
     {
         try
         {
-            var files = await _s3Service.GetFileList();
+            var files = await s3Service.GetFileList();
             return Ok(files);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error listing files");
+            logger.LogError(ex, "Error listing files");
             return StatusCode(500, ex.Message);
         }
     }
@@ -56,12 +52,12 @@ public class S3StorageController : ControllerBase
     {
         try
         {
-            var node = await _s3Service.DownloadFile(key);
+            var node = await s3Service.DownloadFile(key);
             return Ok(node);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error downloading file {Key}", key);
+            logger.LogError(ex, "Error downloading file {Key}", key);
             return NotFound(ex.Message);
         }
     }
