@@ -1,4 +1,5 @@
-﻿using Cloud.Api.Models;
+﻿using Cloud.Api.Messaging;
+using Cloud.Api.Models;
 using Cloud.Api.Services;
 using Microsoft.Extensions.Caching.Distributed;
 using System.Text.Json;
@@ -14,6 +15,7 @@ namespace Cloud.Api.Services;
 /// <param name="logger">Логгер</param>
 public class EmployeeService(
     IEmployeeGenerator generator,
+    IProducerService producer,
     IDistributedCache cache,
     IConfiguration configuration,
     ILogger<EmployeeService> logger) : IEmployeeService
@@ -34,6 +36,7 @@ public class EmployeeService(
 
         logger.LogInformation("Cache miss for employee {Id}, generating new data", id);
         var employee = generator.Generate(id);
+        await producer.SendMessage(employee);
         await SetToCache(cacheKey, employee);
         return employee;
     }
