@@ -66,5 +66,9 @@ builder.AddProject<Projects.Client_Wasm>("client")
     .WithReference(gateway)
     .WaitFor(gateway);
 
+builder.AddProject<Projects.WebApplication1>("webapplication1");
+
+builder.AddProject<Projects.MedicalPatient_Tests>("medicalpatient-tests");
+
 builder.Build().Run();
 

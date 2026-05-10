@@ -22,6 +22,7 @@
     <ProjectReference Include="..\..\MedicalPatient.ApiGateway\MedicalPatient.ApiGateway.csproj" />
     <ProjectReference Include="..\..\MedicalPatient.FileService\MedicalPatient.FileService.csproj" />
     <ProjectReference Include="..\..\MedicalPatient.Generator\MedicalPatient.Generator.csproj" />
+    <ProjectReference Include="..\..\MedicalPatient.Tests\MedicalPatient.Tests.csproj" />
   </ItemGroup>
 
 </Project>
