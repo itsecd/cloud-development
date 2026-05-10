@@ -22,8 +22,6 @@ dotnet run --project ./AspireApp/AspireApp.AppHost/AspireApp.AppHost.csproj --la
 ```bash
 curl -k "https://localhost:15000/employee?id=101"
 ```
-![alt text](image1.png)
-
 ### 2. Проверка gateway
 
 ```bash
@@ -50,6 +48,7 @@ curl "http://localhost:16000/files/101"
 ```bash
 dotnet test ./Backend.IntegrationTests/Backend.IntegrationTests.csproj
 ```
+![alt text](image1.png)
 
 ## Ключевые endpoints
 

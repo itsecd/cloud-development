@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Amazon;
 using Amazon.Runtime;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
@@ -49,41 +48,81 @@ public sealed class SnsEmployeeEventPublisher : IEmployeeEventPublisher, IAsyncD
     {
         ArgumentNullException.ThrowIfNull(employee);
 
-        var topicArn = await EnsureTopicAsync(cancellationToken);
-        var message = new EmployeeGeneratedMessage
+        Exception? lastException = null;
+
+        for (var attempt = 1; attempt <= 15; attempt++)
         {
-            EmployeeId = employee.Id,
-            PublishedAtUtc = DateTime.UtcNow,
-            ReplicaId = _replicaId,
-            Payload = employee
-        };
+            cancellationToken.ThrowIfCancellationRequested();
 
-        var payload = JsonSerializer.Serialize(message, JsonOptions);
-
-        _logger.LogInformation(
-            "Publishing employee {EmployeeId} to SNS topic {TopicArn}",
-            employee.Id,
-            topicArn);
-
-        await _snsClient.PublishAsync(new PublishRequest
-        {
-            TopicArn = topicArn,
-            Subject = $"employee-{employee.Id}",
-            Message = payload,
-            MessageAttributes = new Dictionary<string, MessageAttributeValue>
+            try
             {
-                ["employeeId"] = new()
+                var topicArn = await EnsureTopicAsync(cancellationToken);
+
+                var message = new EmployeeGeneratedMessage
                 {
-                    DataType = "Number",
-                    StringValue = employee.Id.ToString()
-                },
-                ["replicaId"] = new()
+                    EmployeeId = employee.Id,
+                    PublishedAtUtc = DateTime.UtcNow,
+                    ReplicaId = _replicaId,
+                    Payload = employee
+                };
+
+                var payload = JsonSerializer.Serialize(message, JsonOptions);
+
+                _logger.LogInformation(
+                    "Publishing employee {EmployeeId} to SNS topic {TopicArn}. Attempt {Attempt}",
+                    employee.Id,
+                    topicArn,
+                    attempt);
+
+                await _snsClient.PublishAsync(new PublishRequest
                 {
-                    DataType = "String",
-                    StringValue = _replicaId
-                }
+                    TopicArn = topicArn,
+                    Subject = $"employee-{employee.Id}",
+                    Message = payload,
+                    MessageAttributes = new Dictionary<string, MessageAttributeValue>
+                    {
+                        ["employeeId"] = new()
+                        {
+                            DataType = "Number",
+                            StringValue = employee.Id.ToString()
+                        },
+                        ["replicaId"] = new()
+                        {
+                            DataType = "String",
+                            StringValue = _replicaId
+                        }
+                    }
+                }, cancellationToken);
+
+                return;
             }
-        }, cancellationToken);
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                lastException = ex;
+                _topicArn = null;
+
+                _logger.LogWarning(
+                    ex,
+                    "Failed to publish employee {EmployeeId} to SNS on attempt {Attempt}. Retrying...",
+                    employee.Id,
+                    attempt);
+
+                if (attempt == 15)
+                {
+                    break;
+                }
+
+                await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
+            }
+        }
+
+        throw new InvalidOperationException(
+            $"Не удалось опубликовать сотрудника {employee.Id} в SNS после повторных попыток.",
+            lastException);
     }
 
     private async Task<string> EnsureTopicAsync(CancellationToken cancellationToken)

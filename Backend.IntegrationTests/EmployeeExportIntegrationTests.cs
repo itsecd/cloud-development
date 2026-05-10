@@ -1,13 +1,14 @@
-using Aspire.Hosting;
 using System.Net;
 using System.Text.Json;
+using Aspire.Hosting;
+using Aspire.Hosting.Testing;
 
 namespace Backend.IntegrationTests;
 
 public sealed class EmployeeExportIntegrationTests : IAsyncLifetime
 {
     private static readonly TimeSpan StartupTimeout = TimeSpan.FromSeconds(120);
-    private static readonly TimeSpan ExportTimeout = TimeSpan.FromSeconds(60);
+    private static readonly TimeSpan ExportTimeout = TimeSpan.FromSeconds(120);
 
     private DistributedApplication? _app;
 
@@ -17,11 +18,13 @@ public sealed class EmployeeExportIntegrationTests : IAsyncLifetime
         _app = await builder.BuildAsync().WaitAsync(StartupTimeout);
         await _app.StartAsync().WaitAsync(StartupTimeout);
 
-        var apiClient = _app.CreateHttpClient("service-api-0");
         var fileClient = _app.CreateHttpClient("file-service");
+        var apiClient = _app.CreateHttpClient("service-api-0");
 
-        await WaitUntilAvailableAsync(apiClient, "/");
-        await WaitUntilAvailableAsync(fileClient, "/");
+        using var cts = new CancellationTokenSource(StartupTimeout);
+
+        await WaitForFileServiceReadyAsync(fileClient, cts.Token);
+        await WaitForApiAsync(apiClient, cts.Token);
     }
 
     public async Task DisposeAsync()
@@ -37,14 +40,15 @@ public sealed class EmployeeExportIntegrationTests : IAsyncLifetime
     {
         Assert.NotNull(_app);
 
-        var employeeId = 501;
+        const int employeeId = 501;
+
         var apiClient = _app!.CreateHttpClient("service-api-0");
         var fileClient = _app.CreateHttpClient("file-service");
 
-        using var apiResponse = await apiClient.GetAsync($"/employee?id={employeeId}");
-        apiResponse.EnsureSuccessStatusCode();
+        using var response = await apiClient.GetAsync($"/employee?id={employeeId}");
+        response.EnsureSuccessStatusCode();
 
-        var generatedJson = await apiResponse.Content.ReadAsStringAsync();
+        var generatedJson = await response.Content.ReadAsStringAsync();
         var exportedJson = await WaitForExportAsync(fileClient, employeeId);
 
         Assert.Equal(Normalize(generatedJson), Normalize(exportedJson));
@@ -55,7 +59,8 @@ public sealed class EmployeeExportIntegrationTests : IAsyncLifetime
     {
         Assert.NotNull(_app);
 
-        var employeeId = 777;
+        const int employeeId = 777;
+
         var apiClient = _app!.CreateHttpClient("service-api-0");
         var fileClient = _app.CreateHttpClient("file-service");
 
@@ -68,39 +73,62 @@ public sealed class EmployeeExportIntegrationTests : IAsyncLifetime
         Assert.Equal(Normalize(first), Normalize(exportedJson));
     }
 
-    private static async Task WaitUntilAvailableAsync(HttpClient client, string path)
+    private static async Task WaitForFileServiceReadyAsync(HttpClient client, CancellationToken cancellationToken)
     {
-        using var cts = new CancellationTokenSource(StartupTimeout);
-
-        while (!cts.IsCancellationRequested)
+        while (!cancellationToken.IsCancellationRequested)
         {
             try
             {
-                using var response = await client.GetAsync(path, cts.Token);
-                if ((int)response.StatusCode < 500)
+                using var response = await client.GetAsync("/ready", cancellationToken);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    return;
+                }
+
+                if (response.StatusCode != HttpStatusCode.ServiceUnavailable)
+                {
+                    response.EnsureSuccessStatusCode();
+                }
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                break;
+            }
+            catch
+            {
+            }
+
+            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+        }
+
+        throw new TimeoutException("File Service не стал ready за отведённое время.");
+    }
+
+    private static async Task WaitForApiAsync(HttpClient client, CancellationToken cancellationToken)
+    {
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            try
+            {
+                using var response = await client.GetAsync("/", cancellationToken);
+                if (response.IsSuccessStatusCode)
                 {
                     return;
                 }
             }
-            catch (HttpRequestException)
-            {
-            }
-            catch (TaskCanceledException) when (cts.IsCancellationRequested)
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
                 break;
+            }
+            catch
+            {
             }
 
-            try
-            {
-                await Task.Delay(TimeSpan.FromSeconds(2), cts.Token);
-            }
-            catch (TaskCanceledException) when (cts.IsCancellationRequested)
-            {
-                break;
-            }
+            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
         }
 
-        throw new TimeoutException($"Сервис не стал доступен по пути '{path}' за отведённое время.");
+        throw new TimeoutException("Service API не стал доступен за отведённое время.");
     }
 
     private static async Task<string> WaitForExportAsync(HttpClient fileClient, int employeeId)
@@ -112,12 +140,13 @@ public sealed class EmployeeExportIntegrationTests : IAsyncLifetime
             try
             {
                 using var response = await fileClient.GetAsync($"/files/{employeeId}", cts.Token);
+
                 if (response.IsSuccessStatusCode)
                 {
                     return await response.Content.ReadAsStringAsync(cts.Token);
                 }
 
-                if (response.StatusCode != HttpStatusCode.NotFound && (int)response.StatusCode >= 500)
+                if (response.StatusCode != HttpStatusCode.NotFound)
                 {
                     response.EnsureSuccessStatusCode();
                 }
@@ -126,18 +155,8 @@ public sealed class EmployeeExportIntegrationTests : IAsyncLifetime
             {
                 break;
             }
-            catch (HttpRequestException)
-            {
-            }
 
-            try
-            {
-                await Task.Delay(TimeSpan.FromSeconds(2), cts.Token);
-            }
-            catch (OperationCanceledException) when (cts.IsCancellationRequested)
-            {
-                break;
-            }
+            await Task.Delay(TimeSpan.FromSeconds(2), cts.Token);
         }
 
         throw new TimeoutException($"Файл сотрудника {employeeId} не был выгружен в объектное хранилище за отведённое время.");

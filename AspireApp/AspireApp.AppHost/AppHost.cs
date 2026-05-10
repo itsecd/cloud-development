@@ -7,8 +7,7 @@ var localstack = builder.AddContainer("localstack", "localstack/localstack", "3.
     .WithEnvironment("SERVICES", "s3,sns,sqs")
     .WithEnvironment("AWS_DEFAULT_REGION", "us-east-1")
     .WithEnvironment("DEBUG", "1")
-    .WithHttpEndpoint(port: 4566, targetPort: 4566, name: "http")
-    .WithExternalHttpEndpoints();
+    .WithHttpEndpoint(port: 4566, targetPort: 4566, name: "http", isProxied: false);
 
 var gateway = builder.AddProject<Projects.ApiGateway>("api-gateway");
 

@@ -6,7 +6,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
-builder.Logging.ClearProviders();
 builder.Logging.AddJsonConsole(options =>
 {
     options.IncludeScopes = true;
@@ -14,8 +13,8 @@ builder.Logging.AddJsonConsole(options =>
 });
 
 builder.Services.Configure<AwsStorageOptions>(builder.Configuration.GetSection(AwsStorageOptions.SectionName));
+
 builder.Services.AddSingleton<FileExportInfrastructureState>();
-builder.Services.AddHealthChecks().AddCheck<FileExportHealthCheck>("file-export");
 builder.Services.AddSingleton<IEmployeeFileStorage, S3EmployeeFileStorage>();
 builder.Services.AddHostedService<SnsSqsFileExportWorker>();
 
@@ -26,9 +25,16 @@ app.MapDefaultEndpoints();
 app.MapGet("/", () => Results.Ok(new
 {
     service = "File.Service",
-    description = "Файловый сервис, сохраняющий сведения о сотрудниках в S3 через LocalStack",
-    endpoints = new[] { "/files/1" }
+    description = "Файловый сервис, сохраняющий сведения о сотрудниках в объектное хранилище",
+    endpoints = new[] { "/ready", "/files/{id}" }
 }));
+
+app.MapGet("/ready", (FileExportInfrastructureState state) =>
+{
+    return state.IsInitialized
+        ? Results.Ok(new { status = "ready" })
+        : Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
+});
 
 app.MapGet("/files/{id:int}", async (int id, IEmployeeFileStorage storage, CancellationToken cancellationToken) =>
 {
