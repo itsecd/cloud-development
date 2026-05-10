@@ -7,7 +7,7 @@ namespace MedicalPatient.FileService.Services;
 public class MinioInitializer(IAmazonS3 s3Client, ILogger<MinioInitializer> logger, IConfiguration configuration) : BackgroundService
 {
 
-    private readonly string _bucketName = configuration["MinIO:BucketName"] ?? "medical-patinet";
+    private readonly string _bucketName = BucketNameResolver.Resolve(configuration["MinIO:BucketName"]);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {

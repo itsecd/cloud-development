@@ -11,12 +11,13 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
 
 var minioSettings = builder.Configuration.GetSection("MinIO");
+var minioConfiguration = minioSettings.Get<MinioConfiguration>() ?? new MinioConfiguration();
 
-var minioAccessKey = minioSettings.Get<MinioConfiguration>()?.AccessKey;
-var minioSecretKey = minioSettings.Get<MinioConfiguration>()?.SecretKey;
-var minioEndpoint = minioSettings.Get<MinioConfiguration>()?.Endpoint;
+var minioAccessKey = minioConfiguration.AccessKey;
+var minioSecretKey = minioConfiguration.SecretKey;
+var minioEndpoint = minioConfiguration.Endpoint;
 
-builder.Services.AddSingleton(minioSettings).Configure<MinioConfiguration>(minioSettings);
+builder.Services.Configure<MinioConfiguration>(minioSettings);
 
 builder.Services.AddSingleton<IAmazonS3>(_ => new AmazonS3Client(
     new BasicAWSCredentials(minioAccessKey, minioSecretKey),
@@ -28,7 +29,8 @@ builder.Services.AddSingleton<IAmazonS3>(_ => new AmazonS3Client(
     }
 ));
 
-var sqsServiceUrl = builder.Configuration["SQS:ServiceUrl"] ?? "http://localhost:9342";
+var sqsServiceUrl = builder.Configuration["SQS:ServiceUrl"] ?? "http://localhost:9324";
+var queueName = builder.Configuration["SQS:QueueName"] ?? "medical-patients";
 
 builder.Services.AddHostedService<SQSService>();
 
@@ -49,7 +51,7 @@ builder.Services.AddMassTransit(x =>
             });
         });
 
-        cfg.ReceiveEndpoint("medical-patinets", e =>
+        cfg.ReceiveEndpoint(queueName, e =>
         {
             e.ConfigureConsumeTopology = false;
             e.UseRawJsonDeserializer(RawSerializerOptions.AnyMessageType);

@@ -36,7 +36,7 @@ var weights = configuredWeights.Length > 0 ? configuredWeights : [3, 2, 1];
 
 var addressOverrides = new List<KeyValuePair<string, string?>>();
 
-for (var i = 0; i < generators.Length; ++i)
+for (var i = 0; i < generators.Length; i++)
 {
     var name = generators[i];
     var url = builder.Configuration[$"services:{name}:http:0"];

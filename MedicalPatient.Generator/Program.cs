@@ -1,6 +1,9 @@
 using MedicalPatient.Generator.Services;
+using MedicalPatient.Generator;
 using MedicalPatient.AppHost.ServiceDefaults;
 using Serilog;
+using Amazon.SQS;
+using MassTransit;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +14,26 @@ builder.AddRedisDistributedCache("redis");
 builder.Services.AddSingleton<MedicalPatientGenerator>();
 builder.Services.AddScoped<MedicalPatientService>();
 
+var sqsServiceUrl = builder.Configuration["SQS:ServiceUrl"] ?? "http://localhost:9324";
+var queueName = builder.Configuration["SQS:QueueName"] ?? "medical-patients";
+
+builder.Services.AddMassTransit(x =>
+{
+    x.UsingAmazonSqs((context, cfg) =>
+        {
+        cfg.Host("us-east-1", h =>
+                {   
+            h.AccessKey("test");
+            h.SecretKey("test");
+            h.Config(new AmazonSQSConfig
+                        {
+                ServiceURL = sqsServiceUrl,
+AuthenticationRegion = "us-east-1"
+            });
+                    });
+        cfg.UseRawJsonSerializer();
+            });
+    });
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.OpenTelemetry()
@@ -27,6 +50,7 @@ app.MapDefaultEndpoints();
 app.MapGet("/medicalpatient-generator", async (
     int id,
     MedicalPatientService service,
+    ISendEndpointProvider sendEndpointProvider,
     ILogger<Program> logger,
     CancellationToken cancellationToken) =>
 {
@@ -41,6 +65,21 @@ app.MapGet("/medicalpatient-generator", async (
     try
     {
         var application = await service.GetByIdAsync(id, cancellationToken);
+
+        var endpoint = await sendEndpointProvider.GetSendEndpoint(new Uri($"queue:{queueName}"));
+        await endpoint.Send(new MedicalPatientMessage(
+            application.Id,
+            application.FullName,
+            application.Address,
+            application.BirthDate,
+            application.Height,
+            application.Weight,
+            application.BloodType,
+            application.RhFactor,
+            application.LastInspectionDate,
+            application.VaccinationMark
+        ), cancellationToken);
+
         return Results.Ok(application);
     }
     catch (Exception ex)

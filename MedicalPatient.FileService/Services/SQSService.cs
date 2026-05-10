@@ -1,12 +1,10 @@
-﻿using LocalStack.Client.Enums;
-
 namespace MedicalPatient.FileService.Services;
 
 public class SQSService(IConfiguration configuration, ILogger<SQSService> logger) : IHostedService
 {
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        var sqsUrl = configuration["SQS:ServiceUrl"] ?? "http://localhost:9342";
+        var sqsUrl = configuration["SQS:ServiceUrl"] ?? "http://localhost:9324";
 
         using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
 
@@ -16,7 +14,8 @@ public class SQSService(IConfiguration configuration, ILogger<SQSService> logger
         {
             try
             {
-                await httpClient.GetAsync($"{sqsUrl}/?Action=ListQueues", cancellationToken);
+                var response = await httpClient.GetAsync($"{sqsUrl}/?Action=ListQueues", cancellationToken);
+                response.EnsureSuccessStatusCode();
                 logger.LogInformation("SQS is ready at {Url}", sqsUrl);
                 return;
             }
@@ -27,7 +26,7 @@ public class SQSService(IConfiguration configuration, ILogger<SQSService> logger
             }
         }
 
-        logger.LogError("SQS did not become ready within the timeout");
+        throw new TimeoutException($"SQS did not become ready within the timeout: {sqsUrl}");
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;

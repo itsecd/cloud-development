@@ -12,7 +12,7 @@ public class PatientConsumer(
     IConfiguration configuration
 ) : IConsumer<MedicalPatientMessage>
 {
-    private readonly string _bucketName = configuration["MinIO:BucketName"] ?? "medical-patient";
+    private readonly string _bucketName = BucketNameResolver.Resolve(configuration["MinIO:BucketName"]);
     private static readonly JsonSerializerOptions _jsonOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
@@ -38,7 +38,7 @@ public class PatientConsumer(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex.Message);
+            logger.LogError(ex, "Failed to save patient data to MinIO");
         }
     }
 }
