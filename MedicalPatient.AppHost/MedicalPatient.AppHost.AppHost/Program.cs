@@ -35,5 +35,7 @@ builder.AddProject<Projects.Client_Wasm>("client")
     .WithReference(gateway)
     .WaitFor(gateway);
 
+builder.AddProject<Projects.MedicalPatient_FileService>("medicalpatient-fileservice");
+
 builder.Build().Run();
 
