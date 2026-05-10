@@ -47,7 +47,7 @@ public class Fixture : IAsyncLifetime
             App.ResourceNotifications.WaitForResourceAsync("minio"),
             App.ResourceNotifications.WaitForResourceAsync("elasticmq"),
             App.ResourceNotifications.WaitForResourceAsync("medicalpatient-apigateway"),
-            App.ResourceNotifications.WaitForResourceAsync("medical-patient-fileservice")
+            App.ResourceNotifications.WaitForResourceAsync("medicalpatient-fileservice")
         ).WaitAsync(TimeSpan.FromMinutes(5));
 
         await Task.Delay(TimeSpan.FromSeconds(5));
@@ -76,7 +76,7 @@ public class Fixture : IAsyncLifetime
         {
             await S3Client.PutBucketAsync(new PutBucketRequest
             {
-                BucketName = "medical-patients"
+                BucketName = "medical-patient"
             });
         }
     }
@@ -93,7 +93,7 @@ public class Fixture : IAsyncLifetime
 
                 var response = await S3Client.ListObjectsV2Async(new ListObjectsV2Request
                 {
-                    BucketName = "medical-patients",
+                    BucketName = "medical-patient",
                     Prefix = key,
                 }
                 );

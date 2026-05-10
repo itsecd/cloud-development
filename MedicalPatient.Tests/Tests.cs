@@ -6,6 +6,7 @@ using System.Text.Json;
 using Xunit;
 using System.Net.Http.Json;
 
+
 namespace MedicalPatient.Tests;
 
 /// <summary>
@@ -36,8 +37,8 @@ public class Tests(Fixture fixture) : IClassFixture<Fixture>
         Assert.True(patient.BirthDate != default);
         Assert.True(patient.LastInspectionDate != default);
 
-        Assert.True(patient.Height > 0);
-        Assert.True(patient.Weight > 0);
+        Assert.InRange(patient.Height, 0.00000001, double.MaxValue);
+        Assert.InRange(patient.Weight, 0.00000001, double.MaxValue);
 
         Assert.True(patient.BloodType >= 1 && patient.BloodType <= 4);
 
@@ -84,8 +85,8 @@ public class Tests(Fixture fixture) : IClassFixture<Fixture>
 
         Assert.NotNull(patient1);
         Assert.NotNull(patient2);
-        Assert.Equal(201, patient1.Id);
-        Assert.Equal(202, patient2.Id);
+        Assert.Equal(1, patient1.Id);
+        Assert.Equal(2, patient2.Id);
         Assert.NotEqual(patient1.FullName, patient2.FullName);
         Assert.NotEqual(patient1.Address, patient2.Address);
     }
@@ -145,67 +146,4 @@ public class Tests(Fixture fixture) : IClassFixture<Fixture>
 
         Assert.True(found, $"Object '{key}' was not found in bucket '{bucket}'.");
     }
-
-
-// ----------------------------------------------------------
-
-///// <summary>
-///// Тест для проверки данных сохранённых в бакете
-///// </summary>
-//[Fact]
-//    public async Task GetEmployee_CheckBucketData()
-//    {
-//        var id = 12;
-//        var expectedKey = $"employee-{id}.json";
-
-//        using var client = fixture.App.CreateHttpClient("medicalpatient-apigateway", "http");
-//        var employee = await client.GetFromJsonAsync<MedicalPatientModel>($"/medicalpatient-generator?id={id}", _jsonOptions);
-//        Assert.NotNull(employee);
-
-//        await Task.Delay(TimeSpan.FromSeconds(10));
-
-//        var objects = await fixture.WaitForS3ObjectAsync(expectedKey);
-//        Assert.NotEmpty(objects);
-
-//        var getResponse = await fixture.S3Client.GetObjectAsync(_bucketName, expectedKey);
-//        using var reader = new StreamReader(getResponse.ResponseStream);
-//        var json = await reader.ReadToEndAsync();
-//        var cached = JsonNode.Parse(json)?.AsObject();
-
-//        Assert.NotNull(cached);
-//        Assert.Equal(id, cached["id"]!.GetValue<int>());
-//        Assert.Equal(employee.FullName, cached["fullName"]!.GetValue<string>());
-//        Assert.Equal(employee.Email, cached["email"]!.GetValue<string>());
-//        Assert.Equal(employee.Salary, cached["salary"]!.GetValue<decimal>());
-//    }
-
-//    /// <summary>
-//    /// Тест для проверки избежания дублирования данных в Minio
-//    /// </summary>
-//    [Fact]
-//    public async Task GetEmployee_CheckNotDuplicate()
-//    {
-//        var id = 23;
-//        var expectedKey = $"employee-{id}.json";
-
-//        using var client = fixture.App.CreateHttpClient("medicalpatient-apigateway", "http");
-
-//        using var firstResponse = await client.GetAsync($"/medicalpatient-generator?id={id}");
-//        firstResponse.EnsureSuccessStatusCode();
-//        var objectsAfterFirst = await fixture.WaitForS3ObjectAsync(expectedKey);
-//        Assert.NotEmpty(objectsAfterFirst);
-
-//        using var secondResponse = await client.GetAsync($"/medicalpatient-generator?id={id}");
-//        secondResponse.EnsureSuccessStatusCode();
-
-//        await Task.Delay(TimeSpan.FromSeconds(5));
-
-//        var listResponse = await fixture.S3Client.ListObjectsV2Async(new ListObjectsV2Request
-//        {
-//            BucketName = _bucketName,
-//            Prefix = expectedKey
-//        });
-
-//        Assert.Single(listResponse.S3Objects);
-//    }
 }

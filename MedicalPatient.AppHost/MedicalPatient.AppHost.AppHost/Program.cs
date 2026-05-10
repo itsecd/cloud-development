@@ -31,8 +31,8 @@ var generator1 = builder.AddProject<Projects.MedicalPatient_Generator>("generato
     .WithEnvironment("SQS__ServiceUrl", sqs.GetEndpoint("http"))
     .WithEnvironment("SQS__QueueName", "medical-patients")
     .WaitFor(redis)
-    .WaitFor(sqs)
-    .WithExternalHttpEndpoints();
+    .WithExternalHttpEndpoints()
+    .WaitFor(sqs);
 
 var generator2 = builder.AddProject<Projects.MedicalPatient_Generator>("generator-2")
     .WithEndpoint("http", endpoint => endpoint.Port = 5102)
@@ -40,8 +40,8 @@ var generator2 = builder.AddProject<Projects.MedicalPatient_Generator>("generato
     .WithEnvironment("SQS__ServiceUrl", sqs.GetEndpoint("http"))
     .WithEnvironment("SQS__QueueName", "medical-patients")
     .WaitFor(redis)
-    .WaitFor(sqs)
-    .WithExternalHttpEndpoints();
+    .WithExternalHttpEndpoints()
+    .WaitFor(sqs);
 
 var generator3 = builder.AddProject<Projects.MedicalPatient_Generator>("generator-3")
     .WithEndpoint("http", endpoint => endpoint.Port = 5103)
@@ -49,8 +49,8 @@ var generator3 = builder.AddProject<Projects.MedicalPatient_Generator>("generato
     .WithEnvironment("SQS__ServiceUrl", sqs.GetEndpoint("http"))
     .WithEnvironment("SQS__QueueName", "medical-patients")
     .WaitFor(redis)
-    .WaitFor(sqs)
-    .WithExternalHttpEndpoints();
+    .WithExternalHttpEndpoints()
+    .WaitFor(sqs);
 
 var gateway = builder
     .AddProject<Projects.MedicalPatient_ApiGateway>("medicalpatient-apigateway")
