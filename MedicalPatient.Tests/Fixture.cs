@@ -2,13 +2,12 @@
 using Amazon.S3;
 using Amazon.S3.Model;
 using Aspire.Hosting;
-using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Testing;
-using Microsoft.AspNetCore.Identity;
 using Xunit;
-using Xunit.Abstractions;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MedicalPatient.Tests;
+
 
 /// <summary>
 /// Класс, поднимающий приложение для интеграционных тестов.
@@ -47,8 +46,8 @@ public class Fixture : IAsyncLifetime
         await Task.WhenAll(
             App.ResourceNotifications.WaitForResourceAsync("minio"),
             App.ResourceNotifications.WaitForResourceAsync("elasticmq"),
-            App.ResourceNotifications.WaitForResourceAsync("companyemployees-apigateway"),
-            App.ResourceNotifications.WaitForResourceAsync("company-employee-fileservice")
+            App.ResourceNotifications.WaitForResourceAsync("medicalpatient-apigateway"),
+            App.ResourceNotifications.WaitForResourceAsync("medical-patient-fileservice")
         ).WaitAsync(TimeSpan.FromMinutes(5));
 
         await Task.Delay(TimeSpan.FromSeconds(5));
@@ -71,13 +70,13 @@ public class Fixture : IAsyncLifetime
                 AuthenticationRegion = "us-east-1"
             });
 
-        var doesExist = await Amazon.S3.Util.AmazonS3Util.DoesS3BucketExistV2Async(S3Client, "company-employee");
+        var doesExist = await Amazon.S3.Util.AmazonS3Util.DoesS3BucketExistV2Async(S3Client, "medical-patient");
 
         if (!doesExist)
         {
             await S3Client.PutBucketAsync(new PutBucketRequest
             {
-                BucketName = "company-employee"
+                BucketName = "medical-patients"
             });
         }
     }
@@ -90,11 +89,11 @@ public class Fixture : IAsyncLifetime
 
             try
             {
-                var doesExist = await Amazon.S3.Util.AmazonS3Util.DoesS3BucketExistV2Async(S3Client, "company-employee");
+                var doesExist = await Amazon.S3.Util.AmazonS3Util.DoesS3BucketExistV2Async(S3Client, "medical-patient");
 
                 var response = await S3Client.ListObjectsV2Async(new ListObjectsV2Request
                 {
-                    BucketName = "company-employee",
+                    BucketName = "medical-patients",
                     Prefix = key,
                 }
                 );

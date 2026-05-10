@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -7,8 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting" Version="13.3.0" />
-    <PackageReference Include="Aspire.Hosting.Testing" Version="13.3.0" />
+    <PackageReference Include="Aspire.Hosting" Version="9.5.2" />
+    <PackageReference Include="Aspire.Hosting.Testing" Version="9.5.2" />
     <PackageReference Include="AWSSDK.S3" Version="4.0.23" />
     <PackageReference Include="coverlet.collector" Version="10.0.0">
       <PrivateAssets>all</PrivateAssets>
@@ -26,6 +26,7 @@
   <ItemGroup>
     <ProjectReference Include="..\MedicalPatient.AppHost\MedicalPatient.AppHost.AppHost\MedicalPatient.AppHost.AppHost.csproj" />
     <ProjectReference Include="..\MedicalPatient.AppHost\MedicalPatient.AppHost.ServiceDefaults\MedicalPatient.AppHost.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\MedicalPatient.Generator\MedicalPatient.Generator.csproj" />
   </ItemGroup>
 
 </Project>

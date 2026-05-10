@@ -16,6 +16,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MedicalPatient.FileService", "MedicalPatient.FileService\MedicalPatient.FileService.csproj", "{118FA956-E736-4284-830B-9CEB94F785B3}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MedicalPatient.Tests", "MedicalPatient.Tests\MedicalPatient.Tests.csproj", "{E3A7A49F-D372-4E07-A882-907F486A7382}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B9054D03-6CF6-4B8C-8E6F-3D27D39983F5} = {B9054D03-6CF6-4B8C-8E6F-3D27D39983F5}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
