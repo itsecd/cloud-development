@@ -7,6 +7,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AWSSDK.S3" Version="4.0.23" />
+    <PackageReference Include="LocalStack.Client.Extensions" Version="2.0.0" />
+    <PackageReference Include="MassTransit.AmazonSQS" Version="9.1.0" />
+    <PackageReference Include="Minio" Version="7.0.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.7" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\MedicalPatient.AppHost\MedicalPatient.AppHost.ServiceDefaults\MedicalPatient.AppHost.ServiceDefaults.csproj" />
   </ItemGroup>
 
