@@ -10,11 +10,12 @@ namespace ProjectApp.Api.Services.CreditApplicationService;
 public class CreditApplicationService(
     IDistributedCache cache,
     CreditApplicationGenerator generator,
-    CreditApplicationValidator validator,
+    IConfiguration configuration,
     ILogger<CreditApplicationService> logger) : ICreditApplicationService
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
-    private static readonly TimeSpan CacheTtl = TimeSpan.FromMinutes(10);
+    private readonly TimeSpan _cacheTtl = TimeSpan.FromMinutes(
+        Math.Max(1, configuration.GetValue<int?>("CacheSettings:ExpirationMinutes") ?? 10));
 
     /// <summary>
     /// Возвращает кредитную заявку по идентификатору.
@@ -28,48 +29,46 @@ public class CreditApplicationService(
         var cacheKey = BuildCacheKey(id);
 
         logger.LogInformation("Looking up credit application {Id} in Redis cache", id);
-        var cachedPayload = await cache.GetStringAsync(cacheKey, cancellationToken);
-        if (!string.IsNullOrEmpty(cachedPayload))
+        try
         {
-            var cachedApplication = JsonSerializer.Deserialize<CreditApplication>(cachedPayload, JsonOptions);
-            if (cachedApplication is not null && validator.TryValidate(cachedApplication, out _))
+            var cachedPayload = await cache.GetStringAsync(cacheKey, cancellationToken);
+            if (!string.IsNullOrEmpty(cachedPayload))
             {
-                logger.LogInformation("Cache hit for credit application {Id}", id);
-                return cachedApplication;
-            }
+                var cachedApplication = JsonSerializer.Deserialize<CreditApplication>(cachedPayload, JsonOptions);
+                if (cachedApplication is not null)
+                {
+                    logger.LogInformation("Cache hit for credit application {Id}", id);
+                    return cachedApplication;
+                }
 
-            if (cachedApplication is null)
-            {
                 logger.LogWarning("Cache entry for credit application {Id} cannot be deserialized. Regenerating value.", id);
             }
-            else
-            {
-                validator.TryValidate(cachedApplication, out var cacheValidationError);
-                logger.LogWarning(
-                    "Cache entry for credit application {Id} is invalid: {ValidationError}. Regenerating value.",
-                    id,
-                    cacheValidationError);
-            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to read credit application {Id} from cache", id);
         }
 
         logger.LogInformation("Cache miss for credit application {Id}. Generating new value.", id);
         var generatedApplication = generator.Generate();
         generatedApplication.Id = id;
 
-        if (!validator.TryValidate(generatedApplication, out var generatedValidationError))
-        {
-            throw new InvalidOperationException($"Generated application is invalid: {generatedValidationError}");
-        }
-
         var payload = JsonSerializer.Serialize(generatedApplication, JsonOptions);
-        await cache.SetStringAsync(
-            cacheKey,
-            payload,
-            new DistributedCacheEntryOptions
-            {
-                AbsoluteExpirationRelativeToNow = CacheTtl
-            },
-            cancellationToken);
+        try
+        {
+            await cache.SetStringAsync(
+                cacheKey,
+                payload,
+                new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = _cacheTtl
+                },
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to write credit application {Id} to cache", id);
+        }
 
         logger.LogInformation(
             "Generated and cached credit application {Id}: CreditType={CreditType}, RequestedAmount={RequestedAmount}, Status={Status}",

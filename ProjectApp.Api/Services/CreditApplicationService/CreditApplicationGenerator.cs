@@ -10,6 +10,9 @@ namespace ProjectApp.Api.Services.CreditApplicationService;
 /// </summary>
 public class CreditApplicationGenerator
 {
+    private static readonly string[] NonTerminalStatuses = ["Новая", "В обработке"];
+    private static readonly string[] TerminalStatuses = ["Одобрена", "Отклонена"];
+
     private readonly Faker<CreditApplication> _faker;
     private readonly CreditApplicationGenerationOptions _options;
 
@@ -17,13 +20,10 @@ public class CreditApplicationGenerator
     {
         _options = options.Value;
 
-        var nonTerminalStatuses = new[] { "Новая", "В обработке" };
-        var terminalStatuses = new[] { "Одобрена", "Отклонена" };
         var minApplicationDate = DateTime.Today.AddYears(-_options.MaxApplicationAgeYears);
         var maxApplicationDate = DateTime.Today.AddDays(-1);
 
         _faker = new Faker<CreditApplication>("ru")
-            .RuleFor(c => c.Id, f => f.IndexFaker + 1)
             .RuleFor(c => c.CreditType, f => f.PickRandom(_options.CreditTypes))
             .RuleFor(c => c.RequestedAmount, f => Math.Round(
                 f.Finance.Amount(_options.MinRequestedAmount, _options.MaxRequestedAmount), 2))
@@ -42,7 +42,7 @@ public class CreditApplicationGenerator
             .RuleFor(c => c.Status, f =>
             {
                 var isTerminal = f.Random.Bool(0.7f);
-                return isTerminal ? f.PickRandom(terminalStatuses) : f.PickRandom(nonTerminalStatuses);
+                return isTerminal ? f.PickRandom(TerminalStatuses) : f.PickRandom(NonTerminalStatuses);
             })
             .RuleFor(c => c.DecisionDate, (f, c) =>
             {

@@ -15,6 +15,7 @@ public class CreditApplicationController(ICreditApplicationService creditService
     /// <param name="cancellationToken">Токен отмены операции</param>
     /// <returns>Кредитная заявка</returns>
     [HttpGet]
+    [ProducesResponseType(typeof(CreditApplication), StatusCodes.Status200OK)]
     public async Task<ActionResult<CreditApplication>> GetById([FromQuery] int id, CancellationToken cancellationToken)
     {
         logger.LogInformation("Received request to retrieve/generate credit application {Id}", id);
