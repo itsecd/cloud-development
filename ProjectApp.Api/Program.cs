@@ -23,7 +23,6 @@ builder.Services.AddCors(options =>
 builder.Services.Configure<CreditApplicationGenerationOptions>(
     builder.Configuration.GetSection(CreditApplicationGenerationOptions.SectionName));
 builder.Services.AddSingleton<CreditApplicationGenerator>();
-builder.Services.AddSingleton<CreditApplicationValidator>();
 builder.Services.AddScoped<ICreditApplicationService, CreditApplicationService>();
 
 builder.Services.AddControllers();

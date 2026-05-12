@@ -26,15 +26,6 @@ public class CreditApplicationServiceCacheTests
         var first = await service.GetByIdAsync(777);
         var second = await service.GetByIdAsync(777);
 
-        Assert.Equal(first.Id, second.Id);
-        Assert.Equal(first.CreditType, second.CreditType);
-        Assert.Equal(first.RequestedAmount, second.RequestedAmount);
-        Assert.Equal(first.TermMonths, second.TermMonths);
-        Assert.Equal(first.InterestRate, second.InterestRate);
-        Assert.Equal(first.ApplicationDate, second.ApplicationDate);
-        Assert.Equal(first.RequiresInsurance, second.RequiresInsurance);
-        Assert.Equal(first.Status, second.Status);
-        Assert.Equal(first.DecisionDate, second.DecisionDate);
-        Assert.Equal(first.ApprovedAmount, second.ApprovedAmount);
+        Assert.Equivalent(first, second);
     }
 }

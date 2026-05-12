@@ -5,7 +5,7 @@ namespace ProjectApp.Api.Services.CreditApplicationService;
 /// <summary>
 /// Валидатор инвариантов кредитной заявки.
 /// </summary>
-public class CreditApplicationValidator
+public static class CreditApplicationValidator
 {
     private static readonly HashSet<string> TerminalStatuses = ["Одобрена", "Отклонена"];
 
@@ -15,7 +15,7 @@ public class CreditApplicationValidator
     /// <param name="application">Проверяемая заявка.</param>
     /// <param name="error">Текст ошибки при неуспехе.</param>
     /// <returns>True, если заявка валидна.</returns>
-    public bool TryValidate(CreditApplication application, out string error)
+    public static bool TryValidate(CreditApplication application, out string error)
     {
         if (string.IsNullOrWhiteSpace(application.CreditType))
         {
@@ -64,13 +64,13 @@ public class CreditApplicationValidator
             }
         }
 
-        if (application.Status == "Одобрена" && application.ApprovedAmount is null)
+        if (application is { Status: "Одобрена", ApprovedAmount: null })
         {
             error = "ApprovedAmount must be set for status 'Одобрена'.";
             return false;
         }
 
-        if (application.Status == "Отклонена" && application.ApprovedAmount is not null)
+        if (application is { Status: "Отклонена", ApprovedAmount: not null })
         {
             error = "ApprovedAmount must be null for status 'Отклонена'.";
             return false;

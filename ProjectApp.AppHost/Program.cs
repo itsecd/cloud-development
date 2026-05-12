@@ -1,33 +1,26 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
 var cache = builder.AddRedis("cache");
-
-var apiReplica1 = builder.AddProject<Projects.ProjectApp_Api>("projectapp-api-r1")
+builder.AddContainer("redis-commander", "rediscommander/redis-commander:latest")
+    .WithEnvironment("REDIS_HOSTS", "local:cache:6379")
     .WithReference(cache)
     .WaitFor(cache)
-    .WithEndpoint("http", endpoint => endpoint.Port = 7001);
-
-var apiReplica2 = builder.AddProject<Projects.ProjectApp_Api>("projectapp-api-r2")
-    .WithReference(cache)
-    .WaitFor(cache)
-    .WithEndpoint("http", endpoint => endpoint.Port = 7002);
-
-var apiReplica3 = builder.AddProject<Projects.ProjectApp_Api>("projectapp-api-r3")
-    .WithReference(cache)
-    .WaitFor(cache)
-    .WithEndpoint("http", endpoint => endpoint.Port = 7003);
+    .WithHttpEndpoint(port: 8081, targetPort: 8081, name: "http");
 
 var gateway = builder.AddProject<Projects.ProjectApp_Gateway>("projectapp-gateway")
-    .WithReference(apiReplica1)
-    .WithReference(apiReplica2)
-    .WithReference(apiReplica3)
-    .WaitFor(apiReplica1)
-    .WaitFor(apiReplica2)
-    .WaitFor(apiReplica3)
     .WithEndpoint("http", endpoint => endpoint.Port = 7000);
 
+for (var i = 1; i <= 3; i++)
+{
+    var replica = builder.AddProject<Projects.ProjectApp_Api>($"projectapp-api-r{i}")
+        .WithReference(cache)
+        .WaitFor(cache)
+        .WithEndpoint("http", endpoint => endpoint.Port = 7000 + i);
+
+    gateway.WithReference(replica).WaitFor(replica);
+}
+
 builder.AddProject<Projects.Client_Wasm>("client")
-    .WithReference(gateway)
     .WaitFor(gateway);
 
 builder.Build().Run();

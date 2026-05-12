@@ -12,7 +12,6 @@ public class CreditApplicationGeneratorTests
     public void Generate_ShouldProduceApplicationMatchingRequiredRules()
     {
         var generator = CreateGenerator();
-        var validator = new CreditApplicationValidator();
         var application = generator.Generate();
 
         Assert.Contains(application.CreditType, _options.CreditTypes);
@@ -23,19 +22,18 @@ public class CreditApplicationGeneratorTests
         Assert.True(application.ApplicationDate >= DateOnly.FromDateTime(DateTime.Today.AddYears(-_options.MaxApplicationAgeYears)));
         Assert.True(application.ApplicationDate <= DateOnly.FromDateTime(DateTime.Today.AddDays(-1)));
 
-        Assert.True(validator.TryValidate(application, out var error), error);
+        Assert.True(CreditApplicationValidator.TryValidate(application, out var error), error);
     }
 
     [Fact]
     public void Generate_MultipleTimes_ShouldKeepInvariants()
     {
         var generator = CreateGenerator();
-        var validator = new CreditApplicationValidator();
 
         for (var i = 0; i < 200; i++)
         {
             var application = generator.Generate();
-            Assert.True(validator.TryValidate(application, out var error), $"Iteration {i}: {error}");
+            Assert.True(CreditApplicationValidator.TryValidate(application, out var error), $"Iteration {i}: {error}");
         }
     }
 

@@ -1,4 +1,3 @@
-using Ocelot.LoadBalancer;
 using Ocelot.LoadBalancer.Errors;
 using Ocelot.LoadBalancer.Interfaces;
 using Ocelot.Responses;
@@ -12,7 +11,7 @@ namespace ProjectApp.Gateway.LoadBalancing;
 /// </summary>
 public class QueryBasedLoadBalancer(IServiceDiscoveryProvider serviceProvider) : ILoadBalancer
 {
-    public string Type => "QueryBased";
+    public string Type => nameof(QueryBasedLoadBalancer);
 
     public async Task<Response<ServiceHostAndPort>> LeaseAsync(HttpContext httpContext)
     {
