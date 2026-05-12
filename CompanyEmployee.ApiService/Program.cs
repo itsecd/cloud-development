@@ -1,10 +1,21 @@
 using CompanyEmployee.ApiService.Services;
 using CompanyEmployee.ServiceDefaults;
-
+using MassTransit;
+using CompanyEmployee.DtoModel;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 builder.AddRedisDistributedCache("redis");
+
+builder.Services.AddMassTransit(x =>
+{
+    x.UsingRabbitMq((context, cfg) =>
+    {
+        var connectionString = builder.Configuration.GetConnectionString("rabbitmq");
+
+        cfg.Host(new Uri(connectionString!));
+    });
+});
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -28,9 +39,22 @@ if (app.Environment.IsDevelopment())
 app.MapDefaultEndpoints();
 app.UseHttpsRedirection();
 
-app.MapGet("/api/CompanyEmployee", async (HttpContext context, CompanyEmployeeService service, int id) =>
+app.MapGet("/api/CompanyEmployee", async (HttpContext context, CompanyEmployeeService service, IPublishEndpoint endpoint, int id) =>
 {
     var employee = await service.GetEmployeeAsync(id);
+    var dto = new ModelDTO(
+        employee.Id,
+        employee.FullName,
+        employee.JobTitle,
+        employee.Department,
+        employee.AdmissionDate,
+        employee.Salary,
+        employee.Email,
+        employee.PhoneNumber,
+        employee.Dismissal,
+        employee.DismissalDate
+    );
+    await endpoint.Publish(dto);
 
     return Results.Ok(employee);
 })
