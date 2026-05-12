@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>dotnet-ProjectApp.FileService-87bb36c8-b357-414f-9b4d-e45436991bd8</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AWSSDK.S3" Version="3.7.412.3" />
+    <PackageReference Include="AWSSDK.SQS" Version="3.7.500" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ProjectApp.Domain\ProjectApp.Domain.csproj" />
+    <ProjectReference Include="..\ProjectApp.ServiceDefaults\ProjectApp.ServiceDefaults.csproj" />
+  </ItemGroup>
+</Project>

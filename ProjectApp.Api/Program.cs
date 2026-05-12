@@ -1,6 +1,8 @@
 using ProjectApp.Api.Services.CreditApplicationService;
 using ProjectApp.Api.Options;
 using ProjectApp.ServiceDefaults;
+using Amazon.Runtime;
+using Amazon.SQS;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,7 +24,20 @@ builder.Services.AddCors(options =>
 
 builder.Services.Configure<CreditApplicationGenerationOptions>(
     builder.Configuration.GetSection(CreditApplicationGenerationOptions.SectionName));
+builder.Services.Configure<AwsMessagingOptions>(
+    builder.Configuration.GetSection(AwsMessagingOptions.SectionName));
+
+var sqsServiceUrl = builder.Configuration["Services:localstack:HttpEndpoint"] ?? "http://localhost:4566";
+var sqsCredentials = new BasicAWSCredentials("test", "test");
+var sqsConfig = new AmazonSQSConfig
+{
+    ServiceURL = sqsServiceUrl,
+    AuthenticationRegion = "us-east-1"
+};
+
+builder.Services.AddSingleton<IAmazonSQS>(_ => new AmazonSQSClient(sqsCredentials, sqsConfig));
 builder.Services.AddSingleton<CreditApplicationGenerator>();
+builder.Services.AddSingleton<ICreditApplicationEventPublisher, SqsCreditApplicationEventPublisher>();
 builder.Services.AddScoped<ICreditApplicationService, CreditApplicationService>();
 
 builder.Services.AddControllers();

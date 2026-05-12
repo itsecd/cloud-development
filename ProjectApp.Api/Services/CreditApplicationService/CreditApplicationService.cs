@@ -10,6 +10,7 @@ namespace ProjectApp.Api.Services.CreditApplicationService;
 public class CreditApplicationService(
     IDistributedCache cache,
     CreditApplicationGenerator generator,
+    ICreditApplicationEventPublisher eventPublisher,
     IConfiguration configuration,
     ILogger<CreditApplicationService> logger) : ICreditApplicationService
 {
@@ -76,6 +77,15 @@ public class CreditApplicationService(
             generatedApplication.CreditType,
             generatedApplication.RequestedAmount,
             generatedApplication.Status);
+
+        try
+        {
+            await eventPublisher.PublishGeneratedAsync(generatedApplication, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to publish generated credit application event for Id={Id}", generatedApplication.Id);
+        }
 
         return generatedApplication;
     }
