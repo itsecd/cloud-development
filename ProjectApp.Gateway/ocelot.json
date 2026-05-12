@@ -1,0 +1,44 @@
+{
+  "Routes": [
+    {
+      "UpstreamPathTemplate": "/applications",
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
+      "DownstreamPathTemplate": "/api/creditapplication",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5500,
+          "Metadata": {
+            "weight": "3"
+          }
+        },
+        {
+          "Host": "localhost",
+          "Port": 5501,
+          "Metadata": {
+            "weight": "2"
+          }
+        },
+        {
+          "Host": "localhost",
+          "Port": 5502,
+          "Metadata": {
+            "weight": "1"
+          }
+        }
+      ],
+      "LoadBalancerOptions": {
+        "Type": "WeightedRoundRobin"
+      }
+    }
+  ],
+  "CorsSettings": {
+    "AllowedOrigins": [
+      "http://localhost:5127",
+      "https://localhost:7282"
+    ]
+  }
+}

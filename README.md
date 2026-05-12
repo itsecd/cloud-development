@@ -1,4 +1,4 @@
-# Лабораторная работа №1 — «Кэширование»
+# Лабораторные работы №1-2
 
 **Вариант:** №21 — «Кредитная заявка»  
 **Балансировка:** Weighted Round Robin  
@@ -12,7 +12,11 @@
 - Кэширование результатов генерации через IDistributedCache (Redis) с TTL 10 минут.
 - Структурное логирование запросов и результатов генерации.
 - Оркестрация сервисов через .NET Aspire.
+- API Gateway на `Ocelot`.
+- Запуск трех реплик `ProjectApp.Api`.
+- Балансировка нагрузки `Weighted Round Robin` с весами `3:2:1`.
 - REST endpoint: `GET /api/creditapplication?id={id}`.
+- Gateway endpoint: `GET /applications?id={id}`.
 - Дополнительно: реализована клиентская карточка «Кредитная заявка» (Blazor WebAssembly, компонент `Client.Wasm/Components/CreditApplicationCard.razor`) для запроса по ID и наглядного отображения всех полей заявки.
 
 ## Характеристики генерируемой заявки
@@ -48,14 +52,25 @@
 
 Структура:
 - ProjectApp.Api — API для кредитных заявок
+- ProjectApp.Gateway — API Gateway на Ocelot c кастомным Weighted Round Robin
 - ProjectApp.Domain — доменные сущности
-- ProjectApp.AppHost — оркестрация (.NET Aspire)
+- ProjectApp.AppHost — оркестрация (.NET Aspire) с Redis, Gateway и тремя репликами API
 - Client.Wasm — веб‑клиент (карточка «Кредитная заявка»)
 - ProjectApp.Tests — модульные тесты генератора
 
 ## Эндпойнты
 
 - GET `/api/creditapplication?id={id}` — получить или сгенерировать заявку, с кэшированием
+- GET `/applications?id={id}` — получить заявку через gateway с балансировкой между репликами
+
+## Лабораторная работа №2
+
+Во второй лабораторной работе настроены:
+
+- несколько реплик сервиса генерации `ProjectApp.Api`;
+- API Gateway на базе `Ocelot`;
+- собственная реализация алгоритма `Weighted Round Robin`;
+- маршрутизация через gateway к трем репликам API по схеме `R1, R1, R1, R2, R2, R3, ...`.
 
 ## Кэширование
 
@@ -65,17 +80,18 @@
 
 ## Запуск проекта
 
-Вариант 1 — через Aspire (поднимет Redis и API):
+Вариант 1 — через Aspire (поднимет Redis, 3 реплики API, gateway и клиент):
 
 ```bash
 dotnet run --project ProjectApp.AppHost
 ```
 
-Вариант 2 — отдельно API и клиент:
+Вариант 2 — отдельно gateway, API и клиент:
 
 ```bash
-dotnet run --project ProjectApp.Api      # API доступен на http://localhost:5179
-dotnet run --project Client.Wasm         # Клиент на http://localhost:5127
+dotnet run --project ProjectApp.Api          # API по launchSettings
+dotnet run --project ProjectApp.Gateway      # Gateway на http://localhost:5224
+dotnet run --project Client.Wasm             # Клиент на http://localhost:5127
 ```
 
 Проверка тестов:

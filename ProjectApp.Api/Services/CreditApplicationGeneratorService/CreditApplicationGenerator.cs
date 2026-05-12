@@ -8,13 +8,13 @@ namespace ProjectApp.Api.Services.CreditApplicationGeneratorService;
 /// </summary>
 public class CreditApplicationGenerator
 {
-    private static readonly string[] CreditTypes =
-    {
+    private static readonly string[] _creditTypes =
+    [
         "Потребительский", "Ипотека", "Автокредит", "Рефинансирование",
         "Образовательный", "Кредитная карта", "Бизнес"
-    };
+    ];
 
-    private static readonly string[] Statuses = { "Новая", "В обработке", "Одобрена", "Отклонена" };
+    private static readonly string[] _statuses = ["Новая", "В обработке", "Одобрена", "Отклонена"];
 
     private readonly Faker<CreditApplication> _faker;
     private readonly double _minInterestRatePercent;
@@ -26,7 +26,7 @@ public class CreditApplicationGenerator
 
         _faker = new Faker<CreditApplication>("ru")
             .RuleFor(c => c.Id, f => f.IndexFaker + 1)
-            .RuleFor(c => c.CreditType, f => f.PickRandom(CreditTypes))
+            .RuleFor(c => c.CreditType, f => f.PickRandom(_creditTypes))
             .RuleFor(c => c.RequestedAmount, f => Math.Round(f.Finance.Amount(50_000, 10_000_000), 2))
             .RuleFor(c => c.TermMonths, f => f.Random.Int(6, 360))
             .RuleFor(c => c.InterestRate, f =>
@@ -41,7 +41,7 @@ public class CreditApplicationGenerator
                 return date > today ? today : date;
             })
             .RuleFor(c => c.RequiresInsurance, f => f.Random.Bool())
-            .RuleFor(c => c.Status, f => f.PickRandom(Statuses))
+            .RuleFor(c => c.Status, f => f.PickRandom(_statuses))
             .RuleFor(c => c.DecisionDate, (f, c) =>
             {
                 if (c.Status is "Одобрена" or "Отклонена")
