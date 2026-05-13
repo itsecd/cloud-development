@@ -1,9 +1,10 @@
 ﻿using Microsoft.Extensions.Caching.Distributed;
 using Service.Api.Entities;
+using Service.Api.Messaging;
 using System.Text.Json;
 namespace Service.Api.Generator;
 
-public class EmployeeGeneratorService(IDistributedCache cache, ILogger<EmployeeGeneratorService> logger, IConfiguration configuration) : IEmployeeGeneratorService
+public class EmployeeGeneratorService(IDistributedCache cache, IProducerService messagingService, ILogger<EmployeeGeneratorService> logger, IConfiguration configuration) : IEmployeeGeneratorService
 {
     /// <summary>
     /// Время инициализации кэша
@@ -27,6 +28,7 @@ public class EmployeeGeneratorService(IDistributedCache cache, ILogger<EmployeeG
             logger.LogInformation("No employee {id} in cache. Generating employee", id);
             employee = EmployeeGenerator.Generate(id);
             logger.LogInformation("Populating the cache with employee {id}", id);
+            await messagingService.SendMessage(employee);
             await PopulateCache(employee);
             return employee;
         }

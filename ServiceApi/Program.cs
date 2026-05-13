@@ -1,3 +1,4 @@
+using Service.Api;
 using Service.Api.Generator;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -6,7 +7,7 @@ builder.AddServiceDefaults();
 builder.AddRedisDistributedCache("RedisCache");
 
 builder.Services.AddScoped<IEmployeeGeneratorService, EmployeeGeneratorService>();
-
+builder.AddProducer();
 
 var app = builder.Build();
 app.MapDefaultEndpoints();

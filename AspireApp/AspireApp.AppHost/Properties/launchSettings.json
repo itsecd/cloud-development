@@ -1,6 +1,18 @@
 {
   "$schema": "https://json.schemastore.org/launchsettings.json",
   "profiles": {
+    "SNS+LocalstackS3": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "applicationUrl": "https://localhost:17289;http://localhost:15028",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "SNS+LocalstackS3",
+        "DOTNET_ENVIRONMENT": "SNS+LocalstackS3",
+        "ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL": "https://localhost:21076",
+        "ASPIRE_RESOURCE_SERVICE_ENDPOINT_URL": "https://localhost:22018"
+      }
+    },
     "https": {
       "commandName": "Project",
       "dotnetRunMessages": true,
