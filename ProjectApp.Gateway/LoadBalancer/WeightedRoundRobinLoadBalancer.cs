@@ -10,9 +10,8 @@ namespace ProjectApp.Gateway.LoadBalancer;
 public class WeightedRoundRobinLoadBalancer : ILoadBalancer
 {
     private readonly List<ServiceHostAndPort> _services;
-    private readonly int[] _weights;
-    private readonly int[] _currentWeights;
-    private readonly int _totalWeight;
+    private readonly List<ServiceHostAndPort> _weightedCycle;
+    private int _currentIndex = -1;
     private readonly object _lock = new();
 
     public WeightedRoundRobinLoadBalancer(List<ServiceHostAndPort> services, int[]? weights = null)
@@ -23,28 +22,34 @@ public class WeightedRoundRobinLoadBalancer : ILoadBalancer
         }
 
         _services = services;
-        _weights = new int[_services.Count];
+        var normalizedWeights = new int[_services.Count];
 
         if (weights is not null)
         {
             for (var i = 0; i < _services.Count; i++)
             {
-                _weights[i] = i < weights.Length && weights[i] > 0 ? weights[i] : 1;
+                normalizedWeights[i] = i < weights.Length && weights[i] > 0 ? weights[i] : 1;
             }
         }
         else
         {
-            Array.Fill(_weights, 1);
+            Array.Fill(normalizedWeights, 1);
         }
 
-        _totalWeight = _weights.Sum();
-        if (_totalWeight <= 0)
+        var totalWeight = normalizedWeights.Sum();
+        if (totalWeight <= 0)
         {
             throw new InvalidOperationException("Total weight must be greater than zero.");
         }
 
-        _currentWeights = new int[_services.Count];
-        Array.Copy(_weights, _currentWeights, _services.Count);
+        _weightedCycle = [];
+        for (var i = 0; i < _services.Count; i++)
+        {
+            for (var j = 0; j < normalizedWeights[i]; j++)
+            {
+                _weightedCycle.Add(_services[i]);
+            }
+        }
     }
 
     public string Type => nameof(WeightedRoundRobinLoadBalancer).Replace("LoadBalancer", "");
@@ -53,27 +58,10 @@ public class WeightedRoundRobinLoadBalancer : ILoadBalancer
     {
         lock (_lock)
         {
-            var maxIndex = 0;
-            var maxWeight = _currentWeights[0];
-
-            for (var i = 1; i < _services.Count; i++)
-            {
-                if (_currentWeights[i] > maxWeight)
-                {
-                    maxWeight = _currentWeights[i];
-                    maxIndex = i;
-                }
-            }
-
-            _currentWeights[maxIndex] -= _totalWeight;
-
-            for (var i = 0; i < _services.Count; i++)
-            {
-                _currentWeights[i] += _weights[i];
-            }
+            _currentIndex = (_currentIndex + 1) % _weightedCycle.Count;
 
             return Task.FromResult<Response<ServiceHostAndPort>>(
-                new OkResponse<ServiceHostAndPort>(_services[maxIndex]));
+                new OkResponse<ServiceHostAndPort>(_weightedCycle[_currentIndex]));
         }
     }
 

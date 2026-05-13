@@ -34,14 +34,24 @@ public class CreditApplicationGenerator
                 var rate = f.Random.Double(_minInterestRatePercent, _minInterestRatePercent + 15.0);
                 return Math.Round(rate, 2);
             })
-            .RuleFor(c => c.ApplicationDate, f =>
-            {
-                var date = f.Date.PastDateOnly(2);
-                var today = DateOnly.FromDateTime(DateTime.Now);
-                return date > today ? today : date;
-            })
-            .RuleFor(c => c.RequiresInsurance, f => f.Random.Bool())
             .RuleFor(c => c.Status, f => f.PickRandom(_statuses))
+            .RuleFor(c => c.RequiresInsurance, f => f.Random.Bool())
+            .RuleFor(c => c.ApplicationDate, (f, c) =>
+            {
+                var today = DateOnly.FromDateTime(DateTime.Now);
+                var date = f.Date.PastDateOnly(2);
+                if (date > today)
+                {
+                    date = today;
+                }
+
+                if (c.Status is "Одобрена" or "Отклонена" && date >= today)
+                {
+                    return today.AddDays(-1);
+                }
+
+                return date;
+            })
             .RuleFor(c => c.DecisionDate, (f, c) =>
             {
                 if (c.Status is "Одобрена" or "Отклонена")
@@ -50,7 +60,7 @@ public class CreditApplicationGenerator
                     var end = DateTime.Now;
                     if (start >= end)
                     {
-                        return DateOnly.FromDateTime(start);
+                        return DateOnly.FromDateTime(end);
                     }
 
                     var decided = f.Date.Between(start, end);

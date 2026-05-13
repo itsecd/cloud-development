@@ -90,7 +90,8 @@ public class CreditApplicationGeneratorTests
             foreach (var app in appsByStatus[status])
             {
                 Assert.NotNull(app.DecisionDate);
-                Assert.True(app.DecisionDate!.Value >= app.ApplicationDate);
+                Assert.True(app.DecisionDate!.Value > app.ApplicationDate);
+                Assert.True(app.DecisionDate.Value <= DateOnly.FromDateTime(DateTime.Now));
             }
         }
 
