@@ -1,4 +1,5 @@
 using Domain.Interfaces;
+using Infrastructure.Extensions;
 using Infrastructure.Generators;
 using Infrastructure.Services;
 
@@ -18,6 +19,7 @@ builder.Services.AddScoped<IVehicleContractGenerator, VehicleContractGenerator>(
 builder.AddRedisDistributedCache("cache");
 
 builder.Services.AddScoped<IVehicleContractCachedService, VehicleContractCachedService>();
+builder.Services.AddSnsPublishing(builder.Configuration);
 
 var clientAddress = builder.Configuration["ClientAddress"]
     ?? throw new InvalidOperationException("ClientAddress is not configured.");
@@ -54,3 +56,5 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+public partial class Program { }
