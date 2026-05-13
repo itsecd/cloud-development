@@ -3,5 +3,7 @@
   <Project Path="Client.Wasm/Client.Wasm.csproj" />
   <Project Path="Cloud.API/Cloud.API.csproj" />
   <Project Path="Cloud.AppHost/Cloud.AppHost.csproj" />
+  <Project Path="Cloud.EventSink/Cloud.EventSink.csproj" />
   <Project Path="Cloud.ServiceDefaults/Cloud.ServiceDefaults.csproj" />
+  <Project Path="Cloud.Tests/Cloud.Tests.csproj" Id="a77628f3-82e1-49c5-90ce-b4b81ce7768c" />
 </Solution>
