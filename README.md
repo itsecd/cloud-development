@@ -66,9 +66,3 @@
 - Domain - описание области 
 - Infrastructure - основная функциональная часть(различные сервисы)
 - Server - серверное приложение ASP 
-
-![alt text](image-1.png)
-
-![alt text](image-2.png)
-
-![alt text](image-3.png)
