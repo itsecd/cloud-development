@@ -9,13 +9,6 @@ builder.AddServiceDefaults();
 builder.Services.AddServiceDiscovery();
 builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
 
-builder.Logging.ClearProviders();
-builder.Logging.AddJsonConsole(options =>
-{
-    options.IncludeScopes = true;
-    options.TimestampFormat = "yyyy-MM-ddTHH:mm:ss.fffZ ";
-});
-
 builder.Services.Configure<WeightedRoundRobinOptions>(
     builder.Configuration.GetSection(WeightedRoundRobinOptions.SectionName));
 

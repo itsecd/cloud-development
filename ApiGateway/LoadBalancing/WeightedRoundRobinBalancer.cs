@@ -8,19 +8,20 @@ namespace ApiGateway.LoadBalancing;
 
 public sealed class WeightedRoundRobinBalancer : ILoadBalancer
 {
-    private static readonly object Sync = new();
+    private readonly object _sync = new();
     private readonly ILogger<WeightedRoundRobinBalancer> _logger;
-    private readonly List<ServiceHostAndPort> _rotation;
-    private int _currentIndex;
+    private readonly List<WeightedNode> _nodes;
+    private readonly int _totalWeight;
 
     public WeightedRoundRobinBalancer(
         IOptions<WeightedRoundRobinOptions> options,
         ILogger<WeightedRoundRobinBalancer> logger)
     {
         _logger = logger;
-        _rotation = BuildRotation(options.Value.Nodes);
+        _nodes = BuildNodes(options.Value.Nodes);
+        _totalWeight = _nodes.Sum(static node => node.Weight);
 
-        if (_rotation.Count == 0)
+        if (_nodes.Count == 0 || _totalWeight <= 0)
         {
             throw new InvalidOperationException("Не настроены узлы для Weighted Round Robin балансировки.");
         }
@@ -30,22 +31,36 @@ public sealed class WeightedRoundRobinBalancer : ILoadBalancer
 
     public Task<Response<ServiceHostAndPort>> LeaseAsync(HttpContext context)
     {
-        lock (Sync)
+        lock (_sync)
         {
-            if (_currentIndex >= _rotation.Count)
+            WeightedNode? selectedNode = null;
+
+            foreach (var node in _nodes)
             {
-                _currentIndex = 0;
+                node.CurrentWeight += node.Weight;
+
+                if (selectedNode is null || node.CurrentWeight > selectedNode.CurrentWeight)
+                {
+                    selectedNode = node;
+                }
             }
 
-            var next = _rotation[_currentIndex++];
+            if (selectedNode is null)
+            {
+                throw new InvalidOperationException("Не удалось выбрать узел для обработки запроса.");
+            }
+
+            selectedNode.CurrentWeight -= _totalWeight;
 
             _logger.LogInformation(
-                "Gateway routed request to {ReplicaAddress} by {BalancerType}",
-                next,
-                Type);
+                "Gateway routed request to replica {ReplicaId} ({ReplicaAddress}) by {BalancerType} with weight {ReplicaWeight}",
+                selectedNode.ReplicaId,
+                selectedNode.HostAndPort,
+                Type,
+                selectedNode.Weight);
 
             return Task.FromResult<Response<ServiceHostAndPort>>(
-                new OkResponse<ServiceHostAndPort>(next));
+                new OkResponse<ServiceHostAndPort>(selectedNode.HostAndPort));
         }
     }
 
@@ -53,20 +68,40 @@ public sealed class WeightedRoundRobinBalancer : ILoadBalancer
     {
     }
 
-    private static List<ServiceHostAndPort> BuildRotation(IEnumerable<ReplicaNodeOptions> nodes)
+    private static List<WeightedNode> BuildNodes(IEnumerable<ReplicaNodeOptions>? nodes)
     {
-        var rotation = new List<ServiceHostAndPort>();
+        var result = new List<WeightedNode>();
+
+        if (nodes is null)
+        {
+            return result;
+        }
 
         foreach (var node in nodes.Where(static n => !string.IsNullOrWhiteSpace(n.Host) && n.Port > 0))
         {
             var normalizedWeight = Math.Max(1, node.Weight);
 
-            for (var i = 0; i < normalizedWeight; i++)
-            {
-                rotation.Add(new ServiceHostAndPort(node.Host, node.Port));
-            }
+            result.Add(new WeightedNode(
+                node.ReplicaId,
+                new ServiceHostAndPort(node.Host, node.Port),
+                normalizedWeight));
         }
 
-        return rotation;
+        return result;
+    }
+
+    private sealed class WeightedNode
+    {
+        public WeightedNode(string replicaId, ServiceHostAndPort hostAndPort, int weight)
+        {
+            ReplicaId = string.IsNullOrWhiteSpace(replicaId) ? hostAndPort.ToString() : replicaId;
+            HostAndPort = hostAndPort;
+            Weight = weight;
+        }
+
+        public string ReplicaId { get; }
+        public ServiceHostAndPort HostAndPort { get; }
+        public int Weight { get; }
+        public int CurrentWeight { get; set; }
     }
 }

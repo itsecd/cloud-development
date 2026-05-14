@@ -14,23 +14,11 @@ builder.Logging.AddJsonConsole(options =>
 
 builder.Services.AddScoped<IEmployeeGeneratorService, EmployeeGeneratorService>();
 
-builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
-{
-    policy.SetIsOriginAllowed(origin =>
-        Uri.TryCreate(origin, UriKind.Absolute, out var uri)
-        && uri.IsLoopback
-        && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
-        .AllowAnyHeader()
-        .WithMethods("GET")
-        .WithExposedHeaders("X-Service-Replica", "X-Service-Weight");
-}));
-
 var app = builder.Build();
 
 var replicaId = app.Configuration["ReplicaId"] ?? Environment.MachineName;
 var replicaWeight = app.Configuration.GetValue<int?>("ReplicaWeight") ?? 1;
 
-app.UseCors();
 app.Use(async (context, next) =>
 {
     context.Response.Headers["X-Service-Replica"] = replicaId;
