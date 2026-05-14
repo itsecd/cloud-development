@@ -8,11 +8,13 @@ namespace VehicleVault.Api.Services;
 /// Сервис транспортных средств с кэшированием
 /// </summary>
 /// <param name="vehicleGenerator">Генератор транспортных средств</param>
+/// <param name="vehiclePublisher">Сервис отправки сгенерированных ТС в брокер сообщений</param>
 /// <param name="distributedCache">Распределённый кэш</param>
 /// <param name="appConfiguration">Конфигурация приложения</param>
 /// <param name="logger">Логгер</param>
 public class VehicleCacheService(
     IVehicleGeneratorService vehicleGenerator,
+    IVehiclePublisherService vehiclePublisher,
     IDistributedCache distributedCache,
     IConfiguration appConfiguration,
     ILogger<VehicleCacheService> logger) : IVehicleCacheService
@@ -31,6 +33,7 @@ public class VehicleCacheService(
         logger.LogInformation("Cache miss for id {Id}, generating new vehicle", id);
         var result = vehicleGenerator.Generate(id);
         await TrySaveToCache(key, result);
+        await vehiclePublisher.Publish(result);
 
         return result;
     }
