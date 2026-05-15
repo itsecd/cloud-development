@@ -3,15 +3,16 @@ using Microsoft.Extensions.Options;
 using Ocelot.LoadBalancer.Interfaces;
 using Ocelot.Responses;
 using Ocelot.Values;
+using System.Threading;
 
 namespace ApiGateway.LoadBalancing;
 
 public sealed class WeightedRoundRobinBalancer : ILoadBalancer
 {
-    private readonly object _sync = new();
     private readonly ILogger<WeightedRoundRobinBalancer> _logger;
     private readonly List<WeightedNode> _nodes;
     private readonly int _totalWeight;
+    private long _requestCounter;
 
     public WeightedRoundRobinBalancer(
         IOptions<WeightedRoundRobinOptions> options,
@@ -19,11 +20,13 @@ public sealed class WeightedRoundRobinBalancer : ILoadBalancer
     {
         _logger = logger;
         _nodes = BuildNodes(options.Value.Nodes);
+
         _totalWeight = _nodes.Sum(static node => node.Weight);
 
         if (_nodes.Count == 0 || _totalWeight <= 0)
         {
-            throw new InvalidOperationException("Не настроены узлы для Weighted Round Robin балансировки.");
+            throw new InvalidOperationException(
+                "Не настроены узлы для Weighted Round Robin балансировки.");
         }
     }
 
@@ -31,37 +34,35 @@ public sealed class WeightedRoundRobinBalancer : ILoadBalancer
 
     public Task<Response<ServiceHostAndPort>> LeaseAsync(HttpContext context)
     {
-        lock (_sync)
+        var currentRequest = Interlocked.Increment(ref _requestCounter);
+
+        var index = (int)((currentRequest - 1) % _totalWeight);
+
+        WeightedNode? selectedNode = null;
+        var cumulativeWeight = 0;
+
+        foreach (var node in _nodes)
         {
-            WeightedNode? selectedNode = null;
+            cumulativeWeight += node.Weight;
 
-            foreach (var node in _nodes)
+            if (index < cumulativeWeight)
             {
-                node.CurrentWeight += node.Weight;
-
-                if (selectedNode is null || node.CurrentWeight > selectedNode.CurrentWeight)
-                {
-                    selectedNode = node;
-                }
+                selectedNode = node;
+                break;
             }
-
-            if (selectedNode is null)
-            {
-                throw new InvalidOperationException("Не удалось выбрать узел для обработки запроса.");
-            }
-
-            selectedNode.CurrentWeight -= _totalWeight;
-
-            _logger.LogInformation(
-                "Gateway routed request to replica {ReplicaId} ({ReplicaAddress}) by {BalancerType} with weight {ReplicaWeight}",
-                selectedNode.ReplicaId,
-                selectedNode.HostAndPort,
-                Type,
-                selectedNode.Weight);
-
-            return Task.FromResult<Response<ServiceHostAndPort>>(
-                new OkResponse<ServiceHostAndPort>(selectedNode.HostAndPort));
         }
+
+        selectedNode ??= _nodes[^1];
+
+        _logger.LogInformation(
+            "Gateway routed request to replica {ReplicaId} ({ReplicaAddress}) by {BalancerType} with weight {ReplicaWeight}",
+            selectedNode.ReplicaId,
+            selectedNode.HostAndPort,
+            Type,
+            selectedNode.Weight);
+
+        return Task.FromResult<Response<ServiceHostAndPort>>(
+            new OkResponse<ServiceHostAndPort>(selectedNode.HostAndPort));
     }
 
     public void Release(ServiceHostAndPort hostAndPort)
@@ -77,7 +78,8 @@ public sealed class WeightedRoundRobinBalancer : ILoadBalancer
             return result;
         }
 
-        foreach (var node in nodes.Where(static n => !string.IsNullOrWhiteSpace(n.Host) && n.Port > 0))
+        foreach (var node in nodes.Where(static n =>
+                     !string.IsNullOrWhiteSpace(n.Host) && n.Port > 0))
         {
             var normalizedWeight = Math.Max(1, node.Weight);
 
@@ -94,14 +96,18 @@ public sealed class WeightedRoundRobinBalancer : ILoadBalancer
     {
         public WeightedNode(string replicaId, ServiceHostAndPort hostAndPort, int weight)
         {
-            ReplicaId = string.IsNullOrWhiteSpace(replicaId) ? hostAndPort.ToString() : replicaId;
+            ReplicaId = string.IsNullOrWhiteSpace(replicaId)
+                ? hostAndPort.ToString()
+                : replicaId;
+
             HostAndPort = hostAndPort;
             Weight = weight;
         }
 
         public string ReplicaId { get; }
+
         public ServiceHostAndPort HostAndPort { get; }
+
         public int Weight { get; }
-        public int CurrentWeight { get; set; }
     }
 }
