@@ -14,6 +14,7 @@ public class PatientController(
     /// Получить медицинского пациента по ID, если не найден в кэше, сгенерировать нового
     /// </summary>
     [HttpGet]
+    [ProducesResponseType(typeof(MedicalPatient), StatusCodes.Status200OK)]
     public async Task<ActionResult<MedicalPatient>> GetById([FromQuery] int id, CancellationToken cancellationToken)
     {
         logger.LogInformation("Received request to retrieve/generate patient {Id}", id);

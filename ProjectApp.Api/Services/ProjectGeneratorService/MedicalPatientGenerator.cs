@@ -20,10 +20,10 @@ public class MedicalPatientGenerator
             .RuleFor(p => p.BirthDate, f => f.Date.PastDateOnly(90))
             .RuleFor(p => p.Height, f => Math.Round(f.Random.Double(145.0, 205.0), 2))
             .RuleFor(p => p.Weight, f => Math.Round(f.Random.Double(45.0, 140.0), 2))
-            .RuleFor(p => p.BloodGroup, f => PickWeighted(f, (1, 35), (2, 25), (3, 20), (4, 20)))
-            .RuleFor(p => p.RhFactor, f => PickWeighted(f, (true, 85), (false, 15)))
+            .RuleFor(p => p.BloodGroup, f => f.Random.WeightedRandom([1, 2, 3, 4], [0.35f, 0.25f, 0.20f, 0.20f]))
+            .RuleFor(p => p.RhFactor, f => f.Random.WeightedRandom([true, false], [0.85f, 0.15f]))
             .RuleFor(p => p.LastExaminationDate, (f, p) => GenerateExaminationDate(f, p.BirthDate))
-            .RuleFor(p => p.IsVaccinated, f => PickWeighted(f, (true, 82), (false, 18)));
+            .RuleFor(p => p.IsVaccinated, f => f.Random.WeightedRandom([true, false], [0.82f, 0.18f]));
     }
 
     /// <summary>
@@ -36,7 +36,7 @@ public class MedicalPatientGenerator
         var gender = faker.PickRandom<Name.Gender>();
         var lastName = faker.Name.LastName(gender);
         var firstName = faker.Name.FirstName(gender);
-        var patronymicBase = faker.Name.FirstName(gender);
+        var patronymicBase = faker.Name.FirstName(Name.Gender.Male);
         var patronymicSuffix = gender == Name.Gender.Male ? "ович" : "овна";
 
         return $"{lastName} {firstName} {patronymicBase}{patronymicSuffix}";
@@ -44,32 +44,7 @@ public class MedicalPatientGenerator
 
     private static DateOnly GenerateExaminationDate(Faker faker, DateOnly birthDate)
     {
-        var birthDateTime = birthDate.ToDateTime(TimeOnly.MinValue);
-        var today = DateTime.Today;
-
-        if (birthDateTime >= today)
-        {
-            return birthDate;
-        }
-
-        return DateOnly.FromDateTime(faker.Date.Between(birthDateTime, today));
-    }
-
-    private static T PickWeighted<T>(Faker faker, params (T value, int weight)[] items)
-    {
-        var totalWeight = items.Sum(item => item.weight);
-        var roll = faker.Random.Int(1, totalWeight);
-        var currentWeight = 0;
-
-        foreach (var item in items)
-        {
-            currentWeight += item.weight;
-            if (roll <= currentWeight)
-            {
-                return item.value;
-            }
-        }
-
-        return items[^1].value;
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        return birthDate >= today ? birthDate : faker.Date.BetweenDateOnly(birthDate, today);
     }
 }

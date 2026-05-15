@@ -17,7 +17,7 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.Services.AddScoped<MedicalPatientGenerator>();
+builder.Services.AddSingleton<MedicalPatientGenerator>();
 builder.Services.AddScoped<IMedicalPatientGeneratorService, MedicalPatientGeneratorService>();
 
 builder.Services.AddControllers();

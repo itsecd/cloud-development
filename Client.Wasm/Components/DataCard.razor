@@ -102,34 +102,14 @@
 
     private static string FormatValue(JsonNode? node)
     {
-        if (node is null)
+        return node switch
         {
-            return "нет данных";
-        }
-
-        if (node is JsonValue value)
-        {
-            if (value.TryGetValue<bool>(out var boolValue))
-            {
-                return boolValue ? "Да" : "Нет";
-            }
-
-            if (value.TryGetValue<double>(out var doubleValue))
-            {
-                return doubleValue.ToString("0.00");
-            }
-
-            if (value.TryGetValue<int>(out var intValue))
-            {
-                return intValue.ToString();
-            }
-
-            if (value.TryGetValue<string>(out var stringValue))
-            {
-                return stringValue;
-            }
-        }
-
-        return node.ToJsonString();
+            null => "нет данных",
+            JsonValue value when value.TryGetValue<bool>(out var boolValue) => boolValue ? "Да" : "Нет",
+            JsonValue value when value.TryGetValue<int>(out var intValue) => intValue.ToString(),
+            JsonValue value when value.TryGetValue<double>(out var doubleValue) => doubleValue.ToString("0.00"),
+            JsonValue value when value.TryGetValue<string>(out var stringValue) => stringValue,
+            _ => node.ToJsonString()
+        };
     }
 }
