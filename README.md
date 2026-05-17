@@ -93,9 +93,8 @@
 Ссылка на форк "https://github.com/RYTpL/cloud-development/tree/lb1_var34"
 
 ## 2. Переход в директорию проекта
-win+R ->
-cmd ->
-
+win+R 
+cmd 
 cd cloud
 ## 3. Запуск проекта
 dotnet run --project CloudDevelopment/CloudDevelopment.AppHost
