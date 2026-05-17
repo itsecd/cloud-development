@@ -1,6 +1,4 @@
-using System;
 using Bogus;
-using Microsoft.Extensions.Logging;
 using Patient.Generator.DTO;
 
 namespace Patient.Generator.Generator;
@@ -34,12 +32,12 @@ public sealed class PatientGenerator(ILogger<PatientGenerator> logger)
     /// <summary>
     /// Faker для генерации тестовых данных пациентов.
     /// </summary>
-    private static readonly Faker<PatientDto>_faker = new Faker<PatientDto>("ru")
+    private static readonly Faker<PatientDto> _faker = new Faker<PatientDto>("ru")
         .RuleFor(x => x.FullName, f =>
         {
             var gender = f.PickRandom<Bogus.DataSets.Name.Gender>();
             var firstName = f.Name.FirstName(gender);
-            var patronymicBase = f.Name.FirstName(gender);
+            var patronymicBase = f.Name.FirstName(Bogus.DataSets.Name.Gender.Male);
             var patronymic = BuildPatronymic(patronymicBase, gender);
             return $"{f.Name.LastName(gender)} {firstName} {patronymic}";
         })
@@ -47,12 +45,7 @@ public sealed class PatientGenerator(ILogger<PatientGenerator> logger)
         .RuleFor(x => x.BirthDate, f =>
         {
             var today = DateOnly.FromDateTime(DateTime.Today);
-            var earliestBirthDate = today.AddYears(-MaxAgeYears);
-            var totalDays = today.DayNumber - earliestBirthDate.DayNumber;
-            var offset = f.Random.Int(0, totalDays);
-            var birthDate = earliestBirthDate.AddDays(offset);
-
-            return birthDate > today ? today : birthDate;
+            return f.Date.BetweenDateOnly(today.AddYears(-MaxAgeYears), today);
         })
         .RuleFor(x => x.Height,
             f => Math.Round(f.Random.Double(MinHeight, MaxHeight), 2, MidpointRounding.AwayFromZero))
@@ -63,10 +56,7 @@ public sealed class PatientGenerator(ILogger<PatientGenerator> logger)
         .RuleFor(x => x.LastExaminationDate, (f, dto) =>
         {
             var today = DateOnly.FromDateTime(DateTime.Today);
-            var totalDays = today.DayNumber - dto.BirthDate.DayNumber;
-            var offset = f.Random.Int(0, totalDays);
-            var examinationDate = dto.BirthDate.AddDays(offset);
-            return examinationDate < dto.BirthDate ? dto.BirthDate : examinationDate;
+            return f.Date.BetweenDateOnly(dto.BirthDate, today);
         })
         .RuleFor(x => x.IsVaccinated, f => f.Random.Bool(0.8f));
 

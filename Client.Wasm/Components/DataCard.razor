@@ -108,17 +108,12 @@
             return [];
         }
 
-        var rows = new List<(int Number, string Name, string Value)>();
-
-        for (var i = 0; i < PropertyOrder.Length; i++)
-        {
-            var propertyKey = PropertyOrder[i];
-            var displayName = PropertyNames.GetValueOrDefault(propertyKey, propertyKey);
-            var displayValue = FormatValue(propertyKey, Value[propertyKey]);
-            rows.Add((i + 1, displayName, displayValue));
-        }
-
-        return rows;
+        return PropertyOrder
+            .Select((propertyKey, i) => (
+                i + 1,
+                PropertyNames.GetValueOrDefault(propertyKey, propertyKey),
+                FormatValue(propertyKey, Value[propertyKey])))
+            .ToList();
     }
 
     private static string FormatValue(string propertyKey, JsonNode? node)

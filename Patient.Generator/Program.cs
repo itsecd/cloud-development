@@ -1,6 +1,3 @@
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Patient.Generator.Generator;
 using Patient.Generator.Service;
 using Patient.ServiceDefaults;
@@ -10,12 +7,14 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
 builder.AddRedisDistributedCache("patient-cache");
 
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowLocalDev", policy =>
     {
         policy
-            .AllowAnyOrigin()
+            .WithOrigins(allowedOrigins)
             .WithHeaders("Content-Type")
             .WithMethods("GET");
     });

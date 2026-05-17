@@ -1,12 +1,7 @@
-using System;
+using Microsoft.Extensions.Caching.Distributed;
+using Patient.Generator.DTO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using Patient.Generator.DTO;
 
 namespace Patient.Generator.Service;
 

@@ -1,5 +1,3 @@
-using System;
-
 namespace Patient.Generator.DTO;
 
 /// <summary>
