@@ -95,7 +95,7 @@
 ## 2. Переход в директорию проекта
 win+R ->
 cmd ->
-cd cloud
+cd cloud-development
 ## 3. Запуск проекта
 dotnet run --project CloudDevelopment/CloudDevelopment.AppHost
 
