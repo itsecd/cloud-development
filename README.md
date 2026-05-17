@@ -95,7 +95,7 @@
 ## 2. Переход в директорию проекта
 win+R ->
 cmd ->
-cd cloud
+cd cloud-development
 ## 3. Запуск проекта
 dotnet run --project CloudDevelopment/CloudDevelopment.AppHost
 
@@ -103,7 +103,8 @@ dotnet run --project CloudDevelopment/CloudDevelopment.AppHost
 
 Aspire Dashboard
 https://localhost:17149
-Если просит токен - 53a6f9faff2f2a1495437e3dd3fde05b
+Если просит токен - Найти его можно в командной строке после info: Aspire.Hosting.DistributedApplication[0]
+      Login to the dashboard at https://localhost:17149/login?t=
 
 Backend API (Swagger)
 https://localhost:7130/swagger
