@@ -40,7 +40,9 @@ public class ContractCacheService
                 _logger.LogInformation("Cache HIT для ключа {CacheKey}", cacheKey);
                 return JsonSerializer.Deserialize<SoftwareProjectContract>(cached)!;
             }
+
         }
+
         catch (Exception ex)
         {
             _logger.LogError(ex, "Ошибка чтения из кэша для ключа {CacheKey}", cacheKey);

@@ -14,7 +14,7 @@ builder.Host.UseSerilog((context, configuration) =>
 builder.AddRedisDistributedCache("redis");
 
 builder.Services.AddSingleton<ContractGeneratorService>();
-builder.Services.AddScoped<ContractCacheService>();
+builder.Services.AddSingleton<ContractCacheService>();
 
 // CORS — разрешаем запросы от клиента
 builder.Services.AddCors(options =>
