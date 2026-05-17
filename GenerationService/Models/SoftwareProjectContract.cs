@@ -1,25 +1,24 @@
 ﻿namespace GenerationService.Models;
 
+public class SoftwareProjectContract
+{
+    public int Id { get; init; }
 
-public record SoftwareProjectContract(
+    public string ProjectName { get; set; } = string.Empty;
 
-    int Id,
-    /// <summary>Название проекта</summary>
-    string ProjectName,
-    /// <summary>Заказчик проекта</summary>
-    string ClientCompany,
-    /// <summary>ФИО менеджера проекта</summary>
-    string ProjectManager,
-    /// <summary>Дата начала</summary>
-    DateOnly StartDate,
-    /// <summary>Плановая дата завершения</summary>
-    DateOnly PlannedEndDate,
-    /// <summary>Фактическая дата завершения (null если проект не завершён)</summary>
-    DateOnly? ActualEndDate,
-    /// <summary>Бюджет</summary>
-    decimal Budget,
-    /// <summary>Фактические затраты</summary>
-    decimal ActualCost,
-    /// <summary>Процент выполнения от 0 до 100</summary>
-    int CompletionPercentage
-);
+    public string ClientCompany { get; set; } = string.Empty;
+
+    public string ProjectManager { get; set; } = string.Empty;
+
+    public DateOnly StartDate { get; set; }
+
+    public DateOnly PlannedEndDate { get; set; }
+
+    public DateOnly? ActualEndDate { get; set; }
+
+    public decimal Budget { get; set; }
+
+    public decimal ActualCost { get; set; }
+
+    public int CompletionPercentage { get; set; }
+}

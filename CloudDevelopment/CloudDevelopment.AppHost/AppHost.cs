@@ -1,3 +1,5 @@
+using Aspire.Hosting;
+
 var builder = DistributedApplication.CreateBuilder(args);
 
 var redis = builder.AddRedis("redis")
@@ -7,8 +9,6 @@ var generation = builder.AddProject<Projects.GenerationService>("generation-serv
     .WithReference(redis)
     .WaitFor(redis);
 
-builder.AddProject<Projects.Client_Wasm>("client-wasm")
-    .WithReference(generation)
-    .WaitFor(generation);
+builder.AddProject<Projects.Client_Wasm>("client-wasm");
 
 builder.Build().Run();

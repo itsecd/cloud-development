@@ -1,6 +1,7 @@
 using GenerationService.Services;
 using Serilog;
 using Serilog.Formatting.Compact;
+using GenerationService.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,17 +19,23 @@ builder.Services.AddSingleton<ContractCacheService>();
 
 // CORS — разрешаем запросы от клиента
 builder.Services.AddCors(options =>
-    options.AddDefaultPolicy(policy =>
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader()));
+{
+    options.AddPolicy("ClientPolicy", policy =>
+    {
+        policy.WithOrigins("https://localhost:7282")
+              .WithMethods("GET")
+              .WithHeaders("Content-Type");
+    });
+});
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.Configure<CacheOptions>(
+    builder.Configuration.GetSection("CacheOptions"));
 
 var app = builder.Build();
 
-app.UseCors();
+app.UseCors("ClientPolicy");
 app.UseSwagger();
 app.UseSwaggerUI();
 
