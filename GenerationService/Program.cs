@@ -17,14 +17,15 @@ builder.AddRedisDistributedCache("redis");
 builder.Services.AddSingleton<ContractGeneratorService>();
 builder.Services.AddSingleton<ContractCacheService>();
 
-// CORS — разрешаем запросы от клиента
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("ClientPolicy", policy =>
+    options.AddPolicy("AllowClient", policy =>
     {
-        policy.WithOrigins("https://localhost:7282")
-              .WithMethods("GET")
-              .WithHeaders("Content-Type");
+        policy.WithOrigins(
+                "https://localhost:7282",
+                "http://localhost:5219")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
     });
 });
 
@@ -34,21 +35,27 @@ builder.Services.Configure<CacheOptions>(
     builder.Configuration.GetSection("CacheOptions"));
 
 var app = builder.Build();
+var instanceId = Guid.NewGuid().ToString()[..8];
 
-app.UseCors("ClientPolicy");
+app.UseCors("AllowClient");
 app.UseSwagger();
 app.UseSwaggerUI();
 
-// GET /contracts/{id} — получить контракт по id (с кэшированием)
+
 app.MapGet("/contracts/{id:int}", async (
     int id,
-    ContractCacheService cacheService) =>
+    ContractCacheService cacheService,
+    ILogger<Program> logger) =>
 {
+    logger.LogInformation(
+        "Request handled by instance {InstanceId}",
+        instanceId);
+
     var contract = await cacheService.GetOrCreateAsync(id);
+
     return Results.Ok(contract);
 });
 
-// GET /contracts — сгенерировать случайный контракт
 app.MapGet("/contracts", (ContractGeneratorService generator) =>
 {
     var contract = generator.Generate(Random.Shared.Next(1, 100000));
