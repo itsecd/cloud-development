@@ -10,11 +10,11 @@ using ProjectApp.FileService.Options;
 
 namespace ProjectApp.FileService;
 
-public class Worker(
+public class CreditApplicationFilePersistenceWorker(
     IAmazonSQS sqsClient,
     IAmazonS3 s3Client,
     IOptions<FilePersistenceOptions> options,
-    ILogger<Worker> logger) : BackgroundService
+    ILogger<CreditApplicationFilePersistenceWorker> logger) : BackgroundService
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {

@@ -1,3 +1,5 @@
+using Amazon;
+using Amazon.Extensions.NETCore.Setup;
 using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.SQS;
@@ -14,13 +16,16 @@ builder.Services.Configure<FilePersistenceOptions>(
 var serviceUrl = builder.Configuration["Services:localstack:HttpEndpoint"] ?? "http://localhost:4566";
 var credentials = new BasicAWSCredentials("test", "test");
 
-builder.Services.AddSingleton<IAmazonSQS>(_ =>
-    new AmazonSQSClient(credentials, new AmazonSQSConfig
+builder.Services.AddAWSService<IAmazonSQS>(new AWSOptions
+{
+    Credentials = credentials,
+    Region = RegionEndpoint.USEast1,
+    DefaultClientConfig =
     {
         ServiceURL = serviceUrl,
         AuthenticationRegion = "us-east-1"
-    }));
-
+    }
+});
 builder.Services.AddSingleton<IAmazonS3>(_ =>
     new AmazonS3Client(credentials, new AmazonS3Config
     {
@@ -29,7 +34,7 @@ builder.Services.AddSingleton<IAmazonS3>(_ =>
         ForcePathStyle = true
     }));
 
-builder.Services.AddHostedService<Worker>();
+builder.Services.AddHostedService<CreditApplicationFilePersistenceWorker>();
 
 var host = builder.Build();
 host.Run();

@@ -11,6 +11,8 @@ namespace ProjectApp.Tests;
 
 public class BackendIntegrationTests
 {
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
     [Fact]
     public async Task GetById_ThroughGateway_ShouldPersistGeneratedPayloadToObjectStorage()
     {
@@ -37,6 +39,11 @@ public class BackendIntegrationTests
         var generated = await response.Content.ReadFromJsonAsync<CreditApplication>();
         Assert.NotNull(generated);
         Assert.Equal(id, generated.Id);
+        Assert.False(string.IsNullOrWhiteSpace(generated.CreditType));
+        Assert.True(generated.RequestedAmount > 0);
+        Assert.True(generated.TermMonths > 0);
+        Assert.True(generated.InterestRate > 0);
+        Assert.False(string.IsNullOrWhiteSpace(generated.Status));
 
         using var s3 = new AmazonS3Client(
             new BasicAWSCredentials("test", "test"),
@@ -58,10 +65,10 @@ public class BackendIntegrationTests
 
         using var reader = new StreamReader(obj.ResponseStream);
         var payload = await reader.ReadToEndAsync();
-        var persisted = JsonSerializer.Deserialize<CreditApplication>(payload);
+        var persisted = JsonSerializer.Deserialize<CreditApplication>(payload, JsonOptions);
 
         Assert.NotNull(persisted);
-        Assert.Equal(id, persisted.Id);
+        Assert.Equivalent(generated, persisted);
     }
 
     private static async Task<string?> WaitForObjectKeyAsync(IAmazonS3 s3Client, int id, TimeSpan timeout)
