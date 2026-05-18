@@ -1,3 +1,5 @@
+using Amazon.SQS;
+using LocalStack.Client.Extensions;
 using VehicleApp.Api.Services;
 using VehicleApp.ServiceDefaults;
 
@@ -6,6 +8,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
 builder.AddRedisDistributedCache("cache");
 
+builder.Services.AddLocalStack(builder.Configuration);
+builder.Services.AddAwsService<IAmazonSQS>();
+builder.Services.AddScoped<IVehicleProducer, SqsVehicleProducer>();
 builder.Services.AddScoped<IVehicleService, VehicleService>();
 
 var app = builder.Build();

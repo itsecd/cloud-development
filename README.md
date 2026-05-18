@@ -73,3 +73,53 @@
 - **Upstream:** `GET /vehicle` → **Downstream:** `/api/vehicle` на одну из реплик
 - `LoadBalancerOptions.Type` = `WeightedRoundRobinLoadBalancer`
 - `DangerousAcceptAnyServerCertificateValidator: true` — принимаем dev-сертификаты реплик
+
+---
+
+# Лабораторная работа №3 — «Интеграционное тестирование»
+
+**Вариант:** SQS + MinIO
+
+---
+
+## Цель работы
+
+Добавить в оркестрацию объектное хранилище, реализовать файловый сервис, который сериализует сгенерированные данные в файлы и сохраняет их в объектном хранилище, наладить отправку данных в файловый сервис через брокер сообщений и покрыть бекенд интеграционными тестами.
+
+---
+
+## Что было сделано
+
+### 1. Объектное хранилище и брокер в оркестрации
+
+В [VehicleApp.AppHost/AppHost.cs](VehicleApp/VehicleApp.AppHost/AppHost.cs) добавлены:
+
+- контейнер **LocalStack** (`vehicle-localstack`, порт 4566) для эмуляции SQS;
+- контейнер **MinIO** (`vehicle-minio`) — объектное хранилище;
+- `AddAWSCloudFormationTemplate("resources", "CloudFormation/vehicle-template-sqs.yaml", ...)`
+Каждая реплика `vehicleapp-api-{i}` и `file-service` получают ссылку на CloudFormation-стек через `.WithReference(awsResources)`, а `file-service` — дополнительно ссылку на MinIO и переменную `AWS__Resources__MinioBucketName=vehicle-bucket`.
+
+### 2. Файловый сервис ([File.Service](File.Service/))
+
+- [Storage/IFileStorage.cs](File.Service/Storage/IFileStorage.cs), [Storage/MinioFileStorage.cs](File.Service/Storage/MinioFileStorage.cs) — интерфейс файлового хранилища и его реализация поверх MinIO. Сериализованный JSON загружается в бакет под ключом `vehicle_{id}.json`.
+- [Messaging/SqsConsumerService.cs](File.Service/Messaging/SqsConsumerService.cs) — фоновый `BackgroundService`, который батчами читает сообщения из SQS (`MaxNumberOfMessages=10`, `WaitTimeSeconds=5`), отдаёт payload в `IFileStorage` и удаляет сообщение из очереди.
+- [Controllers/StorageController.cs](File.Service/Controllers/StorageController.cs) — REST-эндпойнты `GET /api/s3` (список ключей) и `GET /api/s3/{key}` (содержимое файла) — используются интеграционными тестами для проверки результата.
+- [Program.cs](File.Service/Program.cs) — регистрация AWS SDK через `AddLocalStack`, MinIO-клиент через `AddMinioClient("vehicle-minio")` и автоматическое создание бакета при старте (`EnsureBucketExistsAsync`).
+
+### 3. Отправка генерируемых данных через брокер
+
+В [VehicleApp.Api](VehicleApp.Api/):
+
+- [Services/IVehicleProducer.cs](VehicleApp.Api/Services/IVehicleProducer.cs), [Services/SqsVehicleProducer.cs](VehicleApp.Api/Services/SqsVehicleProducer.cs) — продюсер, отправляющий сериализованное `Vehicle` в очередь по имени из `AWS:Resources:SQSQueueName`.
+- [Services/VehicleService.cs](VehicleApp.Api/Services/VehicleService.cs) — после генерации нового транспортного средства (cache miss) вызывает `producer.SendAsync(vehicle)` перед записью в кэш. На cache hit отправка не происходит.
+- [Program.cs](VehicleApp.Api/Program.cs) — регистрация LocalStack/SQS-клиента и продюсера в DI.
+
+### 4. Интеграционные тесты
+
+[VehicleApp/VehicleApp.AppHost.Tests/IntegrationTest1.cs](VehicleApp/VehicleApp.AppHost.Tests/IntegrationTest1.cs) — два `[Fact]`-теста, поднимающие весь AppHost через `DistributedApplicationTestingBuilder`:
+
+- **`GatewayResponse_IsPersistedToObjectStorage`** — выполняет `GET /vehicle?id=...` через шлюз, после паузы запрашивает `GET /api/s3/vehicle_{id}.json` у файлового сервиса и сравнивает оба объекта через `Assert.Equivalent`.
+- **`ObjectStorageList_ContainsGeneratedVehicle`** — после запроса транспортного средства убеждается, что список `GET /api/s3` содержит ключ `vehicle_{id}.json`.
+
+
+

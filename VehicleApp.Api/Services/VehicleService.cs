@@ -9,9 +9,10 @@ namespace VehicleApp.Api.Services;
 /// Сервис получения транспортных средств с кэшированием
 /// </summary>
 /// <param name="cache">Распределённый кэш</param>
+/// <param name="producer">Сервис отправки в брокер сообщений</param>
 /// <param name="logger">Логгер</param>
 /// <param name="configuration">Конфигурация приложения</param>
-public sealed class VehicleService(IDistributedCache cache, ILogger<VehicleService> logger, IConfiguration configuration) : IVehicleService
+public sealed class VehicleService(IDistributedCache cache, IVehicleProducer producer, ILogger<VehicleService> logger, IConfiguration configuration) : IVehicleService
 {
     private const string KeyPrefix = "vehicle:";
 
@@ -30,6 +31,7 @@ public sealed class VehicleService(IDistributedCache cache, ILogger<VehicleServi
         var vehicle = VehicleGenerator.Generate(id);
         logger.LogInformation("Vehicle generated. Id: {VehicleId}", id);
 
+        await producer.SendAsync(vehicle);
         await SetToCacheAsync(key, vehicle);
         return vehicle;
     }
