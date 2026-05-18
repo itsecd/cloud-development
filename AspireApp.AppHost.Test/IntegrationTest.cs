@@ -7,9 +7,9 @@ using Xunit.Abstractions;
 namespace AspireApp.AppHost.Test;
 
 /// <summary>
-/// Интеграционные тесты для проверки микросервисного пайплайна
+/// РРЅС‚РµРіСЂР°С†РёРѕРЅРЅС‹Рµ С‚РµСЃС‚С‹ РґР»СЏ РїСЂРѕРІРµСЂРєРё РјРёРєСЂРѕСЃРµСЂРІРёСЃРЅРѕРіРѕ РїР°Р№РїР»Р°Р№РЅР°
 /// </summary>
-/// <param name="output">Служба журналирования юнит-тестов</param>
+/// <param name="output">РЎР»СѓР¶Р±Р° Р¶СѓСЂРЅР°Р»РёСЂРѕРІР°РЅРёСЏ СЋРЅРёС‚-С‚РµСЃС‚РѕРІ</param>
 public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
 {
     private DistributedApplication? _app;
@@ -21,14 +21,14 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
     }
 
     /// <summary>
-    /// Проверяет, что вызов гейтвея:
+    /// РџСЂРѕРІРµСЂСЏРµС‚, С‡С‚Рѕ РІС‹Р·РѕРІ РіРµР№С‚РІРµСЏ:
     /// <list type="bullet">
-    /// <item><description>В ответ отправляет сгенерированного сотрудника</description></item>
-    /// <item><description>Сериализует сотрудника в S3 хранилище</description></item>
-    /// <item><description>Проверяет, что данные из предыдущих пунктов идентичны</description></item>
+    /// <item><description>Р’ РѕС‚РІРµС‚ РѕС‚РїСЂР°РІР»СЏРµС‚ СЃРіРµРЅРµСЂРёСЂРѕРІР°РЅРЅРѕРіРѕ СЃРѕС‚СЂСѓРґРЅРёРєР°</description></item>
+    /// <item><description>РЎРµСЂРёР°Р»РёР·СѓРµС‚ СЃРѕС‚СЂСѓРґРЅРёРєР° РІ S3 С…СЂР°РЅРёР»РёС‰Рµ</description></item>
+    /// <item><description>РџСЂРѕРІРµСЂСЏРµС‚, С‡С‚Рѕ РґР°РЅРЅС‹Рµ РёР· РїСЂРµРґС‹РґСѓС‰РёС… РїСѓРЅРєС‚РѕРІ РёРґРµРЅС‚РёС‡РЅС‹</description></item>
     /// </list>
     /// </summary>
-    /// <param name="envName">Запускаемый лаунч профайл</param>
+    /// <param name="envName">Р—Р°РїСѓСЃРєР°РµРјС‹Р№ Р»Р°СѓРЅС‡ РїСЂРѕС„Р°Р№Р»</param>
     [Fact]
     public async Task TestPipeline()
     {
