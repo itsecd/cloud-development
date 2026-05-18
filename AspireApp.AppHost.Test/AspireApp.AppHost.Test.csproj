@@ -23,13 +23,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Content Include="..\AspireApp\AspireApp.AppHost\CloudFormation\*.yaml">
-			<Link>CloudFormation\%(Filename)%(Extension)</Link>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</Content>
-	</ItemGroup>
-
-	<ItemGroup>
 		<Using Include="System.Net" />
 		<Using Include="Microsoft.Extensions.DependencyInjection" />
 		<Using Include="Aspire.Hosting.ApplicationModel" />

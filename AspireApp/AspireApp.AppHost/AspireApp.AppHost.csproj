@@ -25,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-	<None Update="CloudFormation\landplot-template-sns-s3.yaml">
+	<None Update="CloudFormation\employee-template-sns-s3.yaml">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	</None>
   </ItemGroup>

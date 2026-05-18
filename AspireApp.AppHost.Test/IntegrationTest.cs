@@ -12,22 +12,12 @@ namespace AspireApp.AppHost.Test;
 /// <param name="output">Служба журналирования юнит-тестов</param>
 public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
 {
-    private IDistributedApplicationTestingBuilder? _builder;
     private DistributedApplication? _app;
 
     /// <inheritdoc/>
     public async Task InitializeAsync()
     {
-        var cancellationToken = CancellationToken.None;
-        _builder = await DistributedApplicationTestingBuilder.CreateAsync<Projects.AspireApp_AppHost>(cancellationToken);
-        _builder.Configuration["DcpPublisher:RandomizePorts"] = "false";
-        _builder.Services.AddLogging(logging =>
-        {
-            logging.AddXUnit(output);
-            logging.SetMinimumLevel(LogLevel.Debug);
-            logging.AddFilter("Aspire.Hosting.Dcp", LogLevel.Debug);
-            logging.AddFilter("Aspire.Hosting", LogLevel.Debug);
-        });
+        await Task.CompletedTask;
     }
 
     /// <summary>
@@ -39,13 +29,23 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
     /// </list>
     /// </summary>
     /// <param name="envName">Запускаемый лаунч профайл</param>
-    [Theory]
-    [InlineData("SNS+LocalstackS3")]
-    public async Task TestPipeline(string envName)
+    [Fact]
+    public async Task TestPipeline()
     {
+        var envName = "SNS+LocalstackS3";
         var cancellationToken = CancellationToken.None;
-        _builder!.Environment.EnvironmentName = envName;
-        _app = await _builder.BuildAsync(cancellationToken);
+        var builder = await DistributedApplicationTestingBuilder.CreateAsync<Projects.AspireApp_AppHost>(cancellationToken);
+        builder.Configuration["DcpPublisher:RandomizePorts"] = "false";
+        builder.Services.AddLogging(logging =>
+        {
+            logging.AddXUnit(output);
+            logging.SetMinimumLevel(LogLevel.Debug);
+            logging.AddFilter("Aspire.Hosting.Dcp", LogLevel.Debug);
+            logging.AddFilter("Aspire.Hosting", LogLevel.Debug);
+        });
+
+        builder.Environment.EnvironmentName = envName;
+        _app = await builder.BuildAsync(cancellationToken);
         await _app.StartAsync(cancellationToken);
 
         var random = new Random();
@@ -72,8 +72,10 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
     /// <inheritdoc/>
     public async Task DisposeAsync()
     {
-        await _app!.StopAsync();
-        await _app.DisposeAsync();
-        await _builder!.DisposeAsync();
+        if (_app is not null)
+        {
+            await _app.StopAsync();
+            await _app.DisposeAsync();
+        }
     }
 }
