@@ -1,15 +1,16 @@
-using System.Text.Json;
+using Microsoft.Extensions.Options;
 using Ocelot.Configuration;
 using Ocelot.LoadBalancer.Interfaces;
 using Ocelot.Responses;
 using Ocelot.ServiceDiscovery.Providers;
+using ProjectApp.Gateway.Configuration;
 
 namespace ProjectApp.Gateway.LoadBalancer;
 
 /// <summary>
-/// Создатель балансировщика Weighted Round Robin с чтением весов из ocelot.json.
+/// Создатель балансировщика Weighted Round Robin с чтением весов из настроек приложения.
 /// </summary>
-public class WeightedRoundRobinCreator : ILoadBalancerCreator
+public class WeightedRoundRobinCreator(IOptions<WeightedRoundRobinOptions> options) : ILoadBalancerCreator
 {
     public string Type => nameof(WeightedRoundRobinCreator).Replace("Creator", "");
 
@@ -17,58 +18,16 @@ public class WeightedRoundRobinCreator : ILoadBalancerCreator
     {
         var services = serviceProvider.GetAsync().Result;
         var hostAndPorts = services.Select(service => service.HostAndPort).ToList();
-
-        var weights = new List<int>();
-        try
+        var configuredWeights = options.Value.Weights;
+        var weights = new int[hostAndPorts.Count];
+        for (var i = 0; i < hostAndPorts.Count; i++)
         {
-            var configPath = Path.Combine(Directory.GetCurrentDirectory(), "ocelot.json");
-            var json = File.ReadAllText(configPath);
-            using var doc = JsonDocument.Parse(json);
-
-            var routes = doc.RootElement.GetProperty("Routes");
-
-            foreach (var currentRoute in routes.EnumerateArray())
-            {
-                if (!currentRoute.TryGetProperty("LoadBalancerOptions", out var options) ||
-                    !options.TryGetProperty("Type", out var type) ||
-                    !string.Equals(type.GetString(), "WeightedRoundRobin", StringComparison.OrdinalIgnoreCase))
-                {
-                    continue;
-                }
-
-                var downstream = currentRoute.GetProperty("DownstreamHostAndPorts");
-                foreach (var hostPort in downstream.EnumerateArray())
-                {
-                    var weight = 1;
-                    if (hostPort.TryGetProperty("Metadata", out var metadata) &&
-                        metadata.TryGetProperty("weight", out var weightElement))
-                    {
-                        if (weightElement.ValueKind == JsonValueKind.String)
-                        {
-                            int.TryParse(weightElement.GetString(), out weight);
-                        }
-                        else if (weightElement.ValueKind == JsonValueKind.Number)
-                        {
-                            weightElement.TryGetInt32(out weight);
-                        }
-                    }
-
-                    weights.Add(weight <= 0 ? 1 : weight);
-                }
-
-                break;
-            }
-        }
-        catch
-        {
-        }
-
-        if (weights.Count == 0)
-        {
-            weights = Enumerable.Repeat(1, hostAndPorts.Count).ToList();
+            weights[i] = i < configuredWeights.Length && configuredWeights[i] > 0
+                ? configuredWeights[i]
+                : 1;
         }
 
         return new OkResponse<ILoadBalancer>(
-            new WeightedRoundRobinLoadBalancer(hostAndPorts, weights.ToArray()));
+            new WeightedRoundRobinLoadBalancer(hostAndPorts, weights));
     }
 }

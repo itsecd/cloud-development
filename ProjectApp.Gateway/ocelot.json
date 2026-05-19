@@ -10,24 +10,15 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": 5500,
-          "Metadata": {
-            "weight": "3"
-          }
+          "Port": 5500
         },
         {
           "Host": "localhost",
-          "Port": 5501,
-          "Metadata": {
-            "weight": "2"
-          }
+          "Port": 5501
         },
         {
           "Host": "localhost",
-          "Port": 5502,
-          "Metadata": {
-            "weight": "1"
-          }
+          "Port": 5502
         }
       ],
       "LoadBalancerOptions": {

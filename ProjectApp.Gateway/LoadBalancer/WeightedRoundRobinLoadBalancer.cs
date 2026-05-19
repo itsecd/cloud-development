@@ -10,8 +10,9 @@ namespace ProjectApp.Gateway.LoadBalancer;
 public class WeightedRoundRobinLoadBalancer : ILoadBalancer
 {
     private readonly List<ServiceHostAndPort> _services;
-    private readonly List<ServiceHostAndPort> _weightedCycle;
+    private readonly int[] _weights;
     private int _currentIndex = -1;
+    private int _remainingSelections;
     private readonly object _lock = new();
 
     public WeightedRoundRobinLoadBalancer(List<ServiceHostAndPort> services, int[]? weights = null)
@@ -22,34 +23,27 @@ public class WeightedRoundRobinLoadBalancer : ILoadBalancer
         }
 
         _services = services;
-        var normalizedWeights = new int[_services.Count];
+        _weights = new int[_services.Count];
 
         if (weights is not null)
         {
             for (var i = 0; i < _services.Count; i++)
             {
-                normalizedWeights[i] = i < weights.Length && weights[i] > 0 ? weights[i] : 1;
+                _weights[i] = i < weights.Length && weights[i] > 0 ? weights[i] : 1;
             }
         }
         else
         {
-            Array.Fill(normalizedWeights, 1);
+            Array.Fill(_weights, 1);
         }
 
-        var totalWeight = normalizedWeights.Sum();
+        var totalWeight = _weights.Sum();
         if (totalWeight <= 0)
         {
             throw new InvalidOperationException("Total weight must be greater than zero.");
         }
 
-        _weightedCycle = [];
-        for (var i = 0; i < _services.Count; i++)
-        {
-            for (var j = 0; j < normalizedWeights[i]; j++)
-            {
-                _weightedCycle.Add(_services[i]);
-            }
-        }
+        MoveToNextService();
     }
 
     public string Type => nameof(WeightedRoundRobinLoadBalancer).Replace("LoadBalancer", "");
@@ -58,14 +52,26 @@ public class WeightedRoundRobinLoadBalancer : ILoadBalancer
     {
         lock (_lock)
         {
-            _currentIndex = (_currentIndex + 1) % _weightedCycle.Count;
+            var selectedService = _services[_currentIndex];
+            _remainingSelections--;
+
+            if (_remainingSelections == 0)
+            {
+                MoveToNextService();
+            }
 
             return Task.FromResult<Response<ServiceHostAndPort>>(
-                new OkResponse<ServiceHostAndPort>(_weightedCycle[_currentIndex]));
+                new OkResponse<ServiceHostAndPort>(selectedService));
         }
     }
 
     public void Release(ServiceHostAndPort hostAndPort)
     {
+    }
+
+    private void MoveToNextService()
+    {
+        _currentIndex = (_currentIndex + 1) % _services.Count;
+        _remainingSelections = _weights[_currentIndex];
     }
 }
