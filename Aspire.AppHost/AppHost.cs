@@ -3,7 +3,7 @@ var builder = DistributedApplication.CreateBuilder(args);
 var redis = builder.AddRedis("cache").WithRedisInsight();
 
 var localstack = builder.AddContainer("localstack", "localstack/localstack", "3.8")
-    .WithEnvironment("SERVICES", "s3,sns")
+    .WithEnvironment("SERVICES", "s3,sns,sqs")
     .WithEnvironment("DEFAULT_REGION", "us-east-1")
     .WithHttpEndpoint(targetPort: 4566, name: "localstack");
 

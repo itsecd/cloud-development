@@ -14,7 +14,9 @@ public class S3FileStorageService(
 
     public async Task<string> SaveContractAsync(VehicleContractDto contract)
     {
-        var timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
+        await EnsureBucketExistsAsync();
+
+        var timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmssffff");
         var key = $"vehicle-contracts/{contract.SystemId}/{timestamp}.json";
         var json = JsonSerializer.Serialize(contract, new JsonSerializerOptions { WriteIndented = true });
 

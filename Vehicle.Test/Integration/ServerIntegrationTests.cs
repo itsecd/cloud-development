@@ -1,66 +1,25 @@
-using Amazon.Runtime;
-using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
-using Amazon.SQS;
 using Amazon.SQS.Model;
+using Aspire.Hosting.Testing;
 using Domain.Contracts;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Extensions.DependencyInjection;
 using System.Net.Http.Json;
 using System.Text.Json;
 
 namespace Vehicle.Test.Integration;
 
 /// <summary>
-/// Интеграционные тесты для Server:
-/// корректность генерации контракта и публикация в SNS.
+/// Интеграционные тесты Server через Aspire.Hosting.Testing.
+/// Проверяют: генерацию контракта, кэширование и публикацию в SNS.
 /// </summary>
-public class ServerIntegrationTests : IntegrationTestBase
+[Collection("Aspire")]
+public class ServerIntegrationTests(AspireIntegrationFixture fixture)
 {
-    private WebApplicationFactory<Program>? _factory;
-    private HttpClient? _client;
-
-    public override async Task InitializeAsync()
-    {
-        await base.InitializeAsync();
-
-        _factory = new WebApplicationFactory<Program>()
-            .WithWebHostBuilder(host =>
-            {
-                host.ConfigureServices(services =>
-                {
-                    services.AddSingleton<IAmazonSimpleNotificationService>(_ =>
-                        new AmazonSimpleNotificationServiceClient(
-                            new BasicAWSCredentials("test", "test"),
-                            new AmazonSimpleNotificationServiceConfig
-                            {
-                                ServiceURL = LocalStackUrl
-                            }));
-
-                    services.AddStackExchangeRedisCache(options =>
-                        options.Configuration = RedisConnectionString);
-                });
-
-                host.UseSetting("ClientAddress", "http://localhost");
-                host.UseSetting("CacheSettings:VehicleContractExpirationMinutes", "1");
-                host.UseSetting("AWS:ServiceURL", LocalStackUrl);
-                host.UseSetting("AWS:Region", "us-east-1");
-                host.UseSetting("AWS:TopicName", "test-vehicle-contracts");
-            });
-
-        _client = _factory.CreateClient();
-    }
-
-    public override async Task DisposeAsync()
-    {
-        _factory?.Dispose();
-        await base.DisposeAsync();
-    }
-
     [Fact]
     public async Task GetVehicle_ReturnsValidContract()
     {
-        var response = await _client!.GetAsync("/contracts/vehicle?id=42");
+        var client = fixture.App.CreateHttpClient("back-0");
+
+        var response = await client.GetAsync("/contracts/vehicle?id=42");
         response.EnsureSuccessStatusCode();
 
         var contract = await response.Content.ReadFromJsonAsync<VehicleContractDto>();
@@ -73,8 +32,10 @@ public class ServerIntegrationTests : IntegrationTestBase
     [Fact]
     public async Task GetVehicle_SameId_ReturnsCachedContract()
     {
-        var first = await _client!.GetFromJsonAsync<VehicleContractDto>("/contracts/vehicle?id=100");
-        var second = await _client!.GetFromJsonAsync<VehicleContractDto>("/contracts/vehicle?id=100");
+        var client = fixture.App.CreateHttpClient("back-0");
+
+        var first  = await client.GetFromJsonAsync<VehicleContractDto>("/contracts/vehicle?id=100");
+        var second = await client.GetFromJsonAsync<VehicleContractDto>("/contracts/vehicle?id=100");
 
         Assert.NotNull(first);
         Assert.NotNull(second);
@@ -85,53 +46,56 @@ public class ServerIntegrationTests : IntegrationTestBase
     [Fact]
     public async Task GetVehicle_DifferentIds_ReturnDifferentContracts()
     {
-        var contract1 = await _client!.GetFromJsonAsync<VehicleContractDto>("/contracts/vehicle?id=1");
-        var contract2 = await _client!.GetFromJsonAsync<VehicleContractDto>("/contracts/vehicle?id=2");
+        var client = fixture.App.CreateHttpClient("back-0");
 
-        Assert.NotNull(contract1);
-        Assert.NotNull(contract2);
-        Assert.NotEqual(contract1.Vin, contract2.Vin);
+        var c1 = await client.GetFromJsonAsync<VehicleContractDto>("/contracts/vehicle?id=1");
+        var c2 = await client.GetFromJsonAsync<VehicleContractDto>("/contracts/vehicle?id=2");
+
+        Assert.NotNull(c1);
+        Assert.NotNull(c2);
+        Assert.NotEqual(c1.Vin, c2.Vin);
     }
 
     [Fact]
-    public async Task GetVehicle_PublishesContractToSnsTopic()
+    public async Task GetVehicle_PublishesContractToSns()
     {
-        // Создаём SNS тему и подписываем SQS-очередь для перехвата сообщений
-        var topicArn = (await SnsClient.CreateTopicAsync("test-vehicle-contracts")).TopicArn;
-        var queueUrl = (await SqsClient.CreateQueueAsync("test-capture-queue")).QueueUrl;
-        var queueArn = (await SqsClient.GetQueueAttributesAsync(queueUrl,
-            new List<string> { "QueueArn" })).Attributes["QueueArn"];
+        const string topicName = "vehicle-contracts";
+        const string queueName = "test-sqs-capture";
 
-        await SnsClient.SubscribeAsync(new SubscribeRequest
+        var topicArn = (await fixture.SnsClient.CreateTopicAsync(topicName)).TopicArn;
+        var queueUrl = (await fixture.SqsClient.CreateQueueAsync(queueName)).QueueUrl;
+        var queueArn = (await fixture.SqsClient.GetQueueAttributesAsync(
+            queueUrl, new List<string> { "QueueArn" })).Attributes["QueueArn"];
+
+        await fixture.SnsClient.SubscribeAsync(new SubscribeRequest
         {
             TopicArn = topicArn,
             Protocol = "sqs",
             Endpoint = queueArn
         });
 
-        // Делаем запрос к Server
-        var response = await _client!.GetAsync("/contracts/vehicle?id=999");
+        var client = fixture.App.CreateHttpClient("back-0");
+        var response = await client.GetAsync("/contracts/vehicle?id=999");
         response.EnsureSuccessStatusCode();
 
-        // Ждём доставки сообщения
-        await Task.Delay(500);
+        await Task.Delay(TimeSpan.FromSeconds(2));
 
-        var messages = await SqsClient.ReceiveMessageAsync(new ReceiveMessageRequest
+        var messages = await fixture.SqsClient.ReceiveMessageAsync(new ReceiveMessageRequest
         {
             QueueUrl = queueUrl,
             MaxNumberOfMessages = 1,
-            WaitTimeSeconds = 3
+            WaitTimeSeconds = 5
         });
 
         Assert.Single(messages.Messages);
 
-        var snsEnvelope = JsonSerializer.Deserialize<JsonElement>(messages.Messages[0].Body);
-        var contractJson = snsEnvelope.GetProperty("Message").GetString();
+        var envelope = JsonSerializer.Deserialize<JsonElement>(messages.Messages[0].Body);
+        var contractJson = envelope.GetProperty("Message").GetString();
         Assert.NotNull(contractJson);
 
-        var contract = JsonSerializer.Deserialize<VehicleContractDto>(contractJson);
-        Assert.NotNull(contract);
-        Assert.Equal(999, contract.SystemId);
-        Assert.True(VehicleContractValidator.ValidateBool(contract));
+        var published = JsonSerializer.Deserialize<VehicleContractDto>(contractJson);
+        Assert.NotNull(published);
+        Assert.Equal(999, published.SystemId);
+        Assert.True(VehicleContractValidator.ValidateBool(published));
     }
 }

@@ -1,131 +1,51 @@
-extern alias FileServiceApp;
-
-using Amazon.Runtime;
-using Amazon.S3;
 using Amazon.S3.Model;
-using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
-using Amazon.SQS;
 using Amazon.SQS.Model;
+using Aspire.Hosting.Testing;
 using Domain.Contracts;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Extensions.DependencyInjection;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
-using IS3FileStorageService = FileServiceApp::FileService.Services.IS3FileStorageService;
-using FileProgram = FileServiceApp::Program;
 
 namespace Vehicle.Test.Integration;
 
 /// <summary>
-/// Сквозные интеграционные тесты всего бекенда:
-/// Server → SNS → FileService → S3.
+/// Сквозные интеграционные тесты всего бекенда.
+/// Сценарий: Server генерирует контракт → публикует в SNS → FileService
+/// получает сообщение → сохраняет JSON-файл в S3.
 ///
-/// Т.к. LocalStack работает в Docker-контейнере, прямая HTTP-доставка SNS→FileService
-/// недоступна без настройки сети. Поэтому тест проверяет каждый переход независимо:
-///   1. Server публикует контракт в SNS (верифицируется через SQS-подписку).
-///   2. FileService сохраняет контракт из SNS-сообщения в S3 (прямой вызов через HTTP).
-///   3. S3 содержит корректные данные.
+/// Т.к. LocalStack работает в Docker-контейнере, HTTP-доставка SNS→FileService
+/// требует сетевого доступа Docker→хост. Поэтому тест верифицирует каждый
+/// переход независимо: SNS-сообщение перехватывается через SQS, затем
+/// передаётся в FileService напрямую через HTTP.
 /// </summary>
-public class EndToEndIntegrationTests : IntegrationTestBase
+[Collection("Aspire")]
+public class EndToEndIntegrationTests(AspireIntegrationFixture fixture)
 {
-    private const string SnsTopic = "e2e-vehicle-contracts";
-    private const string SqsQueue = "e2e-capture-queue";
-    private const string S3Bucket = "e2e-vehicle-files";
-
-    private WebApplicationFactory<Program>? _serverFactory;
-    private WebApplicationFactory<FileProgram>? _fileFactory;
-    private HttpClient? _serverClient;
-    private HttpClient? _fileClient;
-
-    public override async Task InitializeAsync()
-    {
-        await base.InitializeAsync();
-
-        var credentials = new BasicAWSCredentials("test", "test");
-
-        _serverFactory = new WebApplicationFactory<Program>()
-            .WithWebHostBuilder(host =>
-            {
-                host.ConfigureServices(services =>
-                {
-                    services.AddSingleton<IAmazonSimpleNotificationService>(_ =>
-                        new AmazonSimpleNotificationServiceClient(credentials,
-                            new AmazonSimpleNotificationServiceConfig
-                            {
-                                ServiceURL = LocalStackUrl
-                            }));
-
-                    services.AddStackExchangeRedisCache(options =>
-                        options.Configuration = RedisConnectionString);
-                });
-
-                host.UseSetting("ClientAddress", "http://localhost");
-                host.UseSetting("CacheSettings:VehicleContractExpirationMinutes", "1");
-                host.UseSetting("AWS:ServiceURL", LocalStackUrl);
-                host.UseSetting("AWS:TopicName", SnsTopic);
-            });
-
-        _fileFactory = new WebApplicationFactory<FileProgram>()
-            .WithWebHostBuilder(host =>
-            {
-                host.ConfigureServices(services =>
-                {
-                    services.AddSingleton<IAmazonS3>(_ =>
-                        new AmazonS3Client(credentials, new AmazonS3Config
-                        {
-                            ServiceURL = LocalStackUrl,
-                            ForcePathStyle = true
-                        }));
-
-                    services.AddSingleton<IAmazonSimpleNotificationService>(_ =>
-                        new AmazonSimpleNotificationServiceClient(credentials,
-                            new AmazonSimpleNotificationServiceConfig
-                            {
-                                ServiceURL = LocalStackUrl
-                            }));
-                });
-
-                host.UseSetting("AWS:ServiceURL", LocalStackUrl);
-                host.UseSetting("AWS:BucketName", S3Bucket);
-                host.UseSetting("AWS:TopicName", SnsTopic);
-                host.UseSetting("FileService:SnsCallbackUrl", "");
-            });
-
-        _serverClient = _serverFactory.CreateClient();
-        _fileClient = _fileFactory.CreateClient();
-
-        var storageService = _fileFactory.Services.GetRequiredService<IS3FileStorageService>();
-        await storageService.EnsureBucketExistsAsync();
-    }
-
-    public override async Task DisposeAsync()
-    {
-        _serverFactory?.Dispose();
-        _fileFactory?.Dispose();
-        await base.DisposeAsync();
-    }
-
     [Fact]
-    public async Task FullFlow_ContractRequest_PublishedToSns_AndSavedToS3()
+    public async Task FullFlow_ServerRequest_ContractPublishedToSns_AndSavedInS3()
     {
-        // Шаг 1: Создаём SNS тему и SQS-очередь для перехвата сообщений
-        var topicArn = (await SnsClient.CreateTopicAsync(SnsTopic)).TopicArn;
-        var queueUrl = (await SqsClient.CreateQueueAsync(SqsQueue)).QueueUrl;
-        var queueArn = (await SqsClient.GetQueueAttributesAsync(queueUrl,
-            new List<string> { "QueueArn" })).Attributes["QueueArn"];
+        const string topicName = "vehicle-contracts";
+        const string queueName = "e2e-capture-queue";
+        const string bucket    = "vehicle-files";
+        const int    contractId = 7777;
 
-        await SnsClient.SubscribeAsync(new SubscribeRequest
+        // Шаг 1: SQS-очередь для перехвата SNS-сообщений
+        var topicArn = (await fixture.SnsClient.CreateTopicAsync(topicName)).TopicArn;
+        var queueUrl = (await fixture.SqsClient.CreateQueueAsync(queueName)).QueueUrl;
+        var queueArn = (await fixture.SqsClient.GetQueueAttributesAsync(
+            queueUrl, new List<string> { "QueueArn" })).Attributes["QueueArn"];
+
+        await fixture.SnsClient.SubscribeAsync(new SubscribeRequest
         {
             TopicArn = topicArn,
             Protocol = "sqs",
             Endpoint = queueArn
         });
 
-        // Шаг 2: Запрашиваем контракт у Server
-        const int contractId = 7777;
-        var serverResponse = await _serverClient!.GetAsync($"/contracts/vehicle?id={contractId}");
+        // Шаг 2: Запрос к Server — контракт должен быть сгенерирован и опубликован
+        var serverClient = fixture.App.CreateHttpClient("back-0");
+        var serverResponse = await serverClient.GetAsync($"/contracts/vehicle?id={contractId}");
         serverResponse.EnsureSuccessStatusCode();
 
         var contract = await serverResponse.Content.ReadFromJsonAsync<VehicleContractDto>();
@@ -133,100 +53,108 @@ public class EndToEndIntegrationTests : IntegrationTestBase
         Assert.Equal(contractId, contract.SystemId);
         Assert.True(VehicleContractValidator.ValidateBool(contract));
 
-        // Шаг 3: Проверяем, что SNS получил сообщение (через SQS)
-        await Task.Delay(500);
+        // Шаг 3: Проверяем что SNS получил сообщение (через SQS)
+        await Task.Delay(TimeSpan.FromSeconds(2));
 
-        var sqsMessages = await SqsClient.ReceiveMessageAsync(new ReceiveMessageRequest
+        var sqsMessages = await fixture.SqsClient.ReceiveMessageAsync(new ReceiveMessageRequest
         {
-            QueueUrl = queueUrl,
+            QueueUrl          = queueUrl,
             MaxNumberOfMessages = 1,
-            WaitTimeSeconds = 3
+            WaitTimeSeconds   = 5
         });
 
         Assert.Single(sqsMessages.Messages);
 
-        var snsEnvelope = JsonSerializer.Deserialize<JsonElement>(sqsMessages.Messages[0].Body);
-        var contractInMessage = JsonSerializer.Deserialize<VehicleContractDto>(
-            snsEnvelope.GetProperty("Message").GetString()!);
+        var envelope = JsonSerializer.Deserialize<JsonElement>(sqsMessages.Messages[0].Body);
+        var messageBody = envelope.GetProperty("Message").GetString()!;
+        var contractFromSns = JsonSerializer.Deserialize<VehicleContractDto>(messageBody);
 
-        Assert.NotNull(contractInMessage);
-        Assert.Equal(contractId, contractInMessage.SystemId);
-        Assert.Equal(contract.Vin, contractInMessage.Vin);
+        Assert.NotNull(contractFromSns);
+        Assert.Equal(contractId,      contractFromSns.SystemId);
+        Assert.Equal(contract.Vin,    contractFromSns.Vin);
 
         // Шаг 4: Передаём SNS-сообщение в FileService (имитация HTTP-доставки)
-        var snsNotificationBody = sqsMessages.Messages[0].Body;
-        var fileResponse = await _fileClient!.PostAsync("/sns",
-            new StringContent(snsNotificationBody, Encoding.UTF8, "application/json"));
+        var fileClient = fixture.App.CreateHttpClient("file-service");
+        var fileResponse = await fileClient.PostAsync("/sns",
+            new StringContent(sqsMessages.Messages[0].Body, Encoding.UTF8, "application/json"));
         fileResponse.EnsureSuccessStatusCode();
 
         var fileResult = await fileResponse.Content.ReadFromJsonAsync<JsonElement>();
-        var savedKey = fileResult.GetProperty("Key").GetString();
+        var savedKey   = fileResult.GetProperty("key").GetString();
         Assert.NotNull(savedKey);
 
         // Шаг 5: Проверяем содержимое файла в S3
-        var s3Object = await S3Client.GetObjectAsync(new GetObjectRequest
+        var s3Object = await fixture.S3Client.GetObjectAsync(new GetObjectRequest
         {
-            BucketName = S3Bucket,
-            Key = savedKey
+            BucketName = bucket,
+            Key        = savedKey
         });
 
         using var reader = new StreamReader(s3Object.ResponseStream);
-        var fileJson = await reader.ReadToEndAsync();
-        var savedContract = JsonSerializer.Deserialize<VehicleContractDto>(fileJson);
+        var saved = JsonSerializer.Deserialize<VehicleContractDto>(await reader.ReadToEndAsync());
 
-        Assert.NotNull(savedContract);
-        Assert.Equal(contract.SystemId, savedContract.SystemId);
-        Assert.Equal(contract.Vin, savedContract.Vin);
-        Assert.Equal(contract.Manufacturer, savedContract.Manufacturer);
-        Assert.Equal(contract.Year, savedContract.Year);
+        Assert.NotNull(saved);
+        Assert.Equal(contract.SystemId,     saved.SystemId);
+        Assert.Equal(contract.Vin,          saved.Vin);
+        Assert.Equal(contract.Manufacturer, saved.Manufacturer);
+        Assert.Equal(contract.Year,         saved.Year);
     }
 
     [Fact]
-    public async Task FullFlow_MultipleRequests_AllSavedToS3()
+    public async Task FullFlow_MultipleRequests_AllContractsSavedToS3()
     {
-        var topicArn = (await SnsClient.CreateTopicAsync($"{SnsTopic}-multi")).TopicArn;
-        var queueUrl = (await SqsClient.CreateQueueAsync($"{SqsQueue}-multi")).QueueUrl;
-        var queueArn = (await SqsClient.GetQueueAttributesAsync(queueUrl,
-            new List<string> { "QueueArn" })).Attributes["QueueArn"];
+        const string topicName = "vehicle-contracts";
+        const string queueName = "e2e-multi-queue";
+        const string bucket    = "vehicle-files";
+        var ids = new[] { 11, 22, 33 };
 
-        await SnsClient.SubscribeAsync(new SubscribeRequest
+        var topicArn = (await fixture.SnsClient.CreateTopicAsync(topicName)).TopicArn;
+        var queueUrl = (await fixture.SqsClient.CreateQueueAsync(queueName)).QueueUrl;
+        var queueArn = (await fixture.SqsClient.GetQueueAttributesAsync(
+            queueUrl, new List<string> { "QueueArn" })).Attributes["QueueArn"];
+
+        await fixture.SnsClient.SubscribeAsync(new SubscribeRequest
         {
             TopicArn = topicArn,
             Protocol = "sqs",
             Endpoint = queueArn
         });
 
-        var ids = new[] { 11, 22, 33 };
+        var serverClient = fixture.App.CreateHttpClient("back-0");
 
         foreach (var id in ids)
         {
-            var response = await _serverClient!.GetFromJsonAsync<VehicleContractDto>(
+            var response = await serverClient.GetFromJsonAsync<VehicleContractDto>(
                 $"/contracts/vehicle?id={id}");
             Assert.NotNull(response);
         }
 
-        await Task.Delay(1000);
+        // Ждём доставки всех сообщений
+        await Task.Delay(TimeSpan.FromSeconds(3));
 
-        var sqsMessages = await SqsClient.ReceiveMessageAsync(new ReceiveMessageRequest
+        var sqsMessages = await fixture.SqsClient.ReceiveMessageAsync(new ReceiveMessageRequest
         {
-            QueueUrl = queueUrl,
+            QueueUrl          = queueUrl,
             MaxNumberOfMessages = 10,
-            WaitTimeSeconds = 3
+            WaitTimeSeconds   = 5
         });
 
         Assert.Equal(ids.Length, sqsMessages.Messages.Count);
 
+        var fileClient = fixture.App.CreateHttpClient("file-service");
+
         foreach (var msg in sqsMessages.Messages)
         {
-            var fileResponse = await _fileClient!.PostAsync("/sns",
+            var fileResponse = await fileClient.PostAsync("/sns",
                 new StringContent(msg.Body, Encoding.UTF8, "application/json"));
             fileResponse.EnsureSuccessStatusCode();
         }
 
-        var listResponse = await S3Client.ListObjectsV2Async(new ListObjectsV2Request
+        // Проверяем S3: должны быть файлы для всех контрактов
+        var listResponse = await fixture.S3Client.ListObjectsV2Async(new ListObjectsV2Request
         {
-            BucketName = S3Bucket,
-            Prefix = "vehicle-contracts/"
+            BucketName = bucket,
+            Prefix     = "vehicle-contracts/"
         });
 
         Assert.True(listResponse.S3Objects.Count >= ids.Length);

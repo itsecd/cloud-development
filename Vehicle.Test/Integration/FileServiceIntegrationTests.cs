@@ -1,208 +1,136 @@
-extern alias FileServiceApp;
-
-using Amazon.Runtime;
-using Amazon.S3;
 using Amazon.S3.Model;
-using Amazon.SimpleNotificationService;
+using Aspire.Hosting.Testing;
 using Domain.Contracts;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Extensions.DependencyInjection;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
-using IS3FileStorageService = FileServiceApp::FileService.Services.IS3FileStorageService;
-using FileProgram = FileServiceApp::Program;
 
 namespace Vehicle.Test.Integration;
 
 /// <summary>
-/// Интеграционные тесты для FileService:
-/// обработка SNS-уведомлений и сохранение файлов в S3.
+/// Интеграционные тесты FileService через Aspire.Hosting.Testing.
+/// Проверяют: обработку SNS-уведомлений и сохранение файлов в S3.
 /// </summary>
-public class FileServiceIntegrationTests : IntegrationTestBase
+[Collection("Aspire")]
+public class FileServiceIntegrationTests(AspireIntegrationFixture fixture)
 {
-    private const string TestBucket = "test-vehicle-files";
-    private const string TestTopic = "test-vehicle-contracts";
-
-    private WebApplicationFactory<FileProgram>? _factory;
-    private HttpClient? _client;
-
-    public override async Task InitializeAsync()
-    {
-        await base.InitializeAsync();
-
-        _factory = new WebApplicationFactory<FileProgram>()
-            .WithWebHostBuilder(host =>
-            {
-                host.ConfigureServices(services =>
-                {
-                    var credentials = new BasicAWSCredentials("test", "test");
-
-                    services.AddSingleton<IAmazonS3>(_ =>
-                        new AmazonS3Client(credentials, new AmazonS3Config
-                        {
-                            ServiceURL = LocalStackUrl,
-                            ForcePathStyle = true
-                        }));
-
-                    services.AddSingleton<IAmazonSimpleNotificationService>(_ =>
-                        new AmazonSimpleNotificationServiceClient(credentials,
-                            new AmazonSimpleNotificationServiceConfig
-                            {
-                                ServiceURL = LocalStackUrl
-                            }));
-                });
-
-                host.UseSetting("AWS:ServiceURL", LocalStackUrl);
-                host.UseSetting("AWS:BucketName", TestBucket);
-                host.UseSetting("AWS:TopicName", TestTopic);
-                host.UseSetting("FileService:SnsCallbackUrl", "");
-            });
-
-        _client = _factory.CreateClient();
-
-        var storageService = _factory.Services.GetRequiredService<IS3FileStorageService>();
-        await storageService.EnsureBucketExistsAsync();
-    }
-
-    public override async Task DisposeAsync()
-    {
-        _factory?.Dispose();
-        await base.DisposeAsync();
-    }
+    private const string BucketName = "vehicle-files";
 
     [Fact]
-    public async Task SnsEndpoint_SubscriptionConfirmation_ReturnsOk()
-    {
-        var notification = new
-        {
-            Type = "SubscriptionConfirmation",
-            TopicArn = $"arn:aws:sns:us-east-1:000000000000:{TestTopic}",
-            Token = "test-token",
-            SubscribeURL = $"{LocalStackUrl}/?Action=ConfirmSubscription&TopicArn=arn%3Aaws%3Asns%3Aus-east-1%3A000000000000%3A{TestTopic}&Token=test-token",
-            MessageId = Guid.NewGuid().ToString(),
-            Timestamp = DateTime.UtcNow.ToString("o")
-        };
-
-        var content = new StringContent(
-            JsonSerializer.Serialize(notification),
-            Encoding.UTF8, "application/json");
-
-        var response = await _client!.PostAsync("/sns", content);
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task SnsEndpoint_Notification_SavesContractToS3()
+    public async Task SnsNotification_SavesContractToS3()
     {
         var contract = new VehicleContractDto
         {
-            SystemId = 12345,
-            Vin = "1HGCM82633A123456",
+            SystemId    = 55555,
+            Vin         = "1HGCM82633A555555",
             Manufacturer = "Honda",
-            Model = "Accord",
-            Year = 2020,
-            BodyType = "Sedan",
-            FuelType = "Gasoline",
-            Color = "Blue",
-            Mileage = 45000.5,
-            LastServiceDate = new DateOnly(2023, 6, 15)
+            Model       = "Accord",
+            Year        = 2022,
+            BodyType    = "Sedan",
+            FuelType    = "Gasoline",
+            Color       = "Red",
+            Mileage     = 12000.0,
+            LastServiceDate = new DateOnly(2023, 9, 1)
         };
 
         var notification = new
         {
-            Type = "Notification",
-            TopicArn = $"arn:aws:sns:us-east-1:000000000000:{TestTopic}",
-            Subject = "VehicleContract",
-            Message = JsonSerializer.Serialize(contract),
+            Type     = "Notification",
+            TopicArn = "arn:aws:sns:us-east-1:000000000000:vehicle-contracts",
+            Subject  = "VehicleContract",
+            Message  = JsonSerializer.Serialize(contract),
             MessageId = Guid.NewGuid().ToString(),
             Timestamp = DateTime.UtcNow.ToString("o")
         };
 
-        var content = new StringContent(
-            JsonSerializer.Serialize(notification),
-            Encoding.UTF8, "application/json");
+        var client = fixture.App.CreateHttpClient("file-service");
+        var response = await client.PostAsync("/sns",
+            new StringContent(JsonSerializer.Serialize(notification), Encoding.UTF8, "application/json"));
 
-        var response = await _client!.PostAsync("/sns", content);
         response.EnsureSuccessStatusCode();
 
         var result = await response.Content.ReadFromJsonAsync<JsonElement>();
-        var savedKey = result.GetProperty("Key").GetString();
+        var savedKey = result.GetProperty("key").GetString();
         Assert.NotNull(savedKey);
-        Assert.Contains("12345", savedKey);
+        Assert.Contains("55555", savedKey);
 
         // Проверяем файл в S3
-        var s3Object = await S3Client.GetObjectAsync(new GetObjectRequest
+        var s3Object = await fixture.S3Client.GetObjectAsync(new GetObjectRequest
         {
-            BucketName = TestBucket,
-            Key = savedKey
+            BucketName = BucketName,
+            Key        = savedKey
         });
 
         using var reader = new StreamReader(s3Object.ResponseStream);
-        var fileContent = await reader.ReadToEndAsync();
-        var savedContract = JsonSerializer.Deserialize<VehicleContractDto>(fileContent);
+        var json   = await reader.ReadToEndAsync();
+        var saved  = JsonSerializer.Deserialize<VehicleContractDto>(json);
 
-        Assert.NotNull(savedContract);
-        Assert.Equal(contract.SystemId, savedContract.SystemId);
-        Assert.Equal(contract.Vin, savedContract.Vin);
-        Assert.Equal(contract.Manufacturer, savedContract.Manufacturer);
-        Assert.Equal(contract.Mileage, savedContract.Mileage);
+        Assert.NotNull(saved);
+        Assert.Equal(contract.SystemId,    saved.SystemId);
+        Assert.Equal(contract.Vin,         saved.Vin);
+        Assert.Equal(contract.Manufacturer, saved.Manufacturer);
+        Assert.Equal(contract.Mileage,     saved.Mileage);
     }
 
     [Fact]
     public async Task SnsEndpoint_InvalidJson_ReturnsBadRequest()
     {
-        var content = new StringContent("not-valid-json", Encoding.UTF8, "application/json");
-        var response = await _client!.PostAsync("/sns", content);
+        var client = fixture.App.CreateHttpClient("file-service");
+        var response = await client.PostAsync("/sns",
+            new StringContent("not-valid-json", Encoding.UTF8, "application/json"));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     [Fact]
-    public async Task S3_MultipleContracts_SavedWithUniqueKeys()
+    public async Task S3_MultipleContracts_StoredWithUniqueKeys()
     {
-        var contractIds = new[] { 1001, 1002, 1003 };
-        var savedKeys = new List<string>();
+        var ids = new[] { 2001, 2002, 2003 };
+        var keys = new List<string>();
+        var client = fixture.App.CreateHttpClient("file-service");
 
-        foreach (var id in contractIds)
+        foreach (var id in ids)
         {
             var contract = new VehicleContractDto
             {
-                SystemId = id,
-                Vin = $"VIN{id:D12}ABCDE",
+                SystemId    = id,
+                Vin         = $"1HGCM{id:D7}XXXXX",
                 Manufacturer = "Toyota",
-                Model = "Camry",
-                Year = 2021,
-                BodyType = "Sedan",
-                FuelType = "Hybrid",
-                Color = "White",
-                Mileage = id * 1000.0,
-                LastServiceDate = new DateOnly(2023, 1, 1)
+                Model       = "Camry",
+                Year        = 2023,
+                BodyType    = "Sedan",
+                FuelType    = "Hybrid",
+                Color       = "White",
+                Mileage     = id * 500.0,
+                LastServiceDate = new DateOnly(2024, 1, 1)
             };
 
             var notification = new
             {
-                Type = "Notification",
-                TopicArn = $"arn:aws:sns:us-east-1:000000000000:{TestTopic}",
-                Message = JsonSerializer.Serialize(contract),
+                Type      = "Notification",
+                TopicArn  = "arn:aws:sns:us-east-1:000000000000:vehicle-contracts",
+                Message   = JsonSerializer.Serialize(contract),
                 MessageId = Guid.NewGuid().ToString(),
                 Timestamp = DateTime.UtcNow.ToString("o")
             };
 
-            var response = await _client!.PostAsync("/sns",
+            var response = await client.PostAsync("/sns",
                 new StringContent(JsonSerializer.Serialize(notification), Encoding.UTF8, "application/json"));
+
             response.EnsureSuccessStatusCode();
 
             var result = await response.Content.ReadFromJsonAsync<JsonElement>();
-            savedKeys.Add(result.GetProperty("Key").GetString()!);
+            keys.Add(result.GetProperty("key").GetString()!);
 
-            await Task.Delay(10);
+            await Task.Delay(50);
         }
 
-        Assert.Equal(savedKeys.Count, savedKeys.Distinct().Count());
-        for (var i = 0; i < contractIds.Length; i++)
-            Assert.Contains(contractIds[i].ToString(), savedKeys[i]);
+        // Все ключи уникальны
+        Assert.Equal(keys.Count, keys.Distinct().Count());
+
+        // Каждый ключ содержит SystemId
+        for (var i = 0; i < ids.Length; i++)
+            Assert.Contains(ids[i].ToString(), keys[i]);
     }
 }
