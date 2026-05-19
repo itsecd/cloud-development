@@ -22,7 +22,9 @@ var generation3 = builder
 var gateway = builder
     .AddProject<Projects.ApiGateway>("api-gateway");
 
-builder.AddProject<Projects.Client_Wasm>("client-wasm");
+builder.AddProject<Projects.Client_Wasm>("client-wasm")
+    .WithReference(generation1)
+    .WaitFor(generation1);
 
 builder.Build().Run();
 

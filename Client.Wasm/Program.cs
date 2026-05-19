@@ -9,9 +9,6 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-var generationServiceUrl = builder.Configuration["Services:GenerationService"]
-    ?? "http://localhost:5130";
-
 builder.Services.AddScoped(sp => new HttpClient());
 
 builder.Services.AddBlazorise(options => { options.Immediate = true; })
