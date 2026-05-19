@@ -15,9 +15,10 @@
   <ItemGroup>
     <PackageReference Include="Aspire.StackExchange.Redis.DistributedCaching" Version="13.1.2" />
     <PackageReference Include="AWSSDK.Extensions.NETCore.Setup" Version="4.0.3.36" />
+    <PackageReference Include="AWSSDK.SimpleNotificationService" Version="4.0.2.33" />
     <PackageReference Include="Bogus" Version="35.6.5" />
-    <PackageReference Include="MassTransit" Version="9.1.0" />
-    <PackageReference Include="MassTransit.RabbitMQ" Version="9.1.0" />
+    <PackageReference Include="LocalStack.Client" Version="2.0.0" />
+    <PackageReference Include="LocalStack.Client.Extensions" Version="2.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="10.1.4" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="10.1.4" />
   </ItemGroup>

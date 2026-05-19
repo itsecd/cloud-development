@@ -1,21 +1,27 @@
+using Amazon.SimpleNotificationService;
+using CompanyEmployee.ApiService.Messaging;
 using CompanyEmployee.ApiService.Services;
-using CompanyEmployee.ServiceDefaults;
-using MassTransit;
 using CompanyEmployee.DtoModel;
+using CompanyEmployee.ServiceDefaults;
+using LocalStack.Client.Extensions;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 builder.AddRedisDistributedCache("redis");
+builder.Services.AddLocalStack(builder.Configuration);
+var awsConfig = builder.Configuration;
 
-builder.Services.AddMassTransit(x =>
+builder.Services.AddSingleton<IAmazonSimpleNotificationService>(_ =>
 {
-    x.UsingRabbitMq((context, cfg) =>
-    {
-        var connectionString = builder.Configuration.GetConnectionString("rabbitmq");
-
-        cfg.Host(new Uri(connectionString!));
-    });
+    return new AmazonSimpleNotificationServiceClient(
+        awsConfig["AWS:AccessKey"],
+        awsConfig["AWS:SecretKey"],
+        new AmazonSimpleNotificationServiceConfig
+        {
+            ServiceURL = awsConfig["AWS:ServiceURL"]
+        });
 });
+builder.Services.AddScoped<SnsPublisher>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -39,7 +45,7 @@ if (app.Environment.IsDevelopment())
 app.MapDefaultEndpoints();
 app.UseHttpsRedirection();
 
-app.MapGet("/api/CompanyEmployee", async (HttpContext context, CompanyEmployeeService service, IPublishEndpoint endpoint, int id) =>
+app.MapGet("/api/CompanyEmployee", async (HttpContext context, CompanyEmployeeService service, SnsPublisher endpoint, int id) =>
 {
     var employee = await service.GetEmployeeAsync(id);
     var dto = new ModelDTO(

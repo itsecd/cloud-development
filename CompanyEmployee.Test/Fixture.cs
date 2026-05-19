@@ -1,4 +1,5 @@
-﻿using Amazon.Runtime;
+﻿using Amazon.CDK;
+using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.S3.Model;
 using Aspire.Hosting;
@@ -24,12 +25,12 @@ public class Fixture : IAsyncLifetime
                 "DcpPublisher:RandomizePorts=false"
             ]);
 
-        App = await appHost.BuildAsync();
+        App = await appHost.BuildAsync(cts.Token);
         await App.StartAsync(cts.Token);
 
         await Task.WhenAll(
             App.ResourceNotifications.WaitForResourceAsync("minio"),
-            App.ResourceNotifications.WaitForResourceAsync("rabbitmq"),
+            App.ResourceNotifications.WaitForResourceAsync("companyemployee-localstack"),
             App.ResourceNotifications.WaitForResourceAsync("companyemployee-apigateway"),
             App.ResourceNotifications.WaitForResourceAsync("fileservice")
         ).WaitAsync(TimeSpan.FromMinutes(5));
@@ -75,5 +76,10 @@ public class Fixture : IAsyncLifetime
         return [];
     }
 
-    public async Task DisposeAsync(){}
+    public async Task DisposeAsync(){
+        S3Client?.Dispose();
+        GatewayClient?.Dispose();
+        await App.StopAsync();
+        await App.DisposeAsync().AsTask();
+    }
 }

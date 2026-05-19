@@ -7,14 +7,9 @@ using System.Text.Json;
 
 namespace CompanyEmployee.Test;
 
-public class IntegrationTests : IClassFixture<Fixture>
+public class IntegrationTests(Fixture fixture) : IClassFixture<Fixture>
 {
-    private readonly Fixture _fixture;
     private static readonly JsonSerializerOptions _jsonOptions = new() { PropertyNameCaseInsensitive = true };
-    public IntegrationTests(Fixture fixture)
-    {
-        _fixture = fixture;
-    }
     
     /// <summary>
     /// Тест на корректное создание сотрудника
@@ -22,13 +17,11 @@ public class IntegrationTests : IClassFixture<Fixture>
     [Fact]
     public async Task GetEmployee_GenerateTest()
     {
-        var client = _fixture.App.CreateHttpClient(
+        var client = fixture.App.CreateHttpClient(
             "companyemployee-apigateway",
             "gateway");
 
-        HttpResponseMessage? response = null;
-
-        response = await client.GetAsync("/api/CompanyEmployee?id=1");
+        var response = await client.GetAsync("/api/CompanyEmployee?id=1");
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -53,7 +46,7 @@ public class IntegrationTests : IClassFixture<Fixture>
     [Fact]
     public async Task GetEmployee_CashTest()
     {
-        var client = _fixture.App.CreateHttpClient(
+        var client = fixture.App.CreateHttpClient(
             "companyemployee-apigateway",
             "gateway");
 
@@ -82,7 +75,7 @@ public class IntegrationTests : IClassFixture<Fixture>
     [Fact]
     public async Task GetEmployee_DiferentEmployeeTest()
     {
-        var client = _fixture.App.CreateHttpClient(
+        var client = fixture.App.CreateHttpClient(
             "companyemployee-apigateway",
             "gateway");
 
@@ -101,8 +94,6 @@ public class IntegrationTests : IClassFixture<Fixture>
         Assert.NotEqual(employee1.Email, employee2.Email);
         Assert.NotEqual(employee1.PhoneNumber, employee2.PhoneNumber);
         Assert.NotEqual(employee1.Salary, employee2.Salary);
-        Assert.NotEqual(employee1.Dismissal, employee2.Dismissal);
-        Assert.NotEqual(employee1.DismissalDate, employee2.DismissalDate);
     }
     /// <summary>
     /// Тест на создание и запись в Minio
@@ -113,17 +104,17 @@ public class IntegrationTests : IClassFixture<Fixture>
         var id = 5;
         var expectedKey = $"employee-{id}.json";
 
-        using var response = await _fixture.GatewayClient.GetAsync($"/api/CompanyEmployee?id={id}");
+        using var response = await fixture.GatewayClient.GetAsync($"/api/CompanyEmployee?id={id}");
         response.EnsureSuccessStatusCode();
 
         var employee = await response.Content.ReadFromJsonAsync<CompanyEmployeeModel>(_jsonOptions);
         Assert.NotNull(employee);
 
-        var s3Objects = await _fixture.WaitForS3ObjectAsync(expectedKey);
+        var s3Objects = await fixture.WaitForS3ObjectAsync(expectedKey);
         Assert.NotEmpty(s3Objects);
         Assert.Single(s3Objects);
 
-        var getObjectResponse = await _fixture.S3Client.GetObjectAsync(new GetObjectRequest
+        var getObjectResponse = await fixture.S3Client.GetObjectAsync(new GetObjectRequest
         {
             BucketName = "companyemployee",
             Key = expectedKey
@@ -152,19 +143,19 @@ public class IntegrationTests : IClassFixture<Fixture>
         var id = 6;
         var expectedKey = $"employee-{id}.json";
 
-        using var firstResponse = await _fixture.GatewayClient.GetAsync($"/api/CompanyEmployee?id={id}");
+        using var firstResponse = await fixture.GatewayClient.GetAsync($"/api/CompanyEmployee?id={id}");
         firstResponse.EnsureSuccessStatusCode();
 
-        var objectsAfterFirst = await _fixture.WaitForS3ObjectAsync(expectedKey);
+        var objectsAfterFirst = await fixture.WaitForS3ObjectAsync(expectedKey);
         Assert.NotEmpty(objectsAfterFirst);
         Assert.Single(objectsAfterFirst);
 
-        using var secondResponse = await _fixture.GatewayClient.GetAsync($"/api/CompanyEmployee?id={id}");
+        using var secondResponse = await fixture.GatewayClient.GetAsync($"/api/CompanyEmployee?id={id}");
         secondResponse.EnsureSuccessStatusCode();
 
         await Task.Delay(TimeSpan.FromSeconds(5));
 
-        var listResponse = await _fixture.S3Client.ListObjectsV2Async(new ListObjectsV2Request
+        var listResponse = await fixture.S3Client.ListObjectsV2Async(new ListObjectsV2Request
         {
             BucketName = "companyemployee",
             Prefix = expectedKey

@@ -5,14 +5,12 @@ namespace CompanyEmployee.FileService.Services;
 
 public class MinioService
 {
-    private readonly IConfiguration _configuration;
     private readonly IMinioClient _client;
 
     private readonly string _bucket;
 
     public MinioService(IConfiguration configuration)
     {
-        _configuration = configuration;
         _bucket = configuration["Minio:BucketName"]!;
 
         var endpoint = configuration["Minio:Endpoint"]!;
