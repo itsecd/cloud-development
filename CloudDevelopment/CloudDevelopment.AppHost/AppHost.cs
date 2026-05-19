@@ -9,6 +9,8 @@ var generation = builder.AddProject<Projects.GenerationService>("generation-serv
     .WithReference(redis)
     .WaitFor(redis);
 
-builder.AddProject<Projects.Client_Wasm>("client-wasm");
+builder.AddProject<Projects.Client_Wasm>("client-wasm")
+    .WithReference(generation)
+    .WaitFor(generation);
 
 builder.Build().Run();

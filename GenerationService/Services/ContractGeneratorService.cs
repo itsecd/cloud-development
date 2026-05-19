@@ -34,7 +34,7 @@ public class ContractGeneratorService
             })
 
             .RuleFor(c => c.StartDate,
-    f => DateOnly.FromDateTime(f.Date.Past()))
+                f => DateOnly.FromDateTime(f.Date.Past()))
 
             .RuleFor(c => c.PlannedEndDate,
                 (f, c) => c.StartDate.AddMonths(
@@ -60,8 +60,10 @@ public class ContractGeneratorService
 
     public SoftwareProjectContract Generate(int id)
     {
-        return _faker.Clone()
-            .RuleFor(c => c.Id, _ => id)
-            .Generate();
+        var contract = _faker.Generate();
+
+        contract.Id = id;
+
+        return contract;
     }
 }
