@@ -11,8 +11,4 @@
     <PackageReference Include="Ocelot.Provider.Polly" Version="24.1.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="LoadBalancers\" />
-  </ItemGroup>
-
 </Project>

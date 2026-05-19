@@ -3,7 +3,6 @@
     {
       "DownstreamPathTemplate": "/contracts/{everything}",
       "DownstreamScheme": "https",
-
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
@@ -18,17 +17,13 @@
           "Port": 7132
         }
       ],
-
       "UpstreamPathTemplate": "/contracts/{everything}",
-
       "UpstreamHttpMethod": [ "Get" ],
-
       "LoadBalancerOptions": {
-        "Type": "RoundRobin"
+        "Type": "WeightedRoundRobin"
       }
     }
   ],
-
   "GlobalConfiguration": {
     "BaseUrl": "http://localhost:5219"
   }
