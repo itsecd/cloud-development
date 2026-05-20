@@ -27,34 +27,31 @@
     Поднятые контейнеры
   </summary>
 
-  <img width="2560" height="1440" alt="image" src="https://github.com/user-attachments/assets/44d0ff7e-386a-4edf-b2da-35af965220f1" />
+  <img width="2560" height="1440" alt="image" src="https://github.com/user-attachments/assets/53c838b0-9c93-4520-b3fc-b4d3e1459414" />
 
    </br>Граф связей в проекте:</br>
 
-  <img width="719" height="650" alt="image" src="https://github.com/user-attachments/assets/064f7b83-0d2b-43d3-a356-78fb1ab5b4e6" />
+  <img width="2560" height="1440" alt="image" src="https://github.com/user-attachments/assets/1a1145aa-2dee-4ebd-9127-3d9bc79ab020" />
+
 
 </details>
 
 <details>
   <summary>
-    Логи запуска генераторов
+    Проверка работы localstack
   </summary>
+  
+  <img width="1100" height="276" alt="image" src="https://github.com/user-attachments/assets/8ff24f72-ce17-4a75-8f5a-64a655eb13cd" />
 
-  <img width="2560" height="1440" alt="image" src="https://github.com/user-attachments/assets/67ccbc95-16d1-4406-b412-ebea48661e55" />
-
-  <img width="2560" height="1440" alt="image" src="https://github.com/user-attachments/assets/4a79997b-0629-438d-9d91-f4a31d87a9cd" />
+  <img width="2560" height="1439" alt="image" src="https://github.com/user-attachments/assets/9c4e367f-29c8-4968-9ff0-456bcc52e4f4" />
 
 </details>
 
 <details>
   <summary>
-    Демонстрация балансировки
+    Проверка работы тестов
   </summary>
 
-   <img width="2560" height="1435" alt="image" src="https://github.com/user-attachments/assets/a1cd3e1c-46da-47a1-bac4-edfc4e801c69" />
-
-   <img width="2560" height="1428" alt="image" src="https://github.com/user-attachments/assets/08d9e1ea-3ea9-47ae-97df-7645ddf4a6e2" />
-
-   <img width="2560" height="1436" alt="image" src="https://github.com/user-attachments/assets/21847f03-e0a8-473a-abf9-3cc53527352b" />
+   <img width="1231" height="951" alt="image" src="https://github.com/user-attachments/assets/d8d90aba-777a-4dab-8f6b-aa7cfaec9127" />
 
 </details>
