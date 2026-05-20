@@ -6,7 +6,7 @@ namespace File.Service.Background;
 public sealed class FileExportInfrastructureState
 {
     /// <summary>
-    /// Признак готовности инфраструктуры SNS/SQS/S3.
+    /// Признак готовности инфраструктуры SNS/S3.
     /// </summary>
     public bool IsInitialized { get; set; }
 }

@@ -38,7 +38,6 @@ public sealed class EmployeeGeneratorService(
             {
                 fromCache = true;
                 logger.LogInformation("Cache hit. Returning employee from Redis");
-                await eventPublisher.PublishAsync(employee, cancellationToken);
                 return employee;
             }
 
@@ -48,7 +47,7 @@ public sealed class EmployeeGeneratorService(
             await eventPublisher.PublishAsync(employee, cancellationToken);
 
             logger.LogInformation(
-                "Employee {EmployeeId} stored in cache for {CacheLifetimeMinutes} minutes and published to SNS",
+                "Employee {EmployeeId} generated, stored in cache for {CacheLifetimeMinutes} minutes and published to SNS",
                 id,
                 _cacheExpiration.TotalMinutes);
 

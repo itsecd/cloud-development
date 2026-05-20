@@ -1,7 +1,7 @@
 namespace File.Service.Configuration;
 
 /// <summary>
-/// Настройки интеграции с LocalStack для хранения файлов и чтения сообщений.
+/// Настройки интеграции с LocalStack для хранения файлов и приёма сообщений.
 /// </summary>
 public sealed class AwsStorageOptions
 {
@@ -33,9 +33,11 @@ public sealed class AwsStorageOptions
     public string TopicName { get; set; } = "employee-generated-topic";
 
     /// <summary>
-    /// Имя SQS-очереди, подписанной на SNS-топик.
+    /// HTTP-эндпойнт файлового сервиса, на который SNS будет доставлять
+    /// уведомления о новых сотрудниках. Указывается с точки зрения LocalStack
+    /// (например, через host.docker.internal).
     /// </summary>
-    public string QueueName { get; set; } = "employee-generated-queue";
+    public string NotificationEndpoint { get; set; } = string.Empty;
 
     /// <summary>
     /// Имя S3-бакета для файлов сотрудников.

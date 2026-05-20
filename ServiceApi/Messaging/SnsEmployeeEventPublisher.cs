@@ -58,15 +58,7 @@ public sealed class SnsEmployeeEventPublisher : IEmployeeEventPublisher, IAsyncD
             {
                 var topicArn = await EnsureTopicAsync(cancellationToken);
 
-                var message = new EmployeeGeneratedMessage
-                {
-                    EmployeeId = employee.Id,
-                    PublishedAtUtc = DateTime.UtcNow,
-                    ReplicaId = _replicaId,
-                    Payload = employee
-                };
-
-                var payload = JsonSerializer.Serialize(message, JsonOptions);
+                var payload = JsonSerializer.Serialize(employee, JsonOptions);
 
                 _logger.LogInformation(
                     "Publishing employee {EmployeeId} to SNS topic {TopicArn}. Attempt {Attempt}",
