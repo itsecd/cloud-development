@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Patient.Generator", "Patien
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Patient.AppHost", "Patient.AppHost\Patient.AppHost.csproj", "{07AFB6CB-7359-432D-BF0B-14BA7C582AA5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Api.Gateway", "Api.Gateway\Api.Gateway.csproj", "{C99E72F4-9BA7-7D56-C88E-FB28534EFCB6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{07AFB6CB-7359-432D-BF0B-14BA7C582AA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{07AFB6CB-7359-432D-BF0B-14BA7C582AA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{07AFB6CB-7359-432D-BF0B-14BA7C582AA5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C99E72F4-9BA7-7D56-C88E-FB28534EFCB6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C99E72F4-9BA7-7D56-C88E-FB28534EFCB6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C99E72F4-9BA7-7D56-C88E-FB28534EFCB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C99E72F4-9BA7-7D56-C88E-FB28534EFCB6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
