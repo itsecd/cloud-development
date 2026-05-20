@@ -1,34 +1,43 @@
 ﻿using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.S3.Model;
+using Amazon.SQS;
+using Amazon.SQS.Model;
 using Aspire.Hosting;
 using Aspire.Hosting.Testing;
 using Xunit;
 using Microsoft.Extensions.DependencyInjection;
+using System.Text.Json;
 
 namespace MedicalPatient.Tests;
 
-
 /// <summary>
-/// Класс, поднимающий приложение для интеграционных тестов.
+/// Класс, поднимающий приложение для интеграционных тестов с LocalStack.
 /// </summary>
 public class Fixture : IAsyncLifetime
 {
+    private static readonly JsonSerializerOptions _messageSerializerOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
 
     public DistributedApplication App { get; private set; } = null!;
     public AmazonS3Client S3Client { get; private set; } = null!;
-
-    public string sqsUrl = "";
+    public AmazonSQSClient SQSClient { get; private set; } = null!;
+    public string SqsUrl { get; private set; } = string.Empty;
+    public string S3Url { get; private set; } = string.Empty;
+    public const string BucketName = "medical-patient";
+    public const string QueueName = "medical-patients";
 
     public async Task InitializeAsync()
     {
         using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(10));
 
         var appHost = await DistributedApplicationTestingBuilder
-        .CreateAsync<Projects.MedicalPatient_AppHost_AppHost>(
-        [
-            "DcpPublisher:RandomizePorts=false"
-        ]);
+            .CreateAsync<Projects.MedicalPatient_AppHost_AppHost>(
+            [
+                "DcpPublisher:RandomizePorts=false"
+            ]);
 
         appHost.Services.ConfigureHttpClientDefaults(http =>
             http.AddStandardResilienceHandler(options =>
@@ -44,71 +53,105 @@ public class Fixture : IAsyncLifetime
         await App.StartAsync(cts.Token);
 
         await Task.WhenAll(
-            App.ResourceNotifications.WaitForResourceAsync("minio"),
-            App.ResourceNotifications.WaitForResourceAsync("elasticmq"),
+            App.ResourceNotifications.WaitForResourceAsync("localstack"),
             App.ResourceNotifications.WaitForResourceAsync("medicalpatient-apigateway"),
-            App.ResourceNotifications.WaitForResourceAsync("medicalpatient-fileservice")
+            App.ResourceNotifications.WaitForResourceAsync("medicalpatient-fileservice"),
+            App.ResourceNotifications.WaitForResourceAsync("generator-1"),
+            App.ResourceNotifications.WaitForResourceAsync("generator-2"),
+            App.ResourceNotifications.WaitForResourceAsync("generator-3")
         ).WaitAsync(TimeSpan.FromMinutes(5));
 
         await Task.Delay(TimeSpan.FromSeconds(5));
 
-        using var minioClient = App.CreateHttpClient("minio", "http");
-        var minioUrl = minioClient.BaseAddress!.ToString().TrimEnd('/');
-
-
-        var sqsHttpClient = App.CreateHttpClient("elasticmq", "http");
-        sqsUrl = sqsHttpClient.BaseAddress!.ToString().TrimEnd('/');
-
+        var localstackClient = App.CreateHttpClient("localstack", "http");
+        var localstackUrl = localstackClient.BaseAddress?.ToString().TrimEnd('/') ?? "http://localhost:4566";
+        S3Url = localstackUrl;
+        SqsUrl = localstackUrl;
 
         S3Client = new AmazonS3Client(
-            new BasicAWSCredentials("minioadmin", "minioadmin"),
+            new BasicAWSCredentials("test", "test"),
             new AmazonS3Config
             {
-                ServiceURL = minioUrl,
+                ServiceURL = S3Url,
                 ForcePathStyle = true,
                 UseHttp = true,
                 AuthenticationRegion = "us-east-1"
             });
 
-        var doesExist = await Amazon.S3.Util.AmazonS3Util.DoesS3BucketExistV2Async(S3Client, "medical-patient");
+        SQSClient = new AmazonSQSClient(
+            new BasicAWSCredentials("test", "test"),
+            new AmazonSQSConfig
+            {
+                ServiceURL = SqsUrl,
+                UseHttp = true,
+                AuthenticationRegion = "us-east-1"
+            });
 
-        if (!doesExist)
+        await EnsureBucketExistsAsync();
+        await EnsureQueueExistsAsync();
+    }
+
+    private async Task EnsureBucketExistsAsync()
+    {
+        var bucketExists = await Amazon.S3.Util.AmazonS3Util.DoesS3BucketExistV2Async(S3Client, BucketName);
+
+        if (!bucketExists)
         {
             await S3Client.PutBucketAsync(new PutBucketRequest
             {
-                BucketName = "medical-patient"
+                BucketName = BucketName,
+                UseClientRegion = true
             });
         }
     }
 
-    public async Task<List<S3Object>> WaitForS3ObjectAsync(string key, int maxAttempts = 15)
+    private async Task EnsureQueueExistsAsync()
+    {
+        try
+        {
+            await SQSClient.GetQueueUrlAsync(QueueName);
+        }
+        catch (AmazonSQSException ex) when (ex.ErrorCode == "AWS.SimpleQueueService.NonExistentQueue")
+        {
+            await SQSClient.CreateQueueAsync(new CreateQueueRequest
+            {
+                QueueName = QueueName,
+                Attributes = new Dictionary<string, string>
+                {
+                    { "VisibilityTimeout", "30" }
+                }
+            });
+        }
+    }
+
+    public async Task<string> GetQueueUrlAsync()
+    {
+        var response = await SQSClient.GetQueueUrlAsync(QueueName);
+        return response.QueueUrl;
+    }
+
+    public async Task SendMessageToQueueAsync<T>(T message)
+    {
+        var queueUrl = await GetQueueUrlAsync();
+        var messageBody = JsonSerializer.Serialize(message, _messageSerializerOptions);
+
+        await SQSClient.SendMessageAsync(queueUrl, messageBody);
+    }
+
+    public async Task<List<S3Object>> WaitForS3ObjectAsync(string keyPrefix, int maxAttempts = 15)
     {
         for (var i = 0; i < maxAttempts; i++)
         {
             await Task.Delay(TimeSpan.FromSeconds(2));
 
-            try
+            var response = await S3Client.ListObjectsV2Async(new ListObjectsV2Request
             {
-                var doesExist = await Amazon.S3.Util.AmazonS3Util.DoesS3BucketExistV2Async(S3Client, "medical-patient");
+                BucketName = BucketName,
+                Prefix = keyPrefix,
+            });
 
-                var response = await S3Client.ListObjectsV2Async(new ListObjectsV2Request
-                {
-                    BucketName = "medical-patient",
-                    Prefix = key,
-                }
-                );
-
-                if (response.S3Objects is not null && response.S3Objects.Count > 0)
-                    return response.S3Objects;
-            }
-            catch (AmazonS3Exception ex) when (ex.Message.Contains("NoSuchBucket"))
-            {
-                Console.WriteLine($"Bucket not ready yet, attempt {i + 1}/{maxAttempts}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error listing objects: {ex.Message}");
-            }
+            if (response.S3Objects.Count > 0)
+                return response.S3Objects;
         }
 
         return [];
@@ -117,6 +160,7 @@ public class Fixture : IAsyncLifetime
     public async Task DisposeAsync()
     {
         S3Client?.Dispose();
+        SQSClient?.Dispose();
 
         if (App is not null)
         {

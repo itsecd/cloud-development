@@ -1,36 +1,61 @@
+using Amazon;
+using Amazon.Extensions.NETCore.Setup;
 using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.SQS;
+using MassTransit;
+using MedicalPatient.AppHost.ServiceDefaults;
 using MedicalPatient.FileService;
 using MedicalPatient.FileService.Services;
-using MedicalPatient.AppHost.ServiceDefaults;
-using MassTransit;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
-var minioSettings = builder.Configuration.GetSection("MinIO");
-var minioConfiguration = minioSettings.Get<MinioConfiguration>() ?? new MinioConfiguration();
+var useLocalStack = builder.Configuration.GetValue<bool>("LocalStack:UseLocalStack");
+var localStackUrl = builder.Configuration["LocalStack:LocalStackUrl"] ?? "http://localhost:4566";
+var accessKey = builder.Configuration["LocalStack:AwsAccessKeyId"] ?? "admin";
+var secretKey = builder.Configuration["LocalStack:AwsSecretAccessKey"] ?? "admin";
+var region = builder.Configuration["LocalStack:AwsRegion"] ?? "us-east-1";
 
-var minioAccessKey = minioConfiguration.AccessKey;
-var minioSecretKey = minioConfiguration.SecretKey;
-var minioEndpoint = minioConfiguration.Endpoint;
+var bucketName = BucketNameResolver.Resolve(builder.Configuration["S3:BucketName"]);
 
-builder.Services.Configure<MinioConfiguration>(minioSettings);
-
-builder.Services.AddSingleton<IAmazonS3>(_ => new AmazonS3Client(
-    new BasicAWSCredentials(minioAccessKey, minioSecretKey),
-    new AmazonS3Config
+// Настройка S3 клиента
+if (useLocalStack)
+{
+    builder.Services.AddSingleton<IAmazonS3>(_ => new AmazonS3Client(
+        new BasicAWSCredentials(accessKey, secretKey),
+        new AmazonS3Config
+        {
+            ServiceURL = localStackUrl,
+            ForcePathStyle = true,
+            UseHttp = true,
+            AuthenticationRegion = region
+        }
+    ));
+}
+else
+{
+    builder.Services.AddAWSService<IAmazonS3>(new AWSOptions
     {
-        ServiceURL = minioEndpoint,
-        ForcePathStyle = true,
-        AuthenticationRegion = "us-east-1"
+        Region = RegionEndpoint.GetBySystemName(region)
+    });
+}
+
+builder.Services.AddSingleton(bucketName);
+
+var sqsServiceUrl = builder.Configuration["SQS:ServiceUrl"] ?? "http://localhost:4566";
+var queueName = builder.Configuration["SQS:QueueName"] ?? "medical-patients";
+
+builder.Services.AddSingleton<IAmazonSQS>(_ => new AmazonSQSClient(
+    new BasicAWSCredentials(accessKey, secretKey),
+    new AmazonSQSConfig
+    {
+        ServiceURL = sqsServiceUrl,
+        AuthenticationRegion = region,
+        UseHttp = true
     }
 ));
-
-var sqsServiceUrl = builder.Configuration["SQS:ServiceUrl"] ?? "http://localhost:9324";
-var queueName = builder.Configuration["SQS:QueueName"] ?? "medical-patients";
 
 builder.Services.AddHostedService<SQSService>();
 
@@ -40,16 +65,23 @@ builder.Services.AddMassTransit(x =>
 
     x.UsingAmazonSqs((context, cfg) =>
     {
-        cfg.Host("us-east-1", h =>
+        cfg.Host(region, h =>
         {
-            h.AccessKey("test");
-            h.SecretKey("test");
-            h.Config(new AmazonSQSConfig
+            h.AccessKey(accessKey);
+            h.SecretKey(secretKey);
+
+            if (useLocalStack)
             {
-                ServiceURL = sqsServiceUrl,
-                AuthenticationRegion = "us-east-1"
-            });
+                h.Config(new AmazonSQSConfig
+                {
+                    ServiceURL = sqsServiceUrl,
+                    AuthenticationRegion = region,
+                    UseHttp = true
+                });
+            }
         });
+
+        cfg.UseRawJsonSerializer(RawSerializerOptions.AnyMessageType);
 
         cfg.ReceiveEndpoint(queueName, e =>
         {
@@ -60,7 +92,7 @@ builder.Services.AddMassTransit(x =>
     });
 });
 
-builder.Services.AddHostedService<MinioInitializer>();
+builder.Services.AddHostedService<S3Initializer>();
 
 var app = builder.Build();
 

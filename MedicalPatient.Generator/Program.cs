@@ -14,26 +14,31 @@ builder.AddRedisDistributedCache("redis");
 builder.Services.AddSingleton<MedicalPatientGenerator>();
 builder.Services.AddScoped<MedicalPatientService>();
 
-var sqsServiceUrl = builder.Configuration["SQS:ServiceUrl"] ?? "http://localhost:9324";
+var sqsServiceUrl = builder.Configuration["SQS:ServiceUrl"] ?? "http://localhost:4566";
 var queueName = builder.Configuration["SQS:QueueName"] ?? "medical-patients";
+var useLocalStack = builder.Configuration.GetValue<bool>("LocalStack:UseLocalStack");
 
 builder.Services.AddMassTransit(x =>
 {
     x.UsingAmazonSqs((context, cfg) =>
-        {
+    {
         cfg.Host("us-east-1", h =>
-                {   
-            h.AccessKey("test");
-            h.SecretKey("test");
+        {
+            h.AccessKey("admin");
+            h.SecretKey("admin");
             h.Config(new AmazonSQSConfig
-                        {
+            {
                 ServiceURL = sqsServiceUrl,
-AuthenticationRegion = "us-east-1"
+                AuthenticationRegion = "us-east-1",
+                UseHttp = true
             });
-                    });
-        cfg.UseRawJsonSerializer();
-            });
+        });
+
+        cfg.UseRawJsonSerializer(RawSerializerOptions.AnyMessageType);
+
+        cfg.ConfigureEndpoints(context);
     });
+});
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.OpenTelemetry()
