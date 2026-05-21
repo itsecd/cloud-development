@@ -17,22 +17,6 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
     /// <inheritdoc/>
     public async Task InitializeAsync()
     {
-        await Task.CompletedTask;
-    }
-
-    /// <summary>
-    /// Проверяет, что вызов гейтвея:
-    /// <list type="bullet">
-    /// <item><description>В ответ отправляет сгенерированного сотрудника</description></item>
-    /// <item><description>Сериализует сотрудника в S3 хранилище</description></item>
-    /// <item><description>Проверяет, что данные из предыдущих пунктов идентичны</description></item>
-    /// </list>
-    /// </summary>
-    /// <param name="envName">Запускаемый лаунч профайл</param>
-    [Fact]
-    public async Task TestPipeline()
-    {
-        var envName = "SNS+LocalstackS3";
         var cancellationToken = CancellationToken.None;
         var builder = await DistributedApplicationTestingBuilder.CreateAsync<Projects.AspireApp_AppHost>(cancellationToken);
         builder.Configuration["DcpPublisher:RandomizePorts"] = "false";
@@ -44,10 +28,21 @@ public class IntegrationTests(ITestOutputHelper output) : IAsyncLifetime
             logging.AddFilter("Aspire.Hosting", LogLevel.Debug);
         });
 
-        builder.Environment.EnvironmentName = envName;
         _app = await builder.BuildAsync(cancellationToken);
         await _app.StartAsync(cancellationToken);
+    }
 
+    /// <summary>
+    /// Проверяет, что вызов гейтвея:
+    /// <list type="bullet">
+    /// <item><description>В ответ отправляет сгенерированного сотрудника</description></item>
+    /// <item><description>Сериализует сотрудника в S3 хранилище</description></item>
+    /// <item><description>Проверяет, что данные из предыдущих пунктов идентичны</description></item>
+    /// </list>
+    /// </summary>
+    [Fact]
+    public async Task TestPipeline()
+    {
         var random = new Random();
         var id = random.Next(1, 100);
         using var gatewayClient = _app.CreateHttpClient("employee-api-gateway", "http");
