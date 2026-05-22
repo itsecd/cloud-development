@@ -4,28 +4,35 @@ var redis = builder
     .AddRedis("redis")
     .WithRedisInsight();
 
-var generation1 = builder
-    .AddProject<Projects.GenerationService>("generation-1")
-    .WithReference(redis)
-    .WithHttpsEndpoint(port: 7130);
+// Порты для трёх реплик GenerationService
+var ports = new[] { 7130, 7131, 7132 };
 
-var generation2 = builder
-    .AddProject<Projects.GenerationService>("generation-2")
-    .WithReference(redis)
-    .WithHttpsEndpoint(port: 7131);
-
-var generation3 = builder
-    .AddProject<Projects.GenerationService>("generation-3")
-    .WithReference(redis)
-    .WithHttpsEndpoint(port: 7132);
+// Создаём реплики в цикле вместо трёх отдельных переменных
+var generationServices = ports
+    .Select((port, index) =>
+    {
+        var name = $"generation-{index + 1}";
+        return builder
+            .AddProject<Projects.GenerationService>(name)
+            .WithReference(redis)
+            // Сервис генерации стартует только после того, как Redis готов
+            .WaitFor(redis)
+            .WithHttpsEndpoint(port: port)
+            // Передаём имя реплики через env — стабильно и видно в логах/дашборде
+            .WithEnvironment("REPLICA_NAME", name);
+    })
+    .ToArray();
 
 var gateway = builder
-    .AddProject<Projects.ApiGateway>("api-gateway");
+    .AddProject<Projects.ApiGateway>("api-gateway")
+    // ApiGateway стартует только после того, как все реплики готовы
+    .WaitForCompletion(generationServices[0])
+    .WaitForCompletion(generationServices[1])
+    .WaitForCompletion(generationServices[2]);
 
+// Клиент стартует после того, как готов ApiGateway
 builder.AddProject<Projects.Client_Wasm>("client-wasm")
-    .WithReference(generation1)
-    .WaitFor(generation1);
+    .WithReference(gateway)
+    .WaitFor(gateway);
 
 builder.Build().Run();
-
-

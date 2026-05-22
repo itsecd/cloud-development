@@ -2,8 +2,15 @@ using ApiGateway.LoadBalancers;
 using Ocelot.DependencyInjection;
 using Ocelot.LoadBalancer.Interfaces;
 using Ocelot.Middleware;
+using Serilog;
+using Serilog.Formatting.Compact;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((context, configuration) =>
+    configuration
+        .ReadFrom.Configuration(context.Configuration)
+        .WriteTo.Console(new CompactJsonFormatter()));
 
 builder.Configuration
     .AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
@@ -12,16 +19,18 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowClient", policy =>
     {
-        policy.WithOrigins(
-            "https://localhost:7282",
-            "http://localhost:7282")
-            .AllowAnyHeader()
-            .AllowAnyMethod();
+        policy
+            // https — порт из launchSettings клиента, http — порт ApiGateway
+            .WithOrigins(
+                "https://localhost:7282",
+                "http://localhost:5219")
+            .WithHeaders("Content-Type", "Authorization", "Accept")
+            .WithMethods("GET", "POST", "PUT", "DELETE");
     });
 });
 
 builder.Services.AddOcelot();
-builder.Services.AddSingleton < ILoadBalancerCreator, WeightedRoundRobinCreator > ();
+builder.Services.AddSingleton<ILoadBalancerCreator, WeightedRoundRobinCreator>();
 
 var app = builder.Build();
 

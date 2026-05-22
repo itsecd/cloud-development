@@ -6,27 +6,23 @@ namespace ApiGateway.LoadBalancers;
 
 public class WeightedRoundRobinLoadBalancer : ILoadBalancer
 {
-    private readonly List<ServiceHostAndPort> _sequence;
-    private int _index = -1;
+    private readonly List<ServiceHostAndPort> _services;
+    private readonly int[] _weights;
+    private readonly int _totalWeight;
+    private int _counter = -1;
     private readonly object _lock = new();
-    private readonly string _type;
 
-    public string Type => _type;
+    public string Type => nameof(WeightedRoundRobinLoadBalancer).Replace("LoadBalancer", "");
 
     public WeightedRoundRobinLoadBalancer(List<ServiceHostAndPort> services)
     {
-        _type = nameof(WeightedRoundRobinLoadBalancer).Replace("LoadBalancer", "");
-
-        var weights = new[] { 4, 3, 1 };
-        _sequence = new List<ServiceHostAndPort>();
+        _services = services;
+        _weights = new[] { 4, 3, 1 };
+        _totalWeight = 0;
 
         for (var i = 0; i < services.Count; i++)
         {
-            var weight = i < weights.Length ? weights[i] : 1;
-            for (var j = 0; j < weight; j++)
-            {
-                _sequence.Add(services[i]);
-            }
+            _totalWeight += i < _weights.Length ? _weights[i] : 1;
         }
     }
 
@@ -34,13 +30,26 @@ public class WeightedRoundRobinLoadBalancer : ILoadBalancer
     {
         lock (_lock)
         {
-            _index = (_index + 1) % _sequence.Count;
+            _counter = (_counter + 1) % _totalWeight;
+
+            var cumulative = 0;
+            for (var i = 0; i < _services.Count; i++)
+            {
+                var weight = i < _weights.Length ? _weights[i] : 1;
+                cumulative += weight;
+                if (_counter < cumulative)
+                {
+                    var selected = _services[i];
+                    // Временно — чтобы видеть в логах выбор балансировщика
+                    Console.WriteLine($"[WRR] counter={_counter} → {selected.DownstreamHost}:{selected.DownstreamPort}");
+                    return Task.FromResult<Response<ServiceHostAndPort>>(
+                        new OkResponse<ServiceHostAndPort>(selected));
+                }
+            }
             return Task.FromResult<Response<ServiceHostAndPort>>(
-                new OkResponse<ServiceHostAndPort>(_sequence[_index]));
+                new OkResponse<ServiceHostAndPort>(_services[^1]));
         }
     }
 
-    public void Release(ServiceHostAndPort hostAndPort)
-    {
-    }
+    public void Release(ServiceHostAndPort hostAndPort) { }
 }

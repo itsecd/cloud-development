@@ -17,30 +17,17 @@ builder.AddRedisDistributedCache("redis");
 builder.Services.AddSingleton<ContractGeneratorService>();
 builder.Services.AddSingleton<ContractCacheService>();
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowClient", policy =>
-    {
-        policy.WithOrigins(
-                "https://localhost:7282",
-                "http://localhost:5219")
-            .AllowAnyHeader()
-            .AllowAnyMethod();
-    });
-});
-
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.Configure<CacheOptions>(
     builder.Configuration.GetSection("CacheOptions"));
 
 var app = builder.Build();
-var instanceId = Guid.NewGuid().ToString()[..8];
 
-app.UseCors("AllowClient");
+var replicaName = builder.Configuration["REPLICA_NAME"] ?? "unknown";
+
 app.UseSwagger();
 app.UseSwaggerUI();
-
 
 app.MapGet("/contracts/{id:int}", async (
     int id,
@@ -48,8 +35,8 @@ app.MapGet("/contracts/{id:int}", async (
     ILogger<Program> logger) =>
 {
     logger.LogInformation(
-        "Request handled by instance {InstanceId}",
-        instanceId);
+        "Request handled by replica {ReplicaName}",
+        replicaName);
 
     var contract = await cacheService.GetOrCreateAsync(id);
 

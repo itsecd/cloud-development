@@ -22,6 +22,6 @@ public class WeightedRoundRobinCreator : ILoadBalancerCreator
 
         var balancer = new WeightedRoundRobinLoadBalancer(hostAndPorts);
 
-        return new OkResponse< ILoadBalancer > (balancer);
+        return new OkResponse<ILoadBalancer>(balancer);
     }
 }
