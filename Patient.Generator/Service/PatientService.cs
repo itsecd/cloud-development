@@ -1,17 +1,23 @@
 using Patient.Generator.DTO;
 using Patient.Generator.Generator;
+using Patient.Generator.Messaging;
 
 namespace Patient.Generator.Service;
 
 /// <summary>
 /// Реализация сервиса работы с медицинскими пациентами.
 /// </summary>
+/// <param name="generator">Генератор пациентов.</param>
+/// <param name="cache">Кэш пациентов.</param>
+/// <param name="producer">Служба отправки пациентов в брокер сообщений.</param>
 public sealed class PatientService(
     PatientGenerator generator,
-    IPatientCache cache) : IPatientService
+    IPatientCache cache,
+    IProducerService producer) : IPatientService
 {
     /// <summary>
-    /// Получить пациента по идентификатору. Если пациент не найден в кэше, генерирует нового и сохраняет в кэш.
+    /// Получить пациента по идентификатору. Если пациент не найден в кэше, генерирует нового,
+    /// сохраняет в кэш и отправляет в брокер сообщений.
     /// </summary>
     /// <param name="id">Идентификатор пациента.</param>
     /// <param name="cancellationToken">Токен отмены.</param>
@@ -26,6 +32,7 @@ public sealed class PatientService(
 
         var generated = generator.Generate(id);
         await cache.SetAsync(id, generated, cancellationToken);
+        await producer.SendMessage(generated);
 
         return generated;
     }

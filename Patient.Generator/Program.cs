@@ -1,4 +1,7 @@
+using Amazon.SQS;
+using LocalStack.Client.Extensions;
 using Patient.Generator.Generator;
+using Patient.Generator.Messaging;
 using Patient.Generator.Service;
 using Patient.ServiceDefaults;
 
@@ -9,7 +12,11 @@ builder.AddRedisDistributedCache("patient-cache");
 
 builder.Services.AddSingleton<PatientGenerator>();
 builder.Services.AddSingleton<IPatientCache, PatientCache>();
-builder.Services.AddSingleton<IPatientService, PatientService>();
+builder.Services.AddScoped<IPatientService, PatientService>();
+
+builder.Services.AddLocalStack(builder.Configuration);
+builder.Services.AddAwsService<IAmazonSQS>();
+builder.Services.AddScoped<IProducerService, SqsProducerService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
