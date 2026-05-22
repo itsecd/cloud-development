@@ -6,8 +6,8 @@ namespace Backend.IntegrationTests;
 
 public sealed class EmployeeExportIntegrationTests : IAsyncLifetime
 {
-    private static readonly TimeSpan StartupTimeout = TimeSpan.FromSeconds(120);
-    private static readonly TimeSpan ExportTimeout = TimeSpan.FromSeconds(120);
+    private static readonly TimeSpan StartupTimeout = TimeSpan.FromMinutes(5);
+    private static readonly TimeSpan ExportTimeout = TimeSpan.FromMinutes(2);
 
     private DistributedApplication? _app;
 

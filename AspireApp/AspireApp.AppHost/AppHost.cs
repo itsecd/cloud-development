@@ -1,19 +1,31 @@
+using Aspire.Hosting.LocalStack;
+
 var builder = DistributedApplication.CreateBuilder(args);
 
 var cache = builder.AddRedis("employee-cache")
     .WithRedisInsight(containerName: "employee-insight");
 
-// LocalStack поднимаем как контейнерный ресурс Aspire с фиксированным edge-портом,
-// чтобы и процессы на хосте, и сами сервисы могли обращаться к нему по одному адресу.
-var localstack = builder.AddContainer("localstack", "localstack/localstack", "3.5")
-    .WithEnvironment("SERVICES", "s3,sns")
-    .WithEnvironment("AWS_DEFAULT_REGION", "us-east-1")
-    .WithEnvironment("DEBUG", "1")
-    .WithHttpEndpoint(port: 4566, targetPort: 4566, name: "http", isProxied: false)
-    .WithHttpHealthCheck("/_localstack/health", endpointName: "http");
+// LocalStack поднимаем через интеграцию LocalStack.Aspire.Hosting — Aspire управляет
+// жизненным циклом контейнера. Закрепляем версию 3.5: в 3.7.2+ есть известный баг
+// с подтверждением HTTP SNS-подписок (https://github.com/localstack/localstack/issues/11652).
+var localstack = builder.AddLocalStack("localstack", configureContainer: container =>
+{
+    container.Lifetime = ContainerLifetime.Session;
+    container.DebugLevel = 1;
+    container.ContainerImageTag = "3.5";
+})
+    ?? throw new InvalidOperationException(
+        "LocalStack отключён в конфигурации AppHost (LocalStack:UseLocalStack = false). " +
+        "Включите его в appsettings.json, иначе file-service и service-api не получат своего edge-эндпойнта.");
 
-
-const string localstackEndpoint = "http://localhost:4566";
+// LocalStack.Aspire.Hosting всегда проксирует edge-порт 4566 через случайный хостовый порт,
+// поэтому ServiceURL приходится резолвить динамически — иначе AWS-клиенты на хосте промахнутся.
+// ILocalStackResource не реализует IResourceWithEndpoints напрямую, но под капотом это
+// ContainerResource — приводим к нему, чтобы можно было дотянуться до edge-эндпойнта.
+var localstackContainer = (IResourceBuilder<ContainerResource>)(object)localstack;
+var localstackHttp = localstackContainer.GetEndpoint("http");
+var localstackEndpoint = ReferenceExpression.Create(
+    $"http://localhost:{localstackHttp.Property(EndpointProperty.Port)}");
 
 var gateway = builder.AddProject<Projects.ApiGateway>("api-gateway");
 
@@ -21,6 +33,9 @@ var replicaWeights = new[] { 1, 2, 3, 2, 1 };
 
 const int fileServicePort = 16000;
 
+// WaitFor(localstack) не используем: health-check интеграции бывает «unhealthy» дольше,
+// чем нужно, и блокирует старт зависимых сервисов. SnsFileExportWorker и SnsEmployeeEventPublisher
+// уже имеют retry-цикл и сами дождутся готовности LocalStack.
 var fileService = builder.AddProject<Projects.File_Service>("file-service", launchProfileName: null)
     .WithHttpEndpoint(port: fileServicePort, name: "http")
     .WithEnvironment("Aws__ServiceUrl", localstackEndpoint)
@@ -28,8 +43,7 @@ var fileService = builder.AddProject<Projects.File_Service>("file-service", laun
     .WithEnvironment("Aws__AccessKey", "test")
     .WithEnvironment("Aws__SecretKey", "test")
     .WithEnvironment("Aws__TopicName", "employee-generated-topic")
-    .WithEnvironment("Aws__BucketName", "employee-files")
-    .WaitFor(localstack);
+    .WithEnvironment("Aws__BucketName", "employee-files");
 
 // NotificationEndpoint собираем уже после описания endpoint, чтобы порт
 // можно было резолвить динамически (важно для Aspire.Testing,
@@ -50,8 +64,7 @@ for (var i = 0; i < 5; i++)
         .WithEnvironment("Aws__AccessKey", "test")
         .WithEnvironment("Aws__SecretKey", "test")
         .WithEnvironment("Aws__TopicName", "employee-generated-topic")
-        .WaitFor(cache)
-        .WaitFor(localstack);
+        .WaitFor(cache);
 
     gateway.WaitFor(service);
 }

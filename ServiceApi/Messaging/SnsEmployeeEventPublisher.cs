@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Amazon.Runtime;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using Microsoft.Extensions.Options;
@@ -11,7 +10,7 @@ namespace Service.Api.Messaging;
 /// <summary>
 /// Публикует события генерации сотрудников в SNS.
 /// </summary>
-public sealed class SnsEmployeeEventPublisher : IEmployeeEventPublisher, IAsyncDisposable
+public sealed class SnsEmployeeEventPublisher : IEmployeeEventPublisher
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
@@ -26,22 +25,14 @@ public sealed class SnsEmployeeEventPublisher : IEmployeeEventPublisher, IAsyncD
 
     public SnsEmployeeEventPublisher(
         IOptions<AwsMessagingOptions> options,
+        IAmazonSimpleNotificationService snsClient,
         IConfiguration configuration,
         ILogger<SnsEmployeeEventPublisher> logger)
     {
         _options = options.Value;
         _logger = logger;
         _replicaId = configuration["ReplicaId"] ?? Environment.MachineName;
-
-        var credentials = new BasicAWSCredentials(_options.AccessKey, _options.SecretKey);
-        var config = new AmazonSimpleNotificationServiceConfig
-        {
-            ServiceURL = _options.ServiceUrl,
-            AuthenticationRegion = _options.Region,
-            UseHttp = _options.ServiceUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
-        };
-
-        _snsClient = new AmazonSimpleNotificationServiceClient(credentials, config);
+        _snsClient = snsClient;
     }
 
     public async Task PublishAsync(Employee employee, CancellationToken cancellationToken = default)
@@ -131,11 +122,5 @@ public sealed class SnsEmployeeEventPublisher : IEmployeeEventPublisher, IAsyncD
 
         _topicArn = response.TopicArn;
         return _topicArn;
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        _snsClient.Dispose();
-        await Task.CompletedTask;
     }
 }

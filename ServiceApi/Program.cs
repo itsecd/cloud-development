@@ -1,3 +1,8 @@
+using Amazon;
+using Amazon.Extensions.NETCore.Setup;
+using Amazon.Runtime;
+using Amazon.SimpleNotificationService;
+using Microsoft.Extensions.Options;
 using Service.Api.Configuration;
 using Service.Api.Generator;
 using Service.Api.Messaging;
@@ -14,6 +19,25 @@ builder.Logging.AddJsonConsole(options =>
 });
 
 builder.Services.Configure<AwsMessagingOptions>(builder.Configuration.GetSection(AwsMessagingOptions.SectionName));
+
+// Регистрируем AWS-клиентов через DI, чтобы они не создавались вручную внутри сервисов
+// и пользовались LocalStack-эндпойнтом из конфигурации.
+builder.Services.AddDefaultAWSOptions(sp =>
+{
+    var opts = sp.GetRequiredService<IOptions<AwsMessagingOptions>>().Value;
+    var awsOptions = new AWSOptions
+    {
+        Region = RegionEndpoint.GetBySystemName(opts.Region),
+        Credentials = new BasicAWSCredentials(opts.AccessKey, opts.SecretKey)
+    };
+    awsOptions.DefaultClientConfig.ServiceURL = opts.ServiceUrl;
+    awsOptions.DefaultClientConfig.AuthenticationRegion = opts.Region;
+    awsOptions.DefaultClientConfig.UseHttp = opts.ServiceUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase);
+    return awsOptions;
+});
+
+builder.Services.AddAWSService<IAmazonSimpleNotificationService>();
+
 builder.Services.AddSingleton<IEmployeeEventPublisher, SnsEmployeeEventPublisher>();
 builder.Services.AddScoped<IEmployeeGeneratorService, EmployeeGeneratorService>();
 

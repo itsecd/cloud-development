@@ -1,4 +1,3 @@
-using Amazon.Runtime;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using File.Service.Configuration;
@@ -24,23 +23,14 @@ public sealed class SnsFileExportWorker : BackgroundService
 
     public SnsFileExportWorker(
         IOptions<AwsStorageOptions> options,
+        IAmazonSimpleNotificationService snsClient,
         ILogger<SnsFileExportWorker> logger,
         FileExportInfrastructureState state)
     {
         _options = options.Value;
         _logger = logger;
         _state = state;
-
-        var credentials = new BasicAWSCredentials(_options.AccessKey, _options.SecretKey);
-
-        var snsConfig = new AmazonSimpleNotificationServiceConfig
-        {
-            ServiceURL = _options.ServiceUrl,
-            AuthenticationRegion = _options.Region,
-            UseHttp = _options.ServiceUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
-        };
-
-        _snsClient = new AmazonSimpleNotificationServiceClient(credentials, snsConfig);
+        _snsClient = snsClient;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -160,11 +150,5 @@ public sealed class SnsFileExportWorker : BackgroundService
 
         throw new InvalidOperationException(
             $"SNS-подписка на {endpoint} не была подтверждена за отведённое время.");
-    }
-
-    public override void Dispose()
-    {
-        _snsClient.Dispose();
-        base.Dispose();
     }
 }

@@ -1,4 +1,3 @@
-using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.S3.Model;
 using Amazon.S3.Util;
@@ -10,27 +9,20 @@ namespace File.Service.Storage;
 /// <summary>
 /// Хранилище файлов сотрудников в S3/LocalStack.
 /// </summary>
-public sealed class S3EmployeeFileStorage : IEmployeeFileStorage, IAsyncDisposable
+public sealed class S3EmployeeFileStorage : IEmployeeFileStorage
 {
     private readonly AwsStorageOptions _options;
     private readonly ILogger<S3EmployeeFileStorage> _logger;
     private readonly IAmazonS3 _s3Client;
 
-    public S3EmployeeFileStorage(IOptions<AwsStorageOptions> options, ILogger<S3EmployeeFileStorage> logger)
+    public S3EmployeeFileStorage(
+        IOptions<AwsStorageOptions> options,
+        IAmazonS3 s3Client,
+        ILogger<S3EmployeeFileStorage> logger)
     {
         _options = options.Value;
         _logger = logger;
-
-        var credentials = new BasicAWSCredentials(_options.AccessKey, _options.SecretKey);
-        var config = new AmazonS3Config
-        {
-            ServiceURL = _options.ServiceUrl,
-            AuthenticationRegion = _options.Region,
-            ForcePathStyle = true,
-            UseHttp = _options.ServiceUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
-        };
-
-        _s3Client = new AmazonS3Client(credentials, config);
+        _s3Client = s3Client;
     }
 
     public async Task SaveEmployeeJsonAsync(int employeeId, string json, CancellationToken cancellationToken = default)
@@ -82,10 +74,4 @@ public sealed class S3EmployeeFileStorage : IEmployeeFileStorage, IAsyncDisposab
     }
 
     private static string BuildObjectKey(int employeeId) => $"employees/employee-{employeeId}.json";
-
-    public async ValueTask DisposeAsync()
-    {
-        _s3Client.Dispose();
-        await Task.CompletedTask;
-    }
 }
