@@ -26,26 +26,36 @@ public class CreditApplicationFilePersistenceWorker(
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _queueUrl = await EnsureQueueAsync(stoppingToken);
-        await EnsureBucketAsync(stoppingToken);
+        await WaitForInfrastructureAsync(stoppingToken);
 
         while (!stoppingToken.IsCancellationRequested)
         {
-            var response = await sqsClient.ReceiveMessageAsync(new ReceiveMessageRequest
+            try
             {
-                QueueUrl = _queueUrl,
-                MaxNumberOfMessages = 5,
-                WaitTimeSeconds = 10
-            }, stoppingToken);
+                var response = await sqsClient.ReceiveMessageAsync(new ReceiveMessageRequest
+                {
+                    QueueUrl = _queueUrl,
+                    MaxNumberOfMessages = 5,
+                    WaitTimeSeconds = 10
+                }, stoppingToken);
 
-            if (response.Messages.Count == 0)
-            {
-                continue;
+                if (response.Messages.Count == 0)
+                {
+                    continue;
+                }
+
+                foreach (var message in response.Messages)
+                {
+                    await HandleMessageAsync(message, stoppingToken);
+                }
             }
-
-            foreach (var message in response.Messages)
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
-                await HandleMessageAsync(message, stoppingToken);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "SQS is unavailable, retrying message polling");
+                await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
             }
         }
     }
@@ -93,6 +103,29 @@ public class CreditApplicationFilePersistenceWorker(
         return queueResponse.QueueUrl;
     }
 
+    private async Task WaitForInfrastructureAsync(CancellationToken cancellationToken)
+    {
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            try
+            {
+                _queueUrl = await EnsureQueueAsync(cancellationToken);
+                await EnsureBucketAsync(cancellationToken);
+                logger.LogInformation("SQS queue and S3 bucket are ready");
+                return;
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "SQS/S3 infrastructure is unavailable, retrying");
+                await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
+            }
+        }
+    }
+
     private async Task EnsureBucketAsync(CancellationToken cancellationToken)
     {
         if (_bucketReady)
@@ -101,7 +134,7 @@ public class CreditApplicationFilePersistenceWorker(
         }
 
         var buckets = await s3Client.ListBucketsAsync(cancellationToken);
-        if (buckets.Buckets.All(b => b.BucketName != options.Value.BucketName))
+        if (buckets.Buckets?.All(b => b.BucketName != options.Value.BucketName) != false)
         {
             await s3Client.PutBucketAsync(new PutBucketRequest
             {

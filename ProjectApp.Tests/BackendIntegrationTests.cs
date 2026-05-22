@@ -78,16 +78,22 @@ public class BackendIntegrationTests
 
         while (DateTime.UtcNow - started < timeout)
         {
-            var list = await s3Client.ListObjectsV2Async(new ListObjectsV2Request
+            try
             {
-                BucketName = "credit-applications",
-                Prefix = prefix
-            });
+                var list = await s3Client.ListObjectsV2Async(new ListObjectsV2Request
+                {
+                    BucketName = "credit-applications",
+                    Prefix = prefix
+                });
 
-            var found = list.S3Objects.FirstOrDefault()?.Key;
-            if (!string.IsNullOrWhiteSpace(found))
+                var found = list.S3Objects.FirstOrDefault()?.Key;
+                if (!string.IsNullOrWhiteSpace(found))
+                {
+                    return found;
+                }
+            }
+            catch (AmazonS3Exception ex) when (ex.ErrorCode == "NoSuchBucket")
             {
-                return found;
             }
 
             await Task.Delay(1000);
