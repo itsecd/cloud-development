@@ -20,7 +20,6 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowClient", policy =>
     {
         policy
-            // https — порт из launchSettings клиента, http — порт ApiGateway
             .WithOrigins(
                 "https://localhost:7282",
                 "http://localhost:5219")

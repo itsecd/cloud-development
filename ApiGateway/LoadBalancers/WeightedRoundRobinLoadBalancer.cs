@@ -40,7 +40,6 @@ public class WeightedRoundRobinLoadBalancer : ILoadBalancer
                 if (_counter < cumulative)
                 {
                     var selected = _services[i];
-                    // Временно — чтобы видеть в логах выбор балансировщика
                     Console.WriteLine($"[WRR] counter={_counter} → {selected.DownstreamHost}:{selected.DownstreamPort}");
                     return Task.FromResult<Response<ServiceHostAndPort>>(
                         new OkResponse<ServiceHostAndPort>(selected));
