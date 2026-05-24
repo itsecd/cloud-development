@@ -1,0 +1,67 @@
+openapi: "3.0.0"
+info:
+  title: Credit Application API Gateway
+  version: "1.0"
+
+x-yc-apigateway:
+  cors:
+    origin: "*"
+    methods: "*"
+    allowedHeaders: "Content-Type,Authorization"
+
+paths:
+  /api/creditapplication:
+    get:
+      summary: Получить кредитную заявку по идентификатору
+      operationId: getCreditApplicationById
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      x-yc-apigateway-integration:
+        type: cloud_functions
+        function_id: ${FUNCTION_ID}
+        service_account_id: ${SERVICE_ACCOUNT_ID}
+        tag: "$latest"
+      responses:
+        "200":
+          description: Кредитная заявка успешно получена
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreditApplication"
+        "400":
+          description: Некорректный идентификатор
+
+components:
+  schemas:
+    CreditApplication:
+      type: object
+      properties:
+        id:
+          type: integer
+        creditType:
+          type: string
+        requestedAmount:
+          type: number
+        termMonths:
+          type: integer
+        interestRate:
+          type: number
+        applicationDate:
+          type: string
+          format: date
+        requiresInsurance:
+          type: boolean
+        status:
+          type: string
+        decisionDate:
+          type: string
+          format: date
+          nullable: true
+        approvedAmount:
+          type: number
+          nullable: true

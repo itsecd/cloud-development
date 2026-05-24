@@ -416,3 +416,11 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Yandex Cloud deployment artifacts
+cloud/build/
+cloud/env.sh
+Client.Wasm/wwwroot/appsettings.Production.json
+*.zip
+publish/
+*-publish/

@@ -1,5 +1,4 @@
-﻿@inject IConfiguration Configuration 
-@inject HttpClient Client
+﻿@inject CreditApplicationApiClient ApiClient
 
 <CardDeck>
     <Card>
@@ -67,8 +66,7 @@
 
     private async Task RequestNewData()
     {
-        var baseAddress = Configuration["BaseAddress"] ?? throw new KeyNotFoundException("Конфигурация клиента не содержит параметра BaseAddress");
-        Value = await Client.GetFromJsonAsync<JsonObject>($"{baseAddress}?id={Id}", new JsonSerializerOptions { });
+        Value = await ApiClient.GetByIdAsync(Id);
         StateHasChanged();
     }
 }
