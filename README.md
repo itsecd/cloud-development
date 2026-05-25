@@ -1,4 +1,4 @@
-# Лабораторные работы №1-2
+# Лабораторные работы №1-3
 
 **Вариант:** №21 — «Кредитная заявка»  
 **Балансировка:** Weighted Round Robin  
@@ -15,6 +15,9 @@
 - Балансировка нагрузки `Weighted Round Robin` с весами `3:2:1`.
 - REST endpoint: `GET /api/creditapplication?id={id}`.
 - Gateway endpoint: `GET /applications?id={id}`.
+- Отправка событий о заявках в `SQS`.
+- Файловый сервис, сохраняющий заявки в `Minio`.
+- Интеграционный тест полного backend flow: Gateway -> API -> SQS -> FileService -> Minio.
 - Дополнительно: реализована клиентская карточка «Кредитная заявка» (Blazor WebAssembly, компонент `Client.Wasm/Components/CreditApplicationCard.razor`) для запроса по ID и наглядного отображения всех полей заявки.
 
 ## Характеристики генерируемой заявки
@@ -45,6 +48,8 @@
 - Генерация данных: Bogus
 - Кэш: IDistributedCache (Redis)
 - Оркестрация: .NET Aspire (AppHost поднимает Redis и API)
+- Брокер сообщений: SQS через LocalStack
+- Объектное хранилище: Minio
 - Клиент: Blazor WebAssembly + Blazorise (Bootstrap)
 - Тесты: xUnit
 
@@ -52,9 +57,10 @@
 - ProjectApp.Api — API для кредитных заявок
 - ProjectApp.Gateway — API Gateway на Ocelot c кастомным Weighted Round Robin
 - ProjectApp.Domain — доменные сущности
-- ProjectApp.AppHost — оркестрация (.NET Aspire) с Redis, Gateway и тремя репликами API
+- ProjectApp.FileService — файловый сервис, читающий события из SQS и сохраняющий заявки в Minio
+- ProjectApp.AppHost — оркестрация (.NET Aspire) с Redis, LocalStack SQS, Minio, Gateway, FileService и тремя репликами API
 - Client.Wasm — веб‑клиент (карточка «Кредитная заявка»)
-- ProjectApp.Tests — модульные тесты генератора
+- ProjectApp.Tests — модульные и интеграционные тесты backend
 
 ## Эндпойнты
 
@@ -69,6 +75,22 @@
 - API Gateway на базе `Ocelot`;
 - собственная реализация алгоритма `Weighted Round Robin`;
 - маршрутизация через gateway к трем репликам API по схеме `R1, R1, R1, R2, R2, R3, ...`.
+
+## Лабораторная работа №3
+
+В третьей лабораторной работе настроены:
+
+- объектное хранилище `Minio` для сохранения JSON-файлов кредитных заявок;
+- брокер сообщений `SQS` через `LocalStack`;
+- файловый сервис `ProjectApp.FileService`, который читает события из очереди и сохраняет заявки в Minio;
+- публикация события `CreditApplicationGeneratedEvent` из `ProjectApp.Api` после получения заявки;
+- интеграционный тест, проверяющий получение заявки через gateway и появление соответствующего JSON-файла в объектном хранилище.
+
+Файлы сохраняются в bucket `credit-applications` с ключом:
+
+```text
+credit-applications/{id}-{timestamp}.json
+```
 
 ## Кэширование
 
