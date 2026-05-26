@@ -11,12 +11,18 @@ using Microsoft.Extensions.Logging;
 
 namespace CourseApp.FileService.YandexFunction;
 
+/// <summary>
+/// Обработчик Yandex Cloud Function, вызываемый триггером Yandex Message Queue.
+/// </summary>
 public sealed class CourseStorageHandler
 {
     private readonly IAmazonS3 _s3;
     private readonly ILogger<CourseStorageHandler> _logger;
     private readonly string _bucketName;
 
+    /// <summary>
+    /// Создаёт обработчик и настраивает клиент Yandex Object Storage через S3-compatible API.
+    /// </summary>
     public CourseStorageHandler()
     {
         var config = new ConfigurationBuilder()
@@ -44,6 +50,10 @@ public sealed class CourseStorageHandler
         _bucketName = config["S3_BUCKET"] ?? "courses-storage";
     }
 
+    /// <summary>
+    /// Обрабатывает пакет сообщений из очереди и сохраняет каждое сообщение в Object Storage.
+    /// </summary>
+    /// <param name="request">Событие триггера Yandex Message Queue.</param>
     public async Task FunctionHandler(QueueRequest request)
     {
         _logger.LogInformation("Received {Count} queue messages", request.Messages.Count);
@@ -94,29 +104,56 @@ public sealed class CourseStorageHandler
     }
 }
 
+/// <summary>
+/// Событие триггера Yandex Message Queue.
+/// </summary>
 public sealed class QueueRequest
 {
+    /// <summary>
+    /// Сообщения, переданные триггером.
+    /// </summary>
     [JsonPropertyName("messages")]
     public List<QueueEvent> Messages { get; set; } = [];
 }
 
+/// <summary>
+/// Элемент пакета сообщений Yandex Message Queue.
+/// </summary>
 public sealed class QueueEvent
 {
+    /// <summary>
+    /// Детали события очереди.
+    /// </summary>
     [JsonPropertyName("details")]
     public QueueEventDetails? Details { get; set; }
 }
 
+/// <summary>
+/// Детали события очереди.
+/// </summary>
 public sealed class QueueEventDetails
 {
+    /// <summary>
+    /// Сообщение очереди.
+    /// </summary>
     [JsonPropertyName("message")]
     public QueueMessage? Message { get; set; }
 }
 
+/// <summary>
+/// Сообщение Yandex Message Queue.
+/// </summary>
 public sealed class QueueMessage
 {
+    /// <summary>
+    /// Идентификатор сообщения.
+    /// </summary>
     [JsonPropertyName("message_id")]
     public string MessageId { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Тело сообщения.
+    /// </summary>
     [JsonPropertyName("body")]
     public string Body { get; set; } = string.Empty;
 }

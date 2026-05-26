@@ -58,3 +58,26 @@
 |------|---------------|
 | `Pipeline_PutsGeneratedCourseToS3` | Сквозной happy-path: запрос к API кладёт сериализованный курс в S3 идентичным тому, что вернулся клиенту (`HTTP → CourseService → SQS → SqsConsumerService → S3`) |
 | `Pipeline_CacheHitDoesNotDuplicateFile` | Идемпотентность: при cache hit отправка в SQS не происходит повторно — в S3 остаётся ровно один файл `course_{id}.json` |
+
+## Лабораторная работа 4. Развёртывание в Yandex Cloud
+
+Проект перенесён с локальной Aspire/LocalStack-инфраструктуры на управляемые сервисы Yandex Cloud. Используются Cloud Functions, очередь сообщений Yandex Message Queue и Object Storage.
+
+### Развёрнутые компоненты
+
+| Компонент | Реализация | Назначение |
+|-----------|------------|------------|
+| Клиент | `Client.Wasm` в Object Storage static website | Веб-интерфейс для запроса учебного курса по `id` |
+| Генератор курсов | `CourseApp.Api.YandexFunction` / `course-generator` | HTTP Cloud Function, генерирует курс и публикует JSON в очередь |
+| Очередь сообщений | Yandex Message Queue `courses-the80hz` | Связывает генератор и обработчик файлов |
+| Файловый обработчик | `CourseApp.FileService.YandexFunction` / `course-storage` | Cloud Function, вызывается триггером очереди и сохраняет JSON в бакет |
+| Объектное хранилище данных | Object Storage `courses-storage-the80hz` | Хранит файлы `course_{id}.json` |
+
+### Схема работы
+
+1. Пользователь открывает статический Blazor WASM клиент из Object Storage.
+2. Клиент отправляет запрос в публичную Cloud Function `course-generator`.
+3. Функция генерирует объект учебного курса по `id` и возвращает JSON клиенту.
+4. Она же публикует JSON в Yandex Message Queue.
+5. Триггер Message Queue вызывает функцию `course-storage`.
+6. `course-storage` сохраняет сообщение в Object Storage как `course_{id}.json`.

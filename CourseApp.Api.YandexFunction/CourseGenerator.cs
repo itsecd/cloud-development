@@ -2,6 +2,9 @@ using Bogus;
 
 namespace CourseApp.Api.YandexFunction;
 
+/// <summary>
+/// Генератор учебных курсов на основе Bogus.
+/// </summary>
 public static class CourseGenerator
 {
     private static readonly string[] CourseNames =
@@ -39,6 +42,10 @@ public static class CourseGenerator
         .RuleFor(c => c.Price, f => Math.Round(f.Random.Decimal(5000m, 150000m), 2))
         .RuleFor(c => c.Rating, f => f.Random.Int(1, 5));
 
+    /// <summary>
+    /// Генерирует учебный курс с указанным идентификатором.
+    /// </summary>
+    /// <param name="id">Идентификатор курса.</param>
     public static Course Generate(int id)
     {
         Faker.UseSeed(id);
@@ -47,6 +54,11 @@ public static class CourseGenerator
         return course;
     }
 
+    /// <summary>
+    /// Генерирует отчество преподавателя по мужскому имени и полу.
+    /// </summary>
+    /// <param name="maleFirstName">Мужское имя.</param>
+    /// <param name="gender">Пол преподавателя.</param>
     private static string GeneratePatronymic(string maleFirstName, Bogus.DataSets.Name.Gender gender)
     {
         var isMale = gender == Bogus.DataSets.Name.Gender.Male;

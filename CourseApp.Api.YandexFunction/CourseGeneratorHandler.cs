@@ -10,6 +10,9 @@ using Microsoft.Extensions.Logging;
 
 namespace CourseApp.Api.YandexFunction;
 
+/// <summary>
+/// HTTP-обработчик Yandex Cloud Function для генерации учебного курса.
+/// </summary>
 public sealed class CourseGeneratorHandler
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -21,6 +24,9 @@ public sealed class CourseGeneratorHandler
     private readonly ILogger<CourseGeneratorHandler> _logger;
     private readonly string _queueUrl;
 
+    /// <summary>
+    /// Создаёт обработчик и настраивает клиент Yandex Message Queue через SQS-compatible API.
+    /// </summary>
     public CourseGeneratorHandler()
     {
         var config = new ConfigurationBuilder()
@@ -50,6 +56,10 @@ public sealed class CourseGeneratorHandler
             ?? throw new InvalidOperationException("SQS_QUEUE_URL is not configured");
     }
 
+    /// <summary>
+    /// Обрабатывает HTTP-запрос, генерирует курс и публикует его JSON в очередь сообщений.
+    /// </summary>
+    /// <param name="request">HTTP-событие, переданное Yandex Cloud Functions.</param>
     public async Task<Response> FunctionHandler(Request request)
     {
         if (!string.Equals(request.HttpMethod, "GET", StringComparison.OrdinalIgnoreCase))
@@ -111,41 +121,80 @@ public sealed class CourseGeneratorHandler
     };
 }
 
+/// <summary>
+/// HTTP-событие Yandex Cloud Functions.
+/// </summary>
 public sealed class Request
 {
+    /// <summary>
+    /// HTTP-метод запроса.
+    /// </summary>
     [JsonPropertyName("httpMethod")]
     public string? HttpMethod { get; set; }
 
+    /// <summary>
+    /// Полный URL запроса.
+    /// </summary>
     [JsonPropertyName("url")]
     public string? Url { get; set; }
 
+    /// <summary>
+    /// Путь запроса.
+    /// </summary>
     [JsonPropertyName("path")]
     public string? Path { get; set; }
 
+    /// <summary>
+    /// Тело запроса.
+    /// </summary>
     [JsonPropertyName("body")]
     public string? Body { get; set; }
 
+    /// <summary>
+    /// Query string параметры запроса.
+    /// </summary>
     [JsonPropertyName("queryStringParameters")]
     public Dictionary<string, string>? QueryStringParameters { get; set; }
 
+    /// <summary>
+    /// HTTP-заголовки запроса.
+    /// </summary>
     [JsonPropertyName("headers")]
     public Dictionary<string, string>? Headers { get; set; }
 
+    /// <summary>
+    /// Параметры пути.
+    /// </summary>
     [JsonPropertyName("pathParameters")]
     public Dictionary<string, string>? PathParameters { get; set; }
 
+    /// <summary>
+    /// Признак передачи тела в Base64.
+    /// </summary>
     [JsonPropertyName("isBase64Encoded")]
     public bool IsBase64Encoded { get; set; }
 }
 
+/// <summary>
+/// HTTP-ответ Yandex Cloud Functions.
+/// </summary>
 public sealed class Response
 {
+    /// <summary>
+    /// HTTP-статус ответа.
+    /// </summary>
     [JsonPropertyName("statusCode")]
     public int StatusCode { get; set; }
 
+    /// <summary>
+    /// HTTP-заголовки ответа.
+    /// </summary>
     [JsonPropertyName("headers")]
     public Dictionary<string, string>? Headers { get; set; }
 
+    /// <summary>
+    /// Тело ответа.
+    /// </summary>
     [JsonPropertyName("body")]
     public string Body { get; set; } = string.Empty;
 }
