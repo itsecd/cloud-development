@@ -43,3 +43,4 @@ redis-data/
 
 # Docker
 docker-compose.override.yml
+/errors.txt
