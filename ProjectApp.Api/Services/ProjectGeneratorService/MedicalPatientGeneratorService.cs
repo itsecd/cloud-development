@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Caching.Distributed;
+using ProjectApp.Api.Services.Messaging;
 using ProjectApp.Domain.Entities;
 using System.Text.Json;
 
@@ -10,6 +11,7 @@ namespace ProjectApp.Api.Services.ProjectGeneratorService;
 public class MedicalPatientGeneratorService(
     IDistributedCache cache,
     MedicalPatientGenerator generator,
+    IPatientGeneratedPublisher patientGeneratedPublisher,
     IConfiguration configuration,
     ILogger<MedicalPatientGeneratorService> logger) : IMedicalPatientGeneratorService
 {
@@ -79,6 +81,8 @@ public class MedicalPatientGeneratorService(
         {
             logger.LogWarning(ex, "Failed to save patient {Id} to cache (error ignored)", id);
         }
+
+        await patientGeneratedPublisher.PublishAsync(patient, cancellationToken);
 
         return patient;
     }

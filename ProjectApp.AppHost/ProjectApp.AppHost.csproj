@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.AppHost" Version="9.5.2" />
+    <PackageReference Include="Aspire.Hosting.RabbitMQ" Version="9.5.2" />
     <PackageReference Include="Aspire.Hosting.Redis" Version="9.5.2" />
   </ItemGroup>
 
@@ -20,6 +21,7 @@
     <ProjectReference Include="..\Client.Wasm\Client.Wasm.csproj" />
     <ProjectReference Include="..\ProjectApp.Api\ProjectApp.Api.csproj" />
     <ProjectReference Include="..\ProjectApp.ApiGateway\ProjectApp.ApiGateway.csproj" />
+    <ProjectReference Include="..\ProjectApp.FileService\ProjectApp.FileService.csproj" />
   </ItemGroup>
 
 </Project>

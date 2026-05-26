@@ -1,3 +1,4 @@
+using ProjectApp.Api.Services.Messaging;
 using ProjectApp.Api.Services.ProjectGeneratorService;
 using ProjectApp.ServiceDefaults;
 
@@ -18,6 +19,7 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddSingleton<MedicalPatientGenerator>();
+builder.Services.AddSingleton<IPatientGeneratedPublisher, RabbitMqPatientGeneratedPublisher>();
 builder.Services.AddScoped<IMedicalPatientGeneratorService, MedicalPatientGeneratorService>();
 
 builder.Services.AddControllers();
