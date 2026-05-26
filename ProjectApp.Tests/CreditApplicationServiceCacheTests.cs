@@ -25,7 +25,7 @@ public class CreditApplicationServiceCacheTests
         var service = new CreditApplicationService(
             cache,
             generator,
-            new NoOpEventPublisher(),
+            new NoOpEventProducer(),
             configuration,
             NullLogger<CreditApplicationService>.Instance);
 
@@ -35,8 +35,8 @@ public class CreditApplicationServiceCacheTests
         Assert.Equivalent(first, second);
     }
 
-    private sealed class NoOpEventPublisher : ICreditApplicationEventPublisher
+    private sealed class NoOpEventProducer : ICreditApplicationEventProducer
     {
-        public Task PublishGeneratedAsync(CreditApplication application, CancellationToken cancellationToken) => Task.CompletedTask;
+        public Task ProduceGeneratedAsync(CreditApplication application, CancellationToken cancellationToken) => Task.CompletedTask;
     }
 }

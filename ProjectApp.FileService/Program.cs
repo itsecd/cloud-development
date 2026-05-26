@@ -4,7 +4,9 @@ using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.SQS;
 using ProjectApp.FileService;
+using ProjectApp.FileService.Messaging;
 using ProjectApp.FileService.Options;
+using ProjectApp.FileService.Storage;
 using ProjectApp.ServiceDefaults;
 
 var builder = Host.CreateApplicationBuilder(args);
@@ -34,6 +36,8 @@ builder.Services.AddSingleton<IAmazonS3>(_ =>
         ForcePathStyle = true
     }));
 
+builder.Services.AddSingleton<ICreditApplicationEventConsumer, SqsCreditApplicationEventConsumer>();
+builder.Services.AddSingleton<ICreditApplicationObjectStorage, S3CreditApplicationObjectStorage>();
 builder.Services.AddHostedService<CreditApplicationFilePersistenceWorker>();
 
 var host = builder.Build();

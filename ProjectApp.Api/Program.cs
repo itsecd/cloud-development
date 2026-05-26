@@ -41,7 +41,7 @@ builder.Services.AddAWSService<IAmazonSQS>(new AWSOptions
     }
 });
 builder.Services.AddSingleton<CreditApplicationGenerator>();
-builder.Services.AddSingleton<ICreditApplicationEventPublisher, SqsCreditApplicationEventPublisher>();
+builder.Services.AddSingleton<ICreditApplicationEventProducer, SqsCreditApplicationEventProducer>();
 builder.Services.AddScoped<ICreditApplicationService, CreditApplicationService>();
 
 builder.Services.AddControllers();

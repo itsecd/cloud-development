@@ -15,7 +15,6 @@ var localstackOptions = builder.AddLocalStackOptions()
 
 var localstack = builder.AddLocalStack("localstack", localStackOptions: localstackOptions, configureContainer: container =>
 {
-    container.ContainerImageTag = "3.8";
     container.AdditionalEnvironmentVariables["SERVICES"] = "sqs,s3";
     container.Port = 4566;
 });
@@ -33,7 +32,8 @@ for (var i = 1; i <= 3; i++)
 
     if (localstack is not null)
     {
-        replica.WithReference(localstack);
+        replica.WithReference(localstack)
+            .WaitFor(localstack);
     }
 
     gateway.WithReference(replica).WaitFor(replica);
@@ -42,7 +42,8 @@ for (var i = 1; i <= 3; i++)
 var fileService = builder.AddProject<Projects.ProjectApp_FileService>("projectapp-file-service");
 if (localstack is not null)
 {
-    fileService.WithReference(localstack);
+    fileService.WithReference(localstack)
+        .WaitFor(localstack);
 }
 
 builder.AddProject<Projects.Client_Wasm>("client")

@@ -3,9 +3,9 @@ using System.Text.Json;
 using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.S3.Model;
-using Aspire.Hosting;
 using Aspire.Hosting.Testing;
 using ProjectApp.Domain.Entities;
+using ProjectApp.FileService.Storage;
 
 namespace ProjectApp.Tests;
 
@@ -20,17 +20,9 @@ public class BackendIntegrationTests
             ["DcpPublisher:RandomizePorts=false"]);
 
         await using var app = await appHost.BuildAsync();
-        try
-        {
-            await app.StartAsync();
-        }
-        catch (DistributedApplicationException ex) when (ex.Message.Contains("контейнера", StringComparison.OrdinalIgnoreCase) ||
-                                                         ex.Message.Contains("container runtime", StringComparison.OrdinalIgnoreCase))
-        {
-            return;
-        }
+        await app.StartAsync();
 
-        using var httpClient = new HttpClient { BaseAddress = new Uri("http://localhost:7000") };
+        using var httpClient = app.CreateHttpClient("projectapp-gateway");
         var id = Random.Shared.Next(200000, 999999);
 
         var response = await httpClient.GetAsync($"/api/creditapplication?id={id}");
@@ -54,8 +46,8 @@ public class BackendIntegrationTests
                 ForcePathStyle = true
             });
 
-        var key = await WaitForObjectKeyAsync(s3, id, TimeSpan.FromSeconds(30));
-        Assert.NotNull(key);
+        var key = ICreditApplicationObjectStorage.BuildObjectKey(id);
+        await WaitForObjectAsync(s3, key, TimeSpan.FromSeconds(30));
 
         var obj = await s3.GetObjectAsync(new GetObjectRequest
         {
@@ -71,34 +63,28 @@ public class BackendIntegrationTests
         Assert.Equivalent(generated, persisted);
     }
 
-    private static async Task<string?> WaitForObjectKeyAsync(IAmazonS3 s3Client, int id, TimeSpan timeout)
+    private static async Task WaitForObjectAsync(IAmazonS3 s3Client, string key, TimeSpan timeout)
     {
         var started = DateTime.UtcNow;
-        var prefix = $"credit-applications/{id}-";
 
         while (DateTime.UtcNow - started < timeout)
         {
             try
             {
-                var list = await s3Client.ListObjectsV2Async(new ListObjectsV2Request
+                await s3Client.GetObjectMetadataAsync(new GetObjectMetadataRequest
                 {
                     BucketName = "credit-applications",
-                    Prefix = prefix
+                    Key = key
                 });
-
-                var found = list.S3Objects.FirstOrDefault()?.Key;
-                if (!string.IsNullOrWhiteSpace(found))
-                {
-                    return found;
-                }
+                return;
             }
-            catch (AmazonS3Exception ex) when (ex.ErrorCode == "NoSuchBucket")
+            catch (AmazonS3Exception ex) when (ex.ErrorCode is "NoSuchBucket" or "NoSuchKey" or "NotFound")
             {
             }
 
             await Task.Delay(1000);
         }
 
-        return null;
+        Assert.Fail($"Object {key} was not persisted to object storage.");
     }
 }

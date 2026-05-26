@@ -9,17 +9,17 @@ using ProjectApp.Domain.Messaging;
 namespace ProjectApp.Api.Services.CreditApplicationService;
 
 /// <summary>
-/// Публикует события о сгенерированных заявках в SQS.
+/// Отправляет события о сгенерированных заявках в SQS.
 /// </summary>
-public class SqsCreditApplicationEventPublisher(
+public class SqsCreditApplicationEventProducer(
     IAmazonSQS sqsClient,
     IOptions<AwsMessagingOptions> options,
-    ILogger<SqsCreditApplicationEventPublisher> logger) : ICreditApplicationEventPublisher
+    ILogger<SqsCreditApplicationEventProducer> logger) : ICreditApplicationEventProducer
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     private string? _queueUrl;
 
-    public async Task PublishGeneratedAsync(CreditApplication application, CancellationToken cancellationToken)
+    public async Task ProduceGeneratedAsync(CreditApplication application, CancellationToken cancellationToken)
     {
         _queueUrl ??= await EnsureQueueAsync(cancellationToken);
 
@@ -37,7 +37,7 @@ public class SqsCreditApplicationEventPublisher(
             MessageBody = payload
         }, cancellationToken);
 
-        logger.LogInformation("Published credit application generated event for Id={Id} to queue {Queue}", application.Id, options.Value.QueueName);
+        logger.LogInformation("Produced credit application generated event for Id={Id} to queue {Queue}", application.Id, options.Value.QueueName);
     }
 
     private async Task<string> EnsureQueueAsync(CancellationToken cancellationToken)
