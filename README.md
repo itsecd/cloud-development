@@ -68,6 +68,7 @@
 | Компонент | Реализация | Назначение |
 |-----------|------------|------------|
 | Клиент | `Client.Wasm` в Object Storage static website | Веб-интерфейс для запроса учебного курса по `id` |
+| API Gateway | Yandex API Gateway `course-gateway` | Serverless Integration, проксирует `GET /courses?id={id}` в функцию генерации |
 | Генератор курсов | `CourseApp.Api.YandexFunction` / `course-generator` | HTTP Cloud Function, генерирует курс и публикует JSON в очередь |
 | Очередь сообщений | Yandex Message Queue `courses-the80hz` | Связывает генератор и обработчик файлов |
 | Файловый обработчик | `CourseApp.FileService.YandexFunction` / `course-storage` | Cloud Function, вызывается триггером очереди и сохраняет JSON в бакет |
@@ -76,8 +77,9 @@
 ### Схема работы
 
 1. Пользователь открывает статический Blazor WASM клиент из Object Storage.
-2. Клиент отправляет запрос в публичную Cloud Function `course-generator`.
-3. Функция генерирует объект учебного курса по `id` и возвращает JSON клиенту.
-4. Она же публикует JSON в Yandex Message Queue.
-5. Триггер Message Queue вызывает функцию `course-storage`.
-6. `course-storage` сохраняет сообщение в Object Storage как `course_{id}.json`.
+2. Клиент отправляет запрос `GET /courses?id={id}` в Yandex API Gateway `course-gateway`.
+3. API Gateway через Serverless Integration вызывает Cloud Function `course-generator`.
+4. Функция генерирует объект учебного курса по `id` и возвращает JSON клиенту через API Gateway.
+5. Она же публикует JSON в Yandex Message Queue.
+6. Триггер Message Queue вызывает функцию `course-storage`.
+7. `course-storage` сохраняет сообщение в Object Storage как `course_{id}.json`.
