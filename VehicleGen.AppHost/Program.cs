@@ -1,13 +1,20 @@
-﻿using Aspire.Hosting;
-
 var builder = DistributedApplication.CreateBuilder(args);
 
-var redis = builder.AddRedis("redis");
+var cache = builder.AddRedis("cache")
+    .WithRedisCommander();
 
-var api = builder.AddProject("vehicle-api", @"..\VehicleGen.Api\VehicleGen.Api.csproj")
-    .WithReference(redis);
+var gateway = builder.AddProject<Projects.VehicleGen_Gateway>("api-gateway");
 
-builder.AddProject("client-wasm", @"..\Client.Wasm\Client.Wasm.csproj")
-    .WithReference(api);
+for (var i = 0; i < 5; i++)
+{
+    var api = builder.AddProject<Projects.VehicleGen_Api>($"vehicle-api-{i}", launchProfileName: null)
+        .WithHttpsEndpoint(9000 + i)
+        .WithReference(cache);
+
+    gateway.WithReference(api);
+}
+
+builder.AddProject<Projects.Client_Wasm>("client-wasm")
+    .WithReference(gateway);
 
 builder.Build().Run();

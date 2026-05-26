@@ -1,0 +1,6 @@
+@VehicleGen.Gateway_HostAddress = http://localhost:5283
+
+GET {{VehicleGen.Gateway_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

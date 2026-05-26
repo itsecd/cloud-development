@@ -5,10 +5,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton<IVehicleGenerator, VehicleGenerator>();
 builder.Services.AddSingleton<ICacheService, RedisCacheService>();
 
-builder.Services.AddStackExchangeRedisCache(options =>
-{
-    options.Configuration = builder.Configuration.GetConnectionString("Redis");
-});
+builder.AddRedisDistributedCache("cache");
 
 builder.Services.AddCors(options =>
 {
