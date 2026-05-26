@@ -20,6 +20,7 @@
 - Интеграционный тест полного backend flow: Gateway -> API -> SQS -> FileService -> Minio.
 - Дополнительно: реализована клиентская карточка «Кредитная заявка» (Blazor WebAssembly, компонент `Client.Wasm/Components/CreditApplicationCard.razor`) для запроса по ID и наглядного отображения всех полей заявки.
 
+
 ## Характеристики генерируемой заявки
 
 1. Идентификатор в системе — `int`
