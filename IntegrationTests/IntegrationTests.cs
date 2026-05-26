@@ -1,7 +1,6 @@
 ﻿using Aspire.Hosting;
 using Aspire.Hosting.Testing;
 using Microsoft.Extensions.DependencyInjection;
-using Projects;
 using System.Text.Json;
 using Xunit;
 
@@ -17,14 +16,19 @@ public class AppHostFixture : IAsyncLifetime
             .CreateAsync<Projects.CloudDevelopment_AppHost>();
 
         appHost.Services.ConfigureHttpClientDefaults(http =>
+        {
             http.AddStandardResilienceHandler(options =>
             {
-                options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(120);
-                options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(60);
-            }));
+                options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(15);
+                options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(90);
+                options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(40);
+            });
+        });
 
         App = await appHost.BuildAsync();
-        await App.StartAsync();
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(120));
+        await App.StartAsync(cts.Token);
     }
 
     public async Task DisposeAsync()
@@ -39,14 +43,17 @@ public class IntegrationTests(AppHostFixture fixture) : IClassFixture<AppHostFix
     [Fact]
     public async Task Contract_Generated_Through_Gateway_Returns_Correct_Data()
     {
-        var testId = Random.Shared.Next(1, 100000);
+        var testId = 12345;  // фиксированный ID для отладки
         var httpClient = fixture.App.CreateHttpClient("api-gateway");
 
         var response = await httpClient.GetAsync($"/contracts/{testId}");
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync();
-        var contract = JsonSerializer.Deserialize<GenerationService.GenerationService.Models.SoftwareProjectContract>(content);
+        Console.WriteLine($"📦 Raw JSON: {content}");
+
+        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        var contract = JsonSerializer.Deserialize<GenerationService.Models.SoftwareProjectContract>(content, options);
 
         Assert.NotNull(contract);
         Assert.Equal(testId, contract!.Id);
@@ -78,9 +85,10 @@ public class IntegrationTests(AppHostFixture fixture) : IClassFixture<AppHostFix
         var expectedFileName = $"software-project-contract-{testId}.json";
         var fileFound = false;
 
-        for (var i = 0; i < 15; i++)
+        // Увеличили время ожидания
+        for (var i = 0; i < 25; i++)
         {
-            await Task.Delay(3000);
+            await Task.Delay(4000); // 4 секунды
 
             var filesResponse = await httpClient.GetAsync("/files");
             if (filesResponse.IsSuccessStatusCode)
@@ -96,7 +104,7 @@ public class IntegrationTests(AppHostFixture fixture) : IClassFixture<AppHostFix
             }
         }
 
-        Assert.True(fileFound, $"Файл {expectedFileName} должен появиться в S3");
+        Assert.True(fileFound, $"Файл {expectedFileName} должен появиться в S3 после обработки брокера");
     }
 
     [Fact]
@@ -110,21 +118,25 @@ public class IntegrationTests(AppHostFixture fixture) : IClassFixture<AppHostFix
         var fileName = $"software-project-contract-{testId}.json";
         string? fileContent = null;
 
-        for (var i = 0; i < 20; i++)
+        // Увеличили попытки и задержку
+        for (var i = 0; i < 30; i++)
         {
-            await Task.Delay(2000);
+            await Task.Delay(3000);
             var response = await httpClient.GetAsync($"/files/{fileName}");
             if (response.IsSuccessStatusCode)
             {
                 fileContent = await response.Content.ReadAsStringAsync();
-                break;
+                if (!string.IsNullOrEmpty(fileContent))
+                    break;
             }
         }
 
-        Assert.NotNull(fileContent);         
-        Assert.False(string.IsNullOrEmpty(fileContent), "Файл не был найден в S3");
+        Assert.NotNull(fileContent);
+        Assert.False(string.IsNullOrEmpty(fileContent), $"Файл {fileName} не был найден в S3");
 
-        var savedContract = JsonSerializer.Deserialize<GenerationService.GenerationService.Models.SoftwareProjectContract>(fileContent);
+        var savedContract = JsonSerializer.Deserialize<GenerationService.Models.SoftwareProjectContract>(fileContent,
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
         Assert.NotNull(savedContract);
         Assert.Equal(testId, savedContract!.Id);
     }

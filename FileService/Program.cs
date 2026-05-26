@@ -22,9 +22,8 @@ builder.Services.AddSingleton<IAmazonSimpleNotificationService>(_ =>
     new AmazonSimpleNotificationServiceClient(credentials, new AmazonSimpleNotificationServiceConfig { ServiceURL = awsUrl }));
 
 builder.Services.AddSingleton<S3StorageService>();
-builder.Services.AddHostedService<AwsResourceInitializer>();
+builder.Services.AddHostedService<AwsResourceInitializer>();  
 builder.Services.AddHostedService<SqsListenerService>();
-
 var app = builder.Build();
 
 app.MapGet("/files", async (S3StorageService storage) =>

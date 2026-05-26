@@ -1,6 +1,6 @@
 ﻿using Amazon.SQS;
 using Amazon.SQS.Model;
-using GenerationService.Models;    
+using GenerationService.Models;
 using System.Text.Json;
 
 namespace FileService.Services;
@@ -14,6 +14,8 @@ public class SqsListenerService(
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        logger.LogInformation("SQS Listener started");
+
         var queueUrl = await GetOrCreateQueueUrlAsync();
 
         while (!stoppingToken.IsCancellationRequested)
@@ -23,33 +25,37 @@ public class SqsListenerService(
                 var response = await sqsClient.ReceiveMessageAsync(new ReceiveMessageRequest
                 {
                     QueueUrl = queueUrl,
-                    MaxNumberOfMessages = 10,
-                    WaitTimeSeconds = 5
+                    MaxNumberOfMessages = 5,
+                    WaitTimeSeconds = 10,
+                    MessageAttributeNames = ["All"]
                 }, stoppingToken);
 
                 foreach (var message in response.Messages)
                 {
+                    logger.LogInformation("Получено сообщение из SQS. Длина: {Length}", message.Body.Length);
+
                     try
                     {
-                        var contract = JsonSerializer.Deserialize<GenerationService.Models.SoftwareProjectContract>(message.Body);
+                        var contract = JsonSerializer.Deserialize<SoftwareProjectContract>(message.Body);
                         if (contract != null)
                         {
                             var key = $"software-project-contract-{contract.Id}.json";
                             await s3Service.SaveContractAsync(key, message.Body);
+                            logger.LogInformation("✅ Обработан контракт {Id}", contract.Id);
                         }
 
                         await sqsClient.DeleteMessageAsync(queueUrl, message.ReceiptHandle, stoppingToken);
                     }
                     catch (Exception ex)
                     {
-                        logger.LogError(ex, "Failed to process message");
+                        logger.LogError(ex, "Ошибка обработки сообщения");
                     }
                 }
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error in SQS listener");
-                await Task.Delay(5000, stoppingToken);
+                logger.LogError(ex, "Ошибка в SQS Listener");
+                await Task.Delay(3000, stoppingToken);
             }
         }
     }

@@ -51,7 +51,9 @@ app.MapGet("/contracts/{id:int}", async (
     ContractCacheService cacheService,
     ILogger<Program> logger) =>
 {
-    logger.LogInformation("Request handled by replica {ReplicaName} for ID: {Id}", replicaName, id);
+    logger.LogInformation("Request handled by replica {ReplicaName} for ID: {Id}",
+        replicaName, id);
+
     var contract = await cacheService.GetOrCreateAsync(id);
     return Results.Ok(contract);
 });

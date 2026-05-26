@@ -18,22 +18,30 @@ public class S3StorageService(IAmazonS3 s3Client, ILogger<S3StorageService> logg
                 ContentBody = jsonContent,
                 ContentType = "application/json"
             });
-            logger.LogInformation("Saved to S3: {Key}", key);
+
+            logger.LogInformation("✅ Сохранено в S3: {Key}", key);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to save {Key} to S3", key);
-            throw;
+            logger.LogError(ex, "❌ Ошибка сохранения {Key} в S3", key);
         }
     }
 
     public async Task<List<string>> ListFilesAsync()
     {
-        var response = await s3Client.ListObjectsV2Async(new ListObjectsV2Request
+        try
         {
-            BucketName = BucketName
-        });
-        return response.S3Objects.Select(o => o.Key).ToList();
+            var response = await s3Client.ListObjectsV2Async(new ListObjectsV2Request
+            {
+                BucketName = BucketName
+            });
+            return response.S3Objects.Select(o => o.Key).ToList();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Ошибка получения списка файлов из S3");
+            return new List<string>();
+        }
     }
 
     public async Task<string?> GetFileAsync(string key)

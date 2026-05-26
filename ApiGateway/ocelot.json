@@ -28,7 +28,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "file-service",
+          "Host": "localhost",
           "Port": 5300
         }
       ],
