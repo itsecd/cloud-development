@@ -82,9 +82,9 @@ public class IntegrationTests(AppHostFixture fixture) : IClassFixture<AppHostFix
         await httpClient.GetAsync($"/contracts/{testId}");
 
         var expectedFileName = $"software-project-contract-{testId}.json";
-        bool fileFound = false;
+        var fileFound = false;
 
-        for (int i = 0; i < 30; i++) // 2 минуты ожидания
+        for (var i = 0; i < 30; i++) // 2 минуты ожидания
         {
             await Task.Delay(4000);
 
@@ -116,7 +116,7 @@ public class IntegrationTests(AppHostFixture fixture) : IClassFixture<AppHostFix
         var fileName = $"software-project-contract-{testId}.json";
         string? fileContent = null;
 
-        for (int i = 0; i < 35; i++)
+        for (var i = 0; i < 35; i++)
         {
             await Task.Delay(3500);
             var response = await httpClient.GetAsync($"/files/{fileName}");
