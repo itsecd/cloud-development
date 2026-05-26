@@ -12,7 +12,7 @@ public sealed class MinioPatientFileStorage(
     ObjectStorageOptions options,
     ILogger<MinioPatientFileStorage> logger) : IPatientFileStorage
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
+    private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web)
     {
         WriteIndented = true
     };
@@ -22,7 +22,7 @@ public sealed class MinioPatientFileStorage(
         await EnsureBucketExistsAsync(cancellationToken);
 
         var objectName = GetObjectName(message.Patient.Id);
-        var json = JsonSerializer.Serialize(message, JsonOptions);
+        var json = JsonSerializer.Serialize(message, _jsonOptions);
         await using var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
 
         var putArgs = new PutObjectArgs()
