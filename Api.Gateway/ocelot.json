@@ -1,0 +1,35 @@
+{
+  "Routes": [
+    {
+      "UpstreamPathTemplate": "/employee",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DownstreamPathTemplate": "/employee",
+      "DownstreamScheme": "https",
+      "LoadBalancerOptions": {
+        "Type": "WeightedRoundRobin"
+      },
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 25000
+        },
+        {
+          "Host": "localhost",
+          "Port": 25001
+        },
+        {
+          "Host": "localhost",
+          "Port": 25002
+        },
+        {
+          "Host": "localhost",
+          "Port": 25003
+        },
+        {
+          "Host": "localhost",
+          "Port": 25004
+        }
+      ]
+    }
+  ]
+}

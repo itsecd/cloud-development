@@ -3,13 +3,19 @@ var builder = DistributedApplication.CreateBuilder(args);
 var redis = builder.AddRedis("redis")
     .WithRedisInsight(containerName: "redis-insight");
 
-var api = builder.AddProject<Projects.ContractGenerator_Api>("api")
-    .WithReference(redis)
-    .WaitFor(redis)
-    .WithHttpsEndpoint(port: 7290)
-    .WithHttpEndpoint(port: 5290);
+var gateway = builder.AddProject<Projects.Api_Gateway>("api-gateway");
+
+for (var i = 0; i < 5; i++)
+{
+    var service = builder.AddProject<Projects.ContractGenerator_Api>($"service-api-{i}", launchProfileName: null)
+        .WithHttpsEndpoint(port: 25000 + i)
+        .WithReference(redis)
+        .WaitFor(redis);
+    gateway.WaitFor(service);
+}
 
 var client = builder.AddProject<Projects.Client_Wasm>("client")
-    .WaitFor(api);
+    .WaitFor(gateway);
+
 
 builder.Build().Run();
