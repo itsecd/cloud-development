@@ -54,19 +54,8 @@ builder.Services
     .AddCustomLoadBalancer((serviceProvider, route, serviceDiscovery) =>
         new WeightedRandomBalancer(serviceDiscovery.GetAsync, hostPortWeights));
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowClient", policy =>
-    {
-        policy.WithOrigins("http://localhost:5127", "https://localhost:5127")
-            .WithMethods("GET")
-            .WithHeaders("Content-Type");
-    });
-});
-
 var app = builder.Build();
 
-app.UseCors("AllowClient");
 app.MapDefaultEndpoints();
 await app.UseOcelot();
 
