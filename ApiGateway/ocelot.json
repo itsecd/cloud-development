@@ -22,6 +22,18 @@
       "LoadBalancerOptions": {
         "Type": "WeightedRoundRobin"
       }
+    },
+    {
+      "DownstreamPathTemplate": "/files/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "file-service",
+          "Port": 5300
+        }
+      ],
+      "UpstreamPathTemplate": "/files/{everything}",
+      "UpstreamHttpMethod": [ "Get" ]
     }
   ],
   "GlobalConfiguration": {

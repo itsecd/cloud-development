@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using GenerationService.Models;
 using GenerationService.Options;
+using GenerationService.Services;    
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Options;
 
@@ -12,6 +13,7 @@ namespace GenerationService.Services;
 public class ContractCacheService(
     IDistributedCache cache,
     ContractGeneratorService generator,
+    SnsPublisherService snsPublisher,   
     ILogger<ContractCacheService> logger,
     IOptions<CacheOptions> options)
 {
@@ -31,25 +33,16 @@ public class ContractCacheService(
 
             if (cached is not null)
             {
-                logger.LogInformation(
-                    "Cache HIT для ключа {CacheKey}",
-                    cacheKey);
-
-                return JsonSerializer
-                    .Deserialize<SoftwareProjectContract>(cached)!;
+                logger.LogInformation("Cache HIT для ключа {CacheKey}", cacheKey);
+                return JsonSerializer.Deserialize<SoftwareProjectContract>(cached)!;
             }
         }
         catch (Exception ex)
         {
-            logger.LogError(
-                ex,
-                "Ошибка чтения из кэша для ключа {CacheKey}",
-                cacheKey);
+            logger.LogError(ex, "Ошибка чтения из кэша для ключа {CacheKey}", cacheKey);
         }
 
-        logger.LogInformation(
-            "Cache MISS для ключа {CacheKey}. Генерация...",
-            cacheKey);
+        logger.LogInformation("Cache MISS для ключа {CacheKey}. Генерация...", cacheKey);
 
         var contract = generator.Generate(id);
 
@@ -60,16 +53,14 @@ public class ContractCacheService(
                 JsonSerializer.Serialize(contract),
                 _cacheOptions);
 
-            logger.LogInformation(
-                "Контракт {Id} сохранён в кэш",
-                id);
+            logger.LogInformation("Контракт {Id} сохранён в кэш", id);
+
+            // === Публикация в SNS после успешного кэширования ===
+            await snsPublisher.PublishAsync(contract);
         }
         catch (Exception ex)
         {
-            logger.LogError(
-                ex,
-                "Ошибка записи в кэш для ключа {CacheKey}",
-                cacheKey);
+            logger.LogError(ex, "Ошибка записи в кэш или публикации в SNS для ключа {CacheKey}", cacheKey);
         }
 
         return contract;

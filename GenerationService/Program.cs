@@ -1,7 +1,9 @@
+using Amazon.Runtime;
+using Amazon.SimpleNotificationService;
+using GenerationService.Options;
 using GenerationService.Services;
 using Serilog;
 using Serilog.Formatting.Compact;
-using GenerationService.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,13 +14,28 @@ builder.Host.UseSerilog((context, configuration) =>
         .ReadFrom.Configuration(context.Configuration)
         .WriteTo.Console(new CompactJsonFormatter()));
 
+// Redis
 builder.AddRedisDistributedCache("redis");
 
+// === AWS Configuration ===
+var awsUrl = builder.Configuration["AWS:ServiceURL"] ?? "http://localhost:4566";
+var credentials = new BasicAWSCredentials("test", "test");
+
+builder.Services.AddSingleton<IAmazonSimpleNotificationService>(
+    _ => new AmazonSimpleNotificationServiceClient(credentials,
+        new AmazonSimpleNotificationServiceConfig
+        {
+            ServiceURL = awsUrl
+        }));
+
+// Сервисы
 builder.Services.AddSingleton<ContractGeneratorService>();
 builder.Services.AddSingleton<ContractCacheService>();
+builder.Services.AddSingleton<SnsPublisherService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
 builder.Services.Configure<CacheOptions>(
     builder.Configuration.GetSection("CacheOptions"));
 
@@ -34,18 +51,8 @@ app.MapGet("/contracts/{id:int}", async (
     ContractCacheService cacheService,
     ILogger<Program> logger) =>
 {
-    logger.LogInformation(
-        "Request handled by replica {ReplicaName}",
-        replicaName);
-
+    logger.LogInformation("Request handled by replica {ReplicaName} for ID: {Id}", replicaName, id);
     var contract = await cacheService.GetOrCreateAsync(id);
-
-    return Results.Ok(contract);
-});
-
-app.MapGet("/contracts", (ContractGeneratorService generator) =>
-{
-    var contract = generator.Generate(Random.Shared.Next(1, 100000));
     return Results.Ok(contract);
 });
 
