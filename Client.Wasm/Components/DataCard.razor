@@ -51,7 +51,7 @@
                     <Text>Идентификатор нового объекта:</Text>
                 </Column>
                 <Column ColumnSize="ColumnSize.Is4">
-                    <NumericEdit TValue="int" @bind-Value="@Id"/>
+                    <NumericEdit TValue="int" @bind-Value="@Id" Min="0" />
                 </Column>
                 <Column ColumnSize="ColumnSize.Is4">
                     <Button Clicked=RequestNewData Color="Color.Primary">Запросить данные  <Icon Name="IconName.ArrowRight" /></Button>

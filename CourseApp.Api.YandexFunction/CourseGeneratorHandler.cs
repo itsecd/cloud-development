@@ -62,8 +62,8 @@ public sealed class CourseGeneratorHandler
             return Error(HttpStatusCode.BadRequest, "Missing or invalid 'id' query parameter");
         }
 
-        if (id <= 0)
-            return Error(HttpStatusCode.BadRequest, "ID must be greater than 0");
+        if (id < 0)
+            return Error(HttpStatusCode.BadRequest, "ID must not be negative");
 
         var course = CourseGenerator.Generate(id);
         var body = JsonSerializer.Serialize(course, JsonOptions);
