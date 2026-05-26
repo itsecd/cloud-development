@@ -8,16 +8,6 @@ builder.AddServiceDefaults();
 
 builder.AddRedisDistributedCache("cache");
 
-builder.Services.AddCors(options =>
-{
-    options.AddDefaultPolicy(policy =>
-    {
-        policy.WithOrigins("http://localhost:5127")
-              .WithMethods("GET")
-              .WithHeaders("Content-Type");
-    });
-});
-
 builder.Services.AddSingleton<MedicalPatientGenerator>();
 builder.Services.AddSingleton<IPatientGeneratedPublisher, RabbitMqPatientGeneratedPublisher>();
 builder.Services.AddScoped<IMedicalPatientGeneratorService, MedicalPatientGeneratorService>();
@@ -54,7 +44,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseCors();
 app.MapControllers();
 app.MapDefaultEndpoints();
 
