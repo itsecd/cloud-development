@@ -130,15 +130,10 @@ dotnet test ProjectApp.Tests/ProjectApp.Tests.csproj
 
 ### Lab 3: Aspire dashboard
 <p align="center">
-  <img src="screenshots/lab3-aspire-dashboard.png" alt="Aspire dashboard с ресурсами lab3" width="900">
-</p>
-
-### Lab 3: Клиент с заявкой
-<p align="center">
-  <img src="screenshots/lab3-client-credit-application.png" alt="Клиент с кредитной заявкой" width="900">
+  <img src="screenshots/aspire.png" alt="Aspire dashboard с ресурсами lab3" width="900">
 </p>
 
 ### Lab 3: Minio с сохраненным JSON-файлом
 <p align="center">
-  <img src="screenshots/lab3-minio-credit-application.png" alt="Minio с сохраненным JSON-файлом кредитной заявки" width="900">
+  <img src="screenshots/minio.png" alt="Minio с сохраненным JSON-файлом кредитной заявки" width="900">
 </p>
