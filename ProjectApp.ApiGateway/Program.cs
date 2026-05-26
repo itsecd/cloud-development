@@ -9,6 +9,16 @@ builder.AddServiceDefaults();
 
 builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowClient", policy =>
+    {
+        policy.WithOrigins("http://localhost:5127", "https://localhost:7282")
+            .WithMethods("GET")
+            .WithHeaders("Content-Type");
+    });
+});
+
 var generatorNames = builder.Configuration.GetSection("GeneratorServices").Get<string[]>() ?? [];
 var serviceWeights = builder.Configuration
     .GetSection("ReplicaWeights")
@@ -57,6 +67,7 @@ builder.Services
 var app = builder.Build();
 
 app.MapDefaultEndpoints();
+app.UseCors("AllowClient");
 await app.UseOcelot();
 
 app.Run();
