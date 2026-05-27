@@ -221,7 +221,7 @@ log "Сборка Blazor WASM клиента"
 CLIENT_SETTINGS="$ROOT_DIR/Client.Wasm/wwwroot/appsettings.json"
 cat > "$CLIENT_SETTINGS" <<EOF
 {
-  "BaseAddress": "$API_GATEWAY_URL/"
+  "BaseAddress": "$API_GATEWAY_URL/employee"
 }
 EOF
 dotnet publish "$ROOT_DIR/Client.Wasm/Client.Wasm.csproj" -c Release -o "$BUILD_DIR/client-publish" --nologo
