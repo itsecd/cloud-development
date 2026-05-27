@@ -13,6 +13,7 @@ namespace ContractGenerator.Api.Services;
 /// <param name="logger">Логгер.</param>
 public class CachedEmployeeService(
     IEmployeeGenerator generator,
+    IEmployeePublisher publisher,
     IDistributedCache cache,
     IConfiguration configuration,
     ILogger<CachedEmployeeService> logger) : IEmployeeService
@@ -34,6 +35,7 @@ public class CachedEmployeeService(
         logger.LogInformation("Cache miss for employee {EmployeeId}, generating new data", id);
         var employee = generator.Generate(id);
         await SetToCache(cacheKey, employee);
+        await publisher.PublishAsync(employee);
         return employee;
     }
 
