@@ -18,7 +18,6 @@ var localstackEndpoint = localstack.GetEndpoint("localstack");
 // Generation Services
 var generation1 = builder.AddProject<Projects.GenerationService>("generation-1")
     .WithReference(redis)
-    .WithHttpsEndpoint(port: 7130)
     .WithEnvironment("REPLICA_NAME", "generation-1")
     .WithEnvironment("AWS:ServiceURL", localstackEndpoint)
     .WaitFor(redis)
@@ -26,7 +25,6 @@ var generation1 = builder.AddProject<Projects.GenerationService>("generation-1")
 
 var generation2 = builder.AddProject<Projects.GenerationService>("generation-2")
     .WithReference(redis)
-    .WithHttpsEndpoint(port: 7131)
     .WithEnvironment("REPLICA_NAME", "generation-2")
     .WithEnvironment("AWS:ServiceURL", localstackEndpoint)
     .WaitFor(redis)
@@ -34,20 +32,20 @@ var generation2 = builder.AddProject<Projects.GenerationService>("generation-2")
 
 var generation3 = builder.AddProject<Projects.GenerationService>("generation-3")
     .WithReference(redis)
-    .WithHttpsEndpoint(port: 7132)
     .WithEnvironment("REPLICA_NAME", "generation-3")
     .WithEnvironment("AWS:ServiceURL", localstackEndpoint)
     .WaitFor(redis)
     .WaitFor(localstack);
 
-// FileService
 var fileService = builder.AddProject<Projects.FileService>("file-service")
-    .WithEndpoint("http", e => e.Port = 5300)
     .WithEnvironment("AWS:ServiceURL", localstackEndpoint)
     .WaitFor(localstack);
 
 // Api Gateway
 var gateway = builder.AddProject<Projects.ApiGateway>("api-gateway")
+    .WithReference(generation1)
+    .WithReference(generation2)
+    .WithReference(generation3)
     .WithReference(fileService)
     .WaitFor(generation1)
     .WaitFor(generation2)

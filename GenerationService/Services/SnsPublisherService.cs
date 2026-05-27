@@ -15,15 +15,21 @@ public class SnsPublisherService(
     {
         try
         {
-            var json = JsonSerializer.Serialize(contract);
-
-            var request = new PublishRequest
+            // Получаем реальный ARN топика
+            var topicResponse = await snsClient.FindTopicAsync(TopicName);
+            if (topicResponse == null)
             {
-                TopicArn = TopicName,
-                Message = json
-            };
+                logger.LogWarning("SNS Topic '{Topic}' не найден", TopicName);
+                return;
+            }
 
-            await snsClient.PublishAsync(request, ct);
+            var json = JsonSerializer.Serialize(contract);
+            await snsClient.PublishAsync(new PublishRequest
+            {
+                TopicArn = topicResponse.TopicArn,
+                Message = json
+            }, ct);
+
             logger.LogInformation("✅ Опубликовано в SNS: контракт {Id}", contract.Id);
         }
         catch (Exception ex)

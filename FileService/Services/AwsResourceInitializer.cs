@@ -38,34 +38,36 @@ public class AwsResourceInitializer(
 
     private async Task InitializeSnsAndSqsAsync()
     {
-        string? topicArn = null;
-        string? queueUrl = null;
-
         try
         {
-            // Создаём Topic
             var topicResponse = await sns.CreateTopicAsync(TopicName);
-            topicArn = topicResponse.TopicArn;
+            var topicArn = topicResponse.TopicArn;
             logger.LogInformation("SNS Topic создан: {Arn}", topicArn);
 
-            // Создаём Queue
             var queueResponse = await sqs.CreateQueueAsync(QueueName);
-            queueUrl = queueResponse.QueueUrl;
+            var queueUrl = queueResponse.QueueUrl;
             logger.LogInformation("SQS Queue создан: {Url}", queueUrl);
 
-            // Подписываем SQS на SNS
+            // Получаем ARN очереди (не URL!) для подписки
+            var attrs = await sqs.GetQueueAttributesAsync(new Amazon.SQS.Model.GetQueueAttributesRequest
+            {
+                QueueUrl = queueUrl,
+                AttributeNames = ["QueueArn"]
+            });
+            var queueArn = attrs.QueueARN;
+
             await sns.SubscribeAsync(new SubscribeRequest
             {
                 TopicArn = topicArn,
                 Protocol = "sqs",
-                Endpoint = queueUrl
+                Endpoint = queueArn   // <-- ARN, не URL
             });
 
-            logger.LogInformation("✅ SQS подписан на SNS Topic");
+            logger.LogInformation("✅ SQS подписан на SNS Topic. QueueArn={Arn}", queueArn);
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "Ошибка при настройке SNS/SQS (возможно уже настроено)");
+            logger.LogWarning(ex, "Ошибка при настройке SNS/SQS");
         }
     }
 }
