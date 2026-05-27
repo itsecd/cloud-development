@@ -4,6 +4,8 @@
   <Project Path="Cloud.API/Cloud.API.csproj" />
   <Project Path="Cloud.AppHost/Cloud.AppHost.csproj" />
   <Project Path="Cloud.EventSink/Cloud.EventSink.csproj" />
+  <Project Path="Cloud.FileServiceFunction/Cloud.FileServiceFunction.csproj" Id="25e16956-ba89-451d-a4e9-ae11cf119ef3" />
+  <Project Path="Cloud.GeneratorFunction/Cloud.GeneratorFunction.csproj" />
   <Project Path="Cloud.ServiceDefaults/Cloud.ServiceDefaults.csproj" />
   <Project Path="Cloud.Tests/Cloud.Tests.csproj" Id="a77628f3-82e1-49c5-90ce-b4b81ce7768c" />
 </Solution>

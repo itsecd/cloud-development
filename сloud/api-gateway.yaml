@@ -1,0 +1,66 @@
+openapi: "3.0.0"
+info:
+  title: Cloud Employee API Gateway
+  version: "1.0"
+
+x-yc-apigateway:
+  cors:
+    origin: "*"
+    methods: "*"
+    allowedHeaders: "Content-Type,Authorization"
+
+paths:
+  /employee:
+    get:
+      summary: Получить сотрудника по идентификатору
+      operationId: getEmployeeById
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+      x-yc-apigateway-integration:
+        type: cloud_functions
+        function_id: ${FUNCTION_ID}
+        service_account_id: ${SERVICE_ACCOUNT_ID}
+        tag: "$latest"
+      responses:
+        "200":
+          description: Сотрудник успешно получен
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Employee"
+        "400":
+          description: Некорректный идентификатор
+
+components:
+  schemas:
+    Employee:
+      type: object
+      properties:
+        id:
+          type: integer
+        fullName:
+          type: string
+        position:
+          type: string
+        department:
+          type: string
+        hireDate:
+          type: string
+          format: date
+        salary:
+          type: number
+        email:
+          type: string
+        phoneNumber:
+          type: string
+        isFired:
+          type: boolean
+        firedDate:
+          type: string
+          format: date
+          nullable: true
