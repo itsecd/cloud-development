@@ -49,18 +49,6 @@ Outputs:
     Description: Name of the S3 bucket
     Value: !Ref EmployeeContractsBucket
 
-  S3BucketArn:
-    Description: ARN of the S3 bucket
-    Value: !GetAtt EmployeeContractsBucket.Arn
-
   SQSQueueName:
     Description: Name of the SQS queue
     Value: !GetAtt EmployeeContractsQueue.QueueName
-
-  SQSQueueUrl:
-    Description: URL of the SQS queue
-    Value: !Ref EmployeeContractsQueue
-
-  SQSQueueArn:
-    Description: ARN of the SQS queue
-    Value: !GetAtt EmployeeContractsQueue.Arn

@@ -8,6 +8,7 @@ namespace ContractGenerator.Api.Services;
 /// Реализация получения сотрудника компании с использованием Redis-кэша.
 /// </summary>
 /// <param name="generator">Генератор сотрудника.</param>
+/// <param name="publisher">Публикатор новых сотрудников в брокер сообщений.</param>
 /// <param name="cache">Сервис кэширования.</param>
 /// <param name="configuration">Конфигурация приложения.</param>
 /// <param name="logger">Логгер.</param>
