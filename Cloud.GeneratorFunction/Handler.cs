@@ -1,15 +1,25 @@
-﻿using System.Text.Json;
-using System.Text.Json.Serialization;
-using Amazon.Runtime;
+﻿using Amazon.Runtime;
 using Amazon.SQS;
 using Amazon.SQS.Model;
+using Cloud.GeneratorFunction.Models;
+using Cloud.GeneratorFunction.Services;
+using System.Text.Json;
 
 namespace Cloud.GeneratorFunction;
 
+/// <summary>
+/// Точка входа облачной функции генерации сотрудников
+/// </summary>
 public class Handler
 {
     private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web);
+    private static readonly EmployeeGenerator _generator = new();
 
+    /// <summary>
+    /// Основной обработчик вызова функции
+    /// </summary>
+    /// <param name="request">Запрос от API Gateway</param>
+    /// <returns>Ответ с JSON сотрудника или ошибкой валидации</returns>
     public FunctionResponse FunctionHandler(FunctionRequest request)
     {
         var id = TryReadId(request);
@@ -18,13 +28,18 @@ public class Handler
             return CreateResponse(400, """{"error":"id must be a positive integer"}""");
         }
 
-        var generator = new EmployeeGenerator();
-        var employee = generator.Generate(id.Value);
+        var employee = _generator.Generate(id.Value);
         PublishGeneratedAsync(employee).GetAwaiter().GetResult();
 
         return CreateResponse(200, JsonSerializer.Serialize(employee, _jsonOptions));
     }
 
+    /// <summary>
+    /// Извлекает идентификатор сотрудника из параметров запроса
+    /// Поддерживает query-параметры, path-параметры и прямую строку запроса в Path/Url.
+    /// </summary>
+    /// <param name="request">Входной запрос функции</param>
+    /// <returns>Идентификатор сотрудника или null, если извлечь не удалось</returns>
     private static int? TryReadId(FunctionRequest? request)
     {
         try
@@ -36,7 +51,6 @@ public class Handler
             if (int.TryParse(rawId, out var id))
                 return id;
 
-            // Пытаемся достать из query строки, если она в path
             var path = request?.Path ?? request?.Url ?? string.Empty;
             var queryStart = path.IndexOf('?');
             if (queryStart >= 0)
@@ -49,6 +63,9 @@ public class Handler
         return null;
     }
 
+    /// <summary>
+    /// Разбирает идентификатор из строки запроса формата "?id=42"
+    /// </summary>
     private static int? ReadIdFromQuery(string query)
     {
         var pairs = query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries);
@@ -65,12 +82,19 @@ public class Handler
         return null;
     }
 
+    /// <summary>
+    /// Безопасно получает значение из словаря параметров
+    /// </summary>
     private static string? TryGetValue(Dictionary<string, string>? values, string key)
     {
         if (values is null) return null;
         return values.TryGetValue(key, out var value) ? value : null;
     }
 
+    /// <summary>
+    /// Публикует сгенерированного сотрудника в очередь Yandex Message Queue
+    /// </summary>
+    /// <param name="employee">Сотрудник для отправки</param>
     private static async Task PublishGeneratedAsync(Employee employee)
     {
         var queueUrl = Environment.GetEnvironmentVariable("SQS_QUEUE_URL");
@@ -105,6 +129,12 @@ public class Handler
         });
     }
 
+    /// <summary>
+    /// Формирует стандартный HTTP-ответ функции
+    /// </summary>
+    /// <param name="statusCode">HTTP-статус</param>
+    /// <param name="body">Тело ответа</param>
+    /// <returns>Сформированный ответ</returns>
     private static FunctionResponse CreateResponse(int statusCode, string body) =>
         new()
         {
@@ -118,21 +148,4 @@ public class Handler
             },
             Body = body
         };
-}
-
-public class FunctionRequest
-{
-    [JsonPropertyName("path")] public string? Path { get; set; }
-    [JsonPropertyName("url")] public string? Url { get; set; }
-    [JsonPropertyName("queryStringParameters")] public Dictionary<string, string>? QueryStringParameters { get; set; }
-    [JsonPropertyName("pathParameters")] public Dictionary<string, string>? PathParameters { get; set; }
-    [JsonPropertyName("pathParams")] public Dictionary<string, string>? PathParams { get; set; }
-}
-
-public class FunctionResponse
-{
-    [JsonPropertyName("statusCode")] public int StatusCode { get; set; }
-    [JsonPropertyName("headers")] public Dictionary<string, string> Headers { get; set; } = new();
-    [JsonPropertyName("body")] public string Body { get; set; } = string.Empty;
-    [JsonPropertyName("isBase64Encoded")] public bool IsBase64Encoded { get; set; }
 }

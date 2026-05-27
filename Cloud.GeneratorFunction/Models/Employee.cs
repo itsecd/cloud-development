@@ -1,0 +1,48 @@
+﻿namespace Cloud.GeneratorFunction.Models;
+
+/// <summary>
+/// Модель сотрудника компании
+/// </summary>
+public class Employee
+{
+    /// <summary>
+    /// Идентификатор сотрудника в системе
+    /// </summary>
+    public required int Id { get; set; }
+    /// <summary>
+    /// ФИО
+    /// </summary>
+    public required string FullName { get; set; }
+    /// <summary>
+    /// Должность
+    /// </summary>
+    public required string Position { get; set; }
+    /// <summary>
+    /// Отдел
+    /// </summary>
+    public required string Department { get; set; }
+    /// <summary>
+    /// Дата приема
+    /// </summary>
+    public DateOnly HireDate { get; set; }
+    /// <summary>
+    /// Зарплата
+    /// </summary>
+    public required decimal Salary { get; set; }
+    /// <summary>
+    /// Электронная почта
+    /// </summary>
+    public required string Email { get; set; }
+    /// <summary>
+    /// Номер телефона
+    /// </summary>
+    public required string PhoneNumber { get; set; }
+    /// <summary>
+    /// Индикатор увольнения
+    /// </summary>
+    public required bool IsFired { get; set; }
+    /// <summary>
+    /// Дата увольнения
+    /// </summary>
+    public DateOnly? FiredDate { get; set; }
+}

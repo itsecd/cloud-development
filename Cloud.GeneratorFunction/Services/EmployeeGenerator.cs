@@ -1,8 +1,12 @@
 ﻿using Bogus;
 using Bogus.DataSets;
+using Cloud.GeneratorFunction.Models;
 
-namespace Cloud.GeneratorFunction;
+namespace Cloud.GeneratorFunction.Services;
 
+/// <summary>
+/// Генератор сотрудника по заданному id
+/// </summary>
 public class EmployeeGenerator
 {
     private static readonly string[] _professions = { "Developer", "Manager", "Analyst", "Designer", "QA" };
@@ -41,6 +45,11 @@ public class EmployeeGenerator
                 ? DateOnly.FromDateTime(f.Date.Between(e.HireDate.ToDateTime(TimeOnly.MinValue), DateTime.Now))
                 : null);
 
+    /// <summary>
+    /// Генерирует сотрудника компании с указанным id
+    /// </summary>
+    /// <param name="id">Идентификатор сотрудника компании</param>
+    /// /// <returns>Сгенерированный сотрудник</returns>
     public Employee Generate(int id)
     {
         var employee = _faker.Generate();
