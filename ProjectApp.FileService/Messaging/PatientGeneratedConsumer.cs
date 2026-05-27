@@ -1,8 +1,13 @@
 using System.Text.Json;
+using Amazon;
+using Amazon.Runtime;
+using Amazon.SimpleNotificationService;
+using Amazon.SimpleNotificationService.Model;
+using Amazon.SQS;
+using Amazon.SQS.Model;
+using System.Collections.Generic;
 using ProjectApp.Domain.Messaging;
 using ProjectApp.FileService.ObjectStorage;
-using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
 
 namespace ProjectApp.FileService.Messaging;
 
@@ -13,9 +18,10 @@ public sealed class PatientGeneratedConsumer(
 {
     private readonly PatientMessagingOptions _options =
         configuration.GetSection(PatientMessagingOptions.SectionName).Get<PatientMessagingOptions>() ?? new();
-
-    private IConnection? _connection;
-    private IChannel? _channel;
+    private readonly IAmazonSimpleNotificationService _sns =
+        CreateSnsClient(configuration.GetSection(PatientMessagingOptions.SectionName).Get<PatientMessagingOptions>() ?? new());
+    private readonly IAmazonSQS _sqs =
+        CreateSqsClient(configuration.GetSection(PatientMessagingOptions.SectionName).Get<PatientMessagingOptions>() ?? new());
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -23,8 +29,13 @@ public sealed class PatientGeneratedConsumer(
         {
             try
             {
-                await StartConsumerAsync(stoppingToken);
-                await Task.Delay(Timeout.InfiniteTimeSpan, stoppingToken);
+                var queueUrl = await InitializeSubscriptionAsync(stoppingToken);
+                logger.LogInformation(
+                    "Started SNS consumer for topic {TopicName} and queue {QueueName}",
+                    _options.TopicName,
+                    _options.QueueName);
+
+                await PollQueueAsync(queueUrl, stoppingToken);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
@@ -32,107 +43,148 @@ public sealed class PatientGeneratedConsumer(
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "RabbitMQ consumer failed. Retrying in 5 seconds");
-                await DisposeRabbitMqAsync();
+                logger.LogWarning(ex, "SNS consumer failed. Retrying in 5 seconds");
                 await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
             }
         }
     }
 
-    private async Task StartConsumerAsync(CancellationToken cancellationToken)
+    private async Task<string> InitializeSubscriptionAsync(CancellationToken cancellationToken)
     {
-        _connection = await CreateConnectionAsync(cancellationToken);
-        _channel = await _connection.CreateChannelAsync(cancellationToken: cancellationToken);
+        var topic = await _sns.CreateTopicAsync(_options.TopicName, cancellationToken);
+        var queue = await _sqs.CreateQueueAsync(_options.QueueName, cancellationToken);
+        var attributes = await _sqs.GetQueueAttributesAsync(new GetQueueAttributesRequest
+        {
+            QueueUrl = queue.QueueUrl,
+            AttributeNames = ["QueueArn"]
+        }, cancellationToken);
 
-        await _channel.ExchangeDeclareAsync(
-            exchange: _options.ExchangeName,
-            type: ExchangeType.Direct,
-            durable: true,
-            autoDelete: false,
-            cancellationToken: cancellationToken);
+        var queueArn = attributes.QueueARN;
+        var policy = $$"""
+            {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Principal": "*",
+                  "Action": "sqs:SendMessage",
+                  "Resource": "{{queueArn}}",
+                  "Condition": {
+                    "ArnEquals": {
+                      "aws:SourceArn": "{{topic.TopicArn}}"
+                    }
+                  }
+                }
+              ]
+            }
+            """;
 
-        await _channel.QueueDeclareAsync(
-            queue: _options.QueueName,
-            durable: true,
-            exclusive: false,
-            autoDelete: false,
-            cancellationToken: cancellationToken);
+        await _sqs.SetQueueAttributesAsync(new SetQueueAttributesRequest
+        {
+            QueueUrl = queue.QueueUrl,
+            Attributes = new Dictionary<string, string>
+            {
+                ["Policy"] = policy
+            }
+        }, cancellationToken);
 
-        await _channel.QueueBindAsync(
-            queue: _options.QueueName,
-            exchange: _options.ExchangeName,
-            routingKey: _options.RoutingKey,
-            cancellationToken: cancellationToken);
+        await _sns.SubscribeAsync(new SubscribeRequest
+        {
+            TopicArn = topic.TopicArn,
+            Protocol = "sqs",
+            Endpoint = queueArn,
+            Attributes = new Dictionary<string, string>
+            {
+                ["RawMessageDelivery"] = "true"
+            }
+        }, cancellationToken);
 
-        var consumer = new AsyncEventingBasicConsumer(_channel);
-        consumer.ReceivedAsync += OnMessageReceivedAsync;
-
-        await _channel.BasicConsumeAsync(
-            queue: _options.QueueName,
-            autoAck: false,
-            consumer: consumer,
-            cancellationToken: cancellationToken);
-
-        logger.LogInformation("Started RabbitMQ consumer for queue {QueueName}", _options.QueueName);
+        return queue.QueueUrl;
     }
 
-    private async Task OnMessageReceivedAsync(object sender, BasicDeliverEventArgs args)
+    private async Task PollQueueAsync(string queueUrl, CancellationToken cancellationToken)
     {
-        if (_channel is null)
+        while (!cancellationToken.IsCancellationRequested)
         {
-            return;
-        }
+            var response = await _sqs.ReceiveMessageAsync(new ReceiveMessageRequest
+            {
+                QueueUrl = queueUrl,
+                MaxNumberOfMessages = 10,
+                WaitTimeSeconds = _options.WaitTimeSeconds
+            }, cancellationToken);
 
+            foreach (var message in response.Messages)
+            {
+                await ProcessMessageAsync(queueUrl, message, cancellationToken);
+            }
+        }
+    }
+
+    private async Task ProcessMessageAsync(string queueUrl, Message sqsMessage, CancellationToken cancellationToken)
+    {
         try
         {
-            var message = JsonSerializer.Deserialize<PatientGeneratedMessage>(args.Body.Span);
+            var message = JsonSerializer.Deserialize<PatientGeneratedMessage>(sqsMessage.Body);
             if (message is null)
             {
                 throw new JsonException("Patient generated message is empty");
             }
 
-            await fileStorage.SaveAsync(message);
-            await _channel.BasicAckAsync(args.DeliveryTag, multiple: false);
+            await fileStorage.SaveAsync(message, cancellationToken);
+            await _sqs.DeleteMessageAsync(queueUrl, sqsMessage.ReceiptHandle, cancellationToken);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to process generated patient message");
-            await _channel.BasicNackAsync(args.DeliveryTag, multiple: false, requeue: true);
         }
     }
 
-    private async Task<IConnection> CreateConnectionAsync(CancellationToken cancellationToken)
+    private static AmazonSimpleNotificationServiceClient CreateSnsClient(PatientMessagingOptions options)
     {
-        var connectionString = configuration.GetConnectionString("messaging")
-            ?? configuration["RabbitMQ:ConnectionString"]
-            ?? "amqp://guest:guest@localhost:5672";
-
-        var factory = new ConnectionFactory
+        var config = new AmazonSimpleNotificationServiceConfig
         {
-            Uri = new Uri(connectionString)
+            AuthenticationRegion = options.Region
         };
 
-        return await factory.CreateConnectionAsync(cancellationToken);
-    }
-
-    public override async Task StopAsync(CancellationToken cancellationToken)
-    {
-        await DisposeRabbitMqAsync();
-        await base.StopAsync(cancellationToken);
-    }
-
-    private async Task DisposeRabbitMqAsync()
-    {
-        if (_channel is not null)
+        if (!string.IsNullOrWhiteSpace(options.ServiceUrl))
         {
-            await _channel.DisposeAsync();
-            _channel = null;
+            config.ServiceURL = options.ServiceUrl;
+        }
+        else
+        {
+            config.RegionEndpoint = RegionEndpoint.GetBySystemName(options.Region);
         }
 
-        if (_connection is not null)
+        return new AmazonSimpleNotificationServiceClient(
+            new BasicAWSCredentials(options.AccessKey, options.SecretKey),
+            config);
+    }
+
+    private static AmazonSQSClient CreateSqsClient(PatientMessagingOptions options)
+    {
+        var config = new AmazonSQSConfig
         {
-            await _connection.DisposeAsync();
-            _connection = null;
+            AuthenticationRegion = options.Region
+        };
+
+        if (!string.IsNullOrWhiteSpace(options.ServiceUrl))
+        {
+            config.ServiceURL = options.ServiceUrl;
         }
+        else
+        {
+            config.RegionEndpoint = RegionEndpoint.GetBySystemName(options.Region);
+        }
+
+        return new AmazonSQSClient(
+            new BasicAWSCredentials(options.AccessKey, options.SecretKey),
+            config);
+    }
+
+    public override void Dispose()
+    {
+        _sns.Dispose();
+        _sqs.Dispose();
+        base.Dispose();
     }
 }

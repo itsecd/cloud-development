@@ -3,8 +3,13 @@ var builder = DistributedApplication.CreateBuilder(args);
 var redis = builder.AddRedis("cache")
     .WithRedisCommander();
 
-var messaging = builder.AddRabbitMQ("messaging")
-    .WithManagementPlugin();
+var messaging = builder.AddContainer("messaging", "localstack/localstack", "3.8.1")
+    .WithEnvironment("SERVICES", "sns,sqs")
+    .WithEnvironment("AWS_DEFAULT_REGION", "us-east-1")
+    .WithEnvironment("AWS_ACCESS_KEY_ID", "test")
+    .WithEnvironment("AWS_SECRET_ACCESS_KEY", "test")
+    .WithEndpoint(port: 4566, targetPort: 4566, name: "edge", scheme: "http", isProxied: false)
+    .WithHttpHealthCheck("/_localstack/health", endpointName: "edge");
 
 var objectStorage = builder.AddContainer("object-storage", "minio/minio", "latest")
     .WithEnvironment("MINIO_ROOT_USER", "minioadmin")
@@ -36,8 +41,11 @@ for (var i = 0; i < ports.Length; i++)
 {
     var api = builder.AddProject<Projects.ProjectApp_Api>($"projectapp-api-{i}", launchProfileName: null)
         .WithReference(redis)
-        .WithReference(messaging)
         .WithEnvironment("ASPNETCORE_URLS", $"http://localhost:{ports[i].ToString()}")
+        .WithEnvironment("PatientMessaging__ServiceUrl", "http://localhost:4566")
+        .WithEnvironment("PatientMessaging__Region", "us-east-1")
+        .WithEnvironment("PatientMessaging__AccessKey", "test")
+        .WithEnvironment("PatientMessaging__SecretKey", "test")
         .WithEndpoint("http", endpoint =>
         {
             endpoint.UriScheme = "http";
@@ -52,8 +60,11 @@ for (var i = 0; i < ports.Length; i++)
 }
 
 var fileService = builder.AddProject<Projects.ProjectApp_FileService>("projectapp-fileservice", launchProfileName: null)
-    .WithReference(messaging)
     .WithEnvironment("ASPNETCORE_URLS", "http://localhost:5180")
+    .WithEnvironment("PatientMessaging__ServiceUrl", "http://localhost:4566")
+    .WithEnvironment("PatientMessaging__Region", "us-east-1")
+    .WithEnvironment("PatientMessaging__AccessKey", "test")
+    .WithEnvironment("PatientMessaging__SecretKey", "test")
     .WithEnvironment("ObjectStorage__Endpoint", "localhost:9000")
     .WithEnvironment("ObjectStorage__AccessKey", "minioadmin")
     .WithEnvironment("ObjectStorage__SecretKey", "minioadmin")

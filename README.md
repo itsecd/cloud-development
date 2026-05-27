@@ -58,9 +58,12 @@
 - `ProjectApp.AppHost` — оркестрация Aspire.
 - `ProjectApp.Api` — сервис генерации и кэширования.
 - `ProjectApp.ApiGateway` — API Gateway и балансировка нагрузки.
+- `ProjectApp.FileService` — сохраняет сгенерированных пациентов в Minio.
 - `ProjectApp.ServiceDefaults` — общие настройки observability и health checks.
 - `Client.Wasm` — клиентское приложение.
 - Redis + Redis Commander — кэш и администрирование.
+- LocalStack SNS/SQS — локальный AWS-совместимый брокер для варианта `SNS`.
+- Minio — S3-совместимое объектное хранилище.
 
 ## Запуск
 

@@ -45,6 +45,12 @@
             <Heading Size="HeadingSize.Is5"><Icon Name="IconName.Send" />  Запросить нового пациента</Heading>
         </CardHeader>
         <CardBody>
+            @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+            {
+                <Alert Color="Color.Danger" Visible>
+                    @ErrorMessage
+                </Alert>
+            }
             <Row>
                 <Column ColumnSize="ColumnSize.Is4">
                     <Text>Идентификатор пациента:</Text>
@@ -53,7 +59,9 @@
                     <NumericEdit TValue="int" @bind-Value="@Id"/>
                 </Column>
                 <Column ColumnSize="ColumnSize.Is4">
-                    <Button Clicked=RequestNewData Color="Color.Primary">Запросить данные  <Icon Name="IconName.ArrowRight" /></Button>
+                    <Button Clicked=RequestNewData Color="Color.Primary" Disabled="@IsLoading">
+                        @(IsLoading ? "Загрузка..." : "Запросить данные") <Icon Name="IconName.ArrowRight" />
+                    </Button>
                 </Column>
             </Row>
         </CardBody>
@@ -63,6 +71,8 @@
 @code {
     private JsonObject? Value { get; set; }
     private int Id { get; set; }
+    private bool IsLoading { get; set; }
+    private string? ErrorMessage { get; set; }
 
     private static readonly (string Key, string Title)[] PropertyOrder =
     [
@@ -80,9 +90,40 @@
 
     private async Task RequestNewData()
     {
-        var baseAddress = Configuration["BaseAddress"] ?? throw new KeyNotFoundException("Конфигурация клиента не содержит параметра BaseAddress");
-        Value = await Client.GetFromJsonAsync<JsonObject>($"{baseAddress}?id={Id}", new JsonSerializerOptions { });
-        StateHasChanged();
+        ErrorMessage = null;
+        IsLoading = true;
+
+        try
+        {
+            var baseAddress = Configuration["BaseAddress"];
+            if (string.IsNullOrWhiteSpace(baseAddress))
+            {
+                ErrorMessage = "Не задан адрес API в конфигурации клиента.";
+                return;
+            }
+
+            var response = await Client.GetAsync($"{baseAddress}?id={Id}");
+            if (!response.IsSuccessStatusCode)
+            {
+                ErrorMessage = $"API вернул ошибку {(int)response.StatusCode}. Проверь, что AppHost запущен.";
+                return;
+            }
+
+            Value = await response.Content.ReadFromJsonAsync<JsonObject>(new JsonSerializerOptions { });
+        }
+        catch (HttpRequestException)
+        {
+            ErrorMessage = "Не удалось подключиться к API Gateway. Проверь, что запущен ProjectApp.AppHost и свободны порты 5127/5139.";
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Ошибка при запросе данных: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+            StateHasChanged();
+        }
     }
 
     private IEnumerable<(int Number, string Title, string Value)> GetDisplayRows()

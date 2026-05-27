@@ -6,8 +6,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="AWSSDK.SimpleNotificationService" Version="4.0.2.34" />
+    <PackageReference Include="AWSSDK.SQS" Version="4.0.2.32" />
     <PackageReference Include="Minio" Version="7.0.0" />
-    <PackageReference Include="RabbitMQ.Client" Version="7.2.1" />
   </ItemGroup>
 
   <PropertyGroup>

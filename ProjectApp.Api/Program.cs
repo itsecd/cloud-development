@@ -9,7 +9,7 @@ builder.AddServiceDefaults();
 builder.AddRedisDistributedCache("cache");
 
 builder.Services.AddSingleton<MedicalPatientGenerator>();
-builder.Services.AddSingleton<IPatientGeneratedPublisher, RabbitMqPatientGeneratedPublisher>();
+builder.Services.AddSingleton<IPatientGeneratedPublisher, SnsPatientGeneratedPublisher>();
 builder.Services.AddScoped<IMedicalPatientGeneratorService, MedicalPatientGeneratorService>();
 
 builder.Services.AddControllers();
