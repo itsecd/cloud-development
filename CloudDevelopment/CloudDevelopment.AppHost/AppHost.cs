@@ -15,31 +15,36 @@ var localstack = builder.AddContainer("localstack", "localstack/localstack:3.8.0
 
 var localstackEndpoint = localstack.GetEndpoint("localstack");
 
+var fileService = builder.AddProject<Projects.FileService>("file-service")
+    .WithEnvironment("AWS:ServiceURL", localstackEndpoint)
+    .WaitFor(localstack);
+
 // Generation Services
 var generation1 = builder.AddProject<Projects.GenerationService>("generation-1")
     .WithReference(redis)
     .WithEnvironment("REPLICA_NAME", "generation-1")
     .WithEnvironment("AWS:ServiceURL", localstackEndpoint)
     .WaitFor(redis)
-    .WaitFor(localstack);
+    .WaitFor(localstack)
+    .WaitFor(fileService); 
 
 var generation2 = builder.AddProject<Projects.GenerationService>("generation-2")
     .WithReference(redis)
     .WithEnvironment("REPLICA_NAME", "generation-2")
     .WithEnvironment("AWS:ServiceURL", localstackEndpoint)
     .WaitFor(redis)
-    .WaitFor(localstack);
+    .WaitFor(localstack)
+    .WaitFor(fileService);
 
 var generation3 = builder.AddProject<Projects.GenerationService>("generation-3")
     .WithReference(redis)
     .WithEnvironment("REPLICA_NAME", "generation-3")
     .WithEnvironment("AWS:ServiceURL", localstackEndpoint)
     .WaitFor(redis)
-    .WaitFor(localstack);
+    .WaitFor(localstack)
+    .WaitFor(fileService);
 
-var fileService = builder.AddProject<Projects.FileService>("file-service")
-    .WithEnvironment("AWS:ServiceURL", localstackEndpoint)
-    .WaitFor(localstack);
+
 
 // Api Gateway
 var gateway = builder.AddProject<Projects.ApiGateway>("api-gateway")

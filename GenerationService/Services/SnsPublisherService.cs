@@ -15,18 +15,27 @@ public class SnsPublisherService(
     {
         try
         {
-            // Получаем реальный ARN топика
-            var topicResponse = await snsClient.FindTopicAsync(TopicName);
-            if (topicResponse == null)
+            Amazon.SimpleNotificationService.Model.Topic? topic = null;
+
+            // Ждём пока топик появится (до 30 секунд)
+            for (var i = 0; i < 6; i++)
             {
-                logger.LogWarning("SNS Topic '{Topic}' не найден", TopicName);
+                topic = await snsClient.FindTopicAsync(TopicName);
+                if (topic != null) break;
+                logger.LogWarning("SNS Topic '{Topic}' не найден, повтор через 5с...", TopicName);
+                await Task.Delay(5000, ct);
+            }
+
+            if (topic == null)
+            {
+                logger.LogWarning("SNS Topic '{Topic}' не найден после ожидания", TopicName);
                 return;
             }
 
             var json = JsonSerializer.Serialize(contract);
             await snsClient.PublishAsync(new PublishRequest
             {
-                TopicArn = topicResponse.TopicArn,
+                TopicArn = topic.TopicArn,
                 Message = json
             }, ct);
 

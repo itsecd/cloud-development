@@ -36,11 +36,21 @@ public class SqsListenerService(
 
                     try
                     {
-                        var contract = JsonSerializer.Deserialize<SoftwareProjectContract>(message.Body);
+                        // SNS оборачивает сообщение в конверт — нужно распаковать
+                        var contractJson = message.Body;
+
+                        using var doc = JsonDocument.Parse(message.Body);
+                        if (doc.RootElement.TryGetProperty("Message", out var msgProp))
+                        {
+                            // Это SNS-конверт, берём внутренний payload
+                            contractJson = msgProp.GetString() ?? message.Body;
+                        }
+
+                        var contract = JsonSerializer.Deserialize<SoftwareProjectContract>(contractJson);
                         if (contract != null)
                         {
                             var key = $"software-project-contract-{contract.Id}.json";
-                            await s3Service.SaveContractAsync(key, message.Body);
+                            await s3Service.SaveContractAsync(key, contractJson);
                             logger.LogInformation("✅ Обработан контракт {Id}", contract.Id);
                         }
 

@@ -48,22 +48,23 @@ public class AwsResourceInitializer(
             var queueUrl = queueResponse.QueueUrl;
             logger.LogInformation("SQS Queue создан: {Url}", queueUrl);
 
-            // Получаем ARN очереди (не URL!) для подписки
-            var attrs = await sqs.GetQueueAttributesAsync(new Amazon.SQS.Model.GetQueueAttributesRequest
-            {
-                QueueUrl = queueUrl,
-                AttributeNames = ["QueueArn"]
-            });
+            // Получаем ARN очереди для подписки
+            var attrs = await sqs.GetQueueAttributesAsync(
+                new Amazon.SQS.Model.GetQueueAttributesRequest
+                {
+                    QueueUrl = queueUrl,
+                    AttributeNames = ["QueueArn"]
+                });
             var queueArn = attrs.QueueARN;
 
             await sns.SubscribeAsync(new SubscribeRequest
             {
                 TopicArn = topicArn,
                 Protocol = "sqs",
-                Endpoint = queueArn   // <-- ARN, не URL
+                Endpoint = queueArn  // ARN, не URL
             });
 
-            logger.LogInformation("✅ SQS подписан на SNS Topic. QueueArn={Arn}", queueArn);
+            logger.LogInformation("✅ SQS подписан на SNS. QueueArn={Arn}", queueArn);
         }
         catch (Exception ex)
         {
