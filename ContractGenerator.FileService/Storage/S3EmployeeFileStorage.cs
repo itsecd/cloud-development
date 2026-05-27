@@ -1,5 +1,6 @@
 using Amazon.S3;
 using Amazon.S3.Model;
+using ContractGenerator.Shared.Storage;
 using System.Net;
 using System.Text;
 using System.Text.Json;
@@ -37,7 +38,7 @@ public class S3EmployeeFileStorage(
             ?? rootNode["Id"]?.GetValue<int>()
             ?? throw new ArgumentException("Employee message has no id field", nameof(employeeJson));
 
-        var key = IEmployeeFileStorage.KeyFor(id);
+        var key = EmployeeFileKeys.ForId(id);
         var normalizedJson = rootNode.ToJsonString(new JsonSerializerOptions(JsonSerializerDefaults.Web));
 
         await using var stream = new MemoryStream(Encoding.UTF8.GetBytes(normalizedJson));

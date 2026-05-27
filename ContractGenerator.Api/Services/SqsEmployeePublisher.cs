@@ -1,6 +1,6 @@
 using Amazon.SQS;
 using Amazon.SQS.Model;
-using ContractGenerator.Api.Models;
+using ContractGenerator.Shared.Models;
 using System.Net;
 using System.Text.Json;
 

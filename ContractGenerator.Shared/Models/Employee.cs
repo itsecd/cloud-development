@@ -1,4 +1,4 @@
-namespace ContractGenerator.Api.Models;
+namespace ContractGenerator.Shared.Models;
 
 /// <summary>
 /// Информация о сотруднике компании.

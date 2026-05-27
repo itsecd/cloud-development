@@ -1,8 +1,9 @@
 using Bogus;
 using Bogus.DataSets;
-using ContractGenerator.Api.Models;
+using ContractGenerator.Shared.Models;
+using Microsoft.Extensions.Logging;
 
-namespace ContractGenerator.Api.Services;
+namespace ContractGenerator.Shared.Generation;
 
 /// <summary>
 /// Генератор реалистичных данных сотрудника компании на основе Bogus.

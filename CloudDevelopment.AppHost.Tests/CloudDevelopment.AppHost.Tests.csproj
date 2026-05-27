@@ -24,7 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CloudDevelopment.AppHost\CloudDevelopment.AppHost.csproj" />
-    <ProjectReference Include="..\ContractGenerator.Api\ContractGenerator.Api.csproj" />
+    <ProjectReference Include="..\ContractGenerator.Shared\ContractGenerator.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

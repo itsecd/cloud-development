@@ -1,5 +1,5 @@
-using ContractGenerator.Api.Models;
 using ContractGenerator.Api.Services;
+using ContractGenerator.Shared.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ContractGenerator.Api;

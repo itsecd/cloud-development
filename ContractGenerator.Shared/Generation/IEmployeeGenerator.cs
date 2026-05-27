@@ -1,6 +1,6 @@
-using ContractGenerator.Api.Models;
+using ContractGenerator.Shared.Models;
 
-namespace ContractGenerator.Api.Services;
+namespace ContractGenerator.Shared.Generation;
 
 /// <summary>
 /// Контракт генератора данных сотрудника компании.

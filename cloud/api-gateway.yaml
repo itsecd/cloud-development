@@ -1,0 +1,66 @@
+openapi: "3.0.0"
+info:
+  title: Employee Contracts API
+  version: "1.0"
+
+x-yc-apigateway:
+  cors:
+    origin: '*'
+    methods: '*'
+    allowedHeaders: 'Content-Type,Authorization'
+
+paths:
+  /employee:
+    get:
+      summary: Получить сотрудника компании по идентификатору
+      operationId: getEmployeeById
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: integer
+      x-yc-apigateway-integration:
+        type: cloud_functions
+        function_id: ${API_FUNCTION_ID}
+        service_account_id: ${SERVICE_ACCOUNT_ID}
+        tag: "$latest"
+      responses:
+        '200':
+          description: Сотрудник успешно получен
+        '400':
+          description: Некорректный идентификатор
+
+  /api/files:
+    get:
+      summary: Получить список JSON-файлов сотрудников
+      operationId: listEmployeeFiles
+      x-yc-apigateway-integration:
+        type: cloud_functions
+        function_id: ${FILE_HTTP_FUNCTION_ID}
+        service_account_id: ${SERVICE_ACCOUNT_ID}
+        tag: "$latest"
+      responses:
+        '200':
+          description: Список файлов успешно получен
+
+  /api/files/{id}:
+    get:
+      summary: Получить JSON-файл сотрудника по идентификатору
+      operationId: getEmployeeFileById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      x-yc-apigateway-integration:
+        type: cloud_functions
+        function_id: ${FILE_HTTP_FUNCTION_ID}
+        service_account_id: ${SERVICE_ACCOUNT_ID}
+        tag: "$latest"
+      responses:
+        '200':
+          description: JSON-файл сотрудника успешно получен
+        '404':
+          description: Файл не найден

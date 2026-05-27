@@ -1,5 +1,6 @@
 using System.Text.Json;
-using ContractGenerator.Api.Models;
+using ContractGenerator.Shared.Generation;
+using ContractGenerator.Shared.Models;
 using Microsoft.Extensions.Caching.Distributed;
 
 namespace ContractGenerator.Api.Services;

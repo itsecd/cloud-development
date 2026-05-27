@@ -1,4 +1,5 @@
 using ContractGenerator.FileService.Storage;
+using ContractGenerator.Shared.Storage;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json.Nodes;
 
@@ -36,7 +37,7 @@ public class EmployeeFilesController(
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<JsonNode>> Get(int id, CancellationToken cancellationToken)
     {
-        var key = IEmployeeFileStorage.KeyFor(id);
+        var key = EmployeeFileKeys.ForId(id);
         var employee = await storage.DownloadAsync(key, cancellationToken);
         if (employee is null)
         {

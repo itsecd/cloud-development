@@ -1,4 +1,4 @@
-using ContractGenerator.Api.Models;
+using ContractGenerator.Shared.Models;
 using System.Net.Http.Json;
 using System.Text.Json;
 

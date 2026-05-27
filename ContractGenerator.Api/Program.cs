@@ -1,4 +1,5 @@
 using Amazon.SQS;
+using ContractGenerator.Shared.Generation;
 using ContractGenerator.Api.Services;
 using LocalStack.Client.Extensions;
 

@@ -1,4 +1,4 @@
-using ContractGenerator.Api.Models;
+using ContractGenerator.Shared.Models;
 
 namespace ContractGenerator.Api.Services;
 

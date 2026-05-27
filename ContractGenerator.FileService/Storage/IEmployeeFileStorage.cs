@@ -31,9 +31,4 @@ public interface IEmployeeFileStorage
     /// <param name="cancellationToken">Токен отмены операции.</param>
     public Task<JsonNode?> DownloadAsync(string key, CancellationToken cancellationToken = default);
 
-    /// <summary>
-    /// Создает ключ файла для сотрудника.
-    /// </summary>
-    /// <param name="id">Идентификатор сотрудника.</param>
-    public static string KeyFor(int id) => $"employee_{id}.json";
 }
