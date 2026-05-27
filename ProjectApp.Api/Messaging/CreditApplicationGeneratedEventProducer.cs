@@ -6,15 +6,15 @@ using ProjectApp.Domain.Events;
 
 namespace ProjectApp.Api.Messaging;
 
-public class CreditApplicationGeneratedEventPublisher(
+public class CreditApplicationGeneratedEventProducer(
     IAmazonSQS sqs,
     IConfiguration configuration,
-    ILogger<CreditApplicationGeneratedEventPublisher> logger)
+    ILogger<CreditApplicationGeneratedEventProducer> logger)
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     private string? _queueUrl;
 
-    public async Task PublishAsync(CreditApplication application, CancellationToken cancellationToken)
+    public async Task ProduceAsync(CreditApplication application, CancellationToken cancellationToken)
     {
         var queueUrl = await GetQueueUrlAsync(cancellationToken);
         var message = new CreditApplicationGeneratedEvent

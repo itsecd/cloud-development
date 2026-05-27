@@ -1,19 +1,24 @@
+using Aspire.Hosting.LocalStack.Configuration;
+
 var builder = DistributedApplication.CreateBuilder(args);
 
 var redis = builder.AddRedis("cache")
     .WithRedisCommander();
 
-var localStack = builder.AddContainer("localstack", "localstack/localstack", "latest")
-    .WithEnvironment("SERVICES", "sqs")
-    .WithEnvironment("AWS_DEFAULT_REGION", "us-east-1")
-    .WithHttpEndpoint(port: 4566, targetPort: 4566, name: "http");
+var localStackOptions = builder.AddLocalStackOptions()
+    .WithUseLocalStack(true)
+    .WithLocalStackHost("http://localhost:4566");
 
-var minio = builder.AddContainer("minio", "minio/minio", "latest")
-    .WithArgs("server", "/data", "--console-address", ":9001")
-    .WithEnvironment("MINIO_ROOT_USER", "minioadmin")
-    .WithEnvironment("MINIO_ROOT_PASSWORD", "minioadmin")
-    .WithHttpEndpoint(port: 9000, targetPort: 9000, name: "api")
-    .WithHttpEndpoint(port: 9001, targetPort: 9001, name: "console");
+var localStack = builder.AddLocalStack("localstack", localStackOptions: localStackOptions, configureContainer: container =>
+{
+    container.AdditionalEnvironmentVariables["SERVICES"] = "sqs";
+    container.Port = 4566;
+});
+builder.UseLocalStack(localStack);
+
+var minioUser = builder.AddParameter("minio-user", "minioadmin", publishValueAsDefault: true, secret: false);
+var minioPassword = builder.AddParameter("minio-password", "minioadmin", publishValueAsDefault: false, secret: true);
+var minio = builder.AddMinioContainer("minio", minioUser, minioPassword, port: 9000);
 
 var gateway = builder.AddProject<Projects.ProjectApp_Gateway>("projectapp-gateway");
 
@@ -27,12 +32,16 @@ for (var i = 0; i < apiPorts.Length; i++)
         .WithHttpsEndpoint(apiPorts[i])
         .WithReference(redis)
         .WaitFor(redis)
-        .WaitFor(localStack)
         .WithEnvironment("Aws__AccessKey", "test")
         .WithEnvironment("Aws__SecretKey", "test")
         .WithEnvironment("Aws__Region", "us-east-1")
         .WithEnvironment("Sqs__ServiceUrl", "http://localhost:4566")
         .WithEnvironment("Sqs__QueueName", "credit-application-generated");
+
+    if (localStack is not null)
+    {
+        service.WaitFor(localStack);
+    }
 
     gateway.WithReference(service);
     gateway.WaitFor(service);
@@ -42,8 +51,7 @@ for (var i = 0; i < apiPorts.Length; i++)
 
 gateway.WithEnvironment("DOWNSTREAM_HOSTS", string.Join(',', downstreamHosts));
 
-builder.AddProject<Projects.ProjectApp_FileService>("projectapp-file-service")
-    .WaitFor(localStack)
+var fileService = builder.AddProject<Projects.ProjectApp_FileService>("projectapp-file-service")
     .WaitFor(minio)
     .WithEnvironment("Aws__AccessKey", "test")
     .WithEnvironment("Aws__SecretKey", "test")
@@ -54,6 +62,11 @@ builder.AddProject<Projects.ProjectApp_FileService>("projectapp-file-service")
     .WithEnvironment("Minio__AccessKey", "minioadmin")
     .WithEnvironment("Minio__SecretKey", "minioadmin")
     .WithEnvironment("Minio__BucketName", "credit-applications");
+
+if (localStack is not null)
+{
+    fileService.WaitFor(localStack);
+}
 
 builder.AddProject<Projects.Client_Wasm>("client")
     .WaitFor(gateway);

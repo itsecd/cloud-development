@@ -35,7 +35,7 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddSingleton<CreditApplicationGenerator>();
 builder.Services.AddScoped<ICreditApplicationGeneratorService, CreditApplicationGeneratorService>();
-builder.Services.AddScoped<CreditApplicationGeneratedEventPublisher>();
+builder.Services.AddScoped<CreditApplicationGeneratedEventProducer>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

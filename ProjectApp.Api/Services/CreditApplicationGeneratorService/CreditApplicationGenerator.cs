@@ -27,7 +27,7 @@ public class CreditApplicationGenerator
         _faker = new Faker<CreditApplication>("ru")
             .RuleFor(c => c.Id, f => f.IndexFaker + 1)
             .RuleFor(c => c.CreditType, f => f.PickRandom(_creditTypes))
-            .RuleFor(c => c.RequestedAmount, f => Math.Round(f.Finance.Amount(50000, 10000000), 2))
+            .RuleFor(c => c.RequestedAmount, f => Math.Round(f.Finance.Amount(50_000, 10_000_000), 2))
             .RuleFor(c => c.TermMonths, f => f.Random.Int(6, 360))
             .RuleFor(c => c.InterestRate, f =>
             {

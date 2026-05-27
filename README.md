@@ -90,7 +90,7 @@
 Файлы сохраняются в bucket `credit-applications` с ключом:
 
 ```text
-credit-applications/{id}-{timestamp}.json
+credit-applications/{id}.json
 ```
 
 ## Кэширование

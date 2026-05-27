@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
 using ProjectApp.Api.Messaging;
 using ProjectApp.Api.Services.CreditApplicationGeneratorService;
 using ProjectApp.Domain.Entities;
@@ -10,7 +9,7 @@ namespace ProjectApp.Api.Controllers;
 [ApiController]
 public class CreditApplicationController(
     ICreditApplicationGeneratorService generatorService,
-    CreditApplicationGeneratedEventPublisher eventPublisher,
+    CreditApplicationGeneratedEventProducer eventProducer,
     ILogger<CreditApplicationController> logger) : ControllerBase
 {
     /// <summary>
@@ -22,7 +21,7 @@ public class CreditApplicationController(
     {
         logger.LogInformation("Received request to retrieve/generate credit application {Id}", id);
         var application = await generatorService.GetByIdAsync(id, cancellationToken);
-        await eventPublisher.PublishAsync(application, cancellationToken);
+        await eventProducer.ProduceAsync(application, cancellationToken);
 
         return Ok(application);
     }

@@ -1,115 +1,63 @@
-using System.Text;
-using System.Text.Json;
-using Amazon.S3;
-using Amazon.S3.Model;
-using Amazon.SQS;
-using Amazon.SQS.Model;
-using ProjectApp.Domain.Events;
+using ProjectApp.FileService.Messaging;
+using ProjectApp.FileService.Storage;
 
 namespace ProjectApp.FileService;
 
 public class CreditApplicationFilePersistenceWorker(
-    IAmazonSQS sqs,
-    IAmazonS3 s3,
-    IConfiguration configuration,
+    ICreditApplicationQueueConsumer queueConsumer,
+    ICreditApplicationObjectStorage objectStorage,
     ILogger<CreditApplicationFilePersistenceWorker> logger) : BackgroundService
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        WriteIndented = true
-    };
-
-    private string? _queueUrl;
-
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var bucketName = configuration["Minio:BucketName"] ?? "credit-applications";
-        await RetryUntilReadyAsync(() => EnsureBucketExistsAsync(bucketName, stoppingToken), stoppingToken);
-        _queueUrl = await RetryUntilReadyAsync(() => EnsureQueueExistsAsync(stoppingToken), stoppingToken);
+        await WaitForInfrastructureAsync(stoppingToken);
 
         while (!stoppingToken.IsCancellationRequested)
         {
-            var response = await sqs.ReceiveMessageAsync(new ReceiveMessageRequest
+            try
             {
-                QueueUrl = _queueUrl,
-                MaxNumberOfMessages = 10,
-                WaitTimeSeconds = 5
-            }, stoppingToken);
-
-            foreach (var message in response.Messages ?? [])
+                foreach (var message in await queueConsumer.ReceiveAsync(stoppingToken))
+                {
+                    await ProcessMessageAsync(message, stoppingToken);
+                }
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
-                await ProcessMessageAsync(bucketName, message, stoppingToken);
+                return;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to receive or process SQS messages");
+                await Task.Delay(TimeSpan.FromSeconds(2), stoppingToken);
             }
         }
     }
 
-    private async Task ProcessMessageAsync(string bucketName, Message message, CancellationToken cancellationToken)
-    {
-        var generatedEvent = JsonSerializer.Deserialize<CreditApplicationGeneratedEvent>(message.Body, JsonOptions);
-        if (generatedEvent?.Application is null)
-        {
-            logger.LogWarning("Received invalid SQS message {MessageId}", message.MessageId);
-            return;
-        }
-
-        var key = $"credit-applications/{generatedEvent.Id}-{generatedEvent.OccurredAtUtc:yyyyMMddHHmmssfff}.json";
-        var body = JsonSerializer.Serialize(generatedEvent.Application, JsonOptions);
-        await using var stream = new MemoryStream(Encoding.UTF8.GetBytes(body));
-
-        await s3.PutObjectAsync(new PutObjectRequest
-        {
-            BucketName = bucketName,
-            Key = key,
-            InputStream = stream,
-            ContentType = "application/json"
-        }, cancellationToken);
-
-        await sqs.DeleteMessageAsync(_queueUrl, message.ReceiptHandle, cancellationToken);
-        logger.LogInformation("Credit application {Id} saved to Minio as {Key}", generatedEvent.Id, key);
-    }
-
-    private async Task<string> EnsureQueueExistsAsync(CancellationToken cancellationToken)
-    {
-        var queueName = configuration["Sqs:QueueName"] ?? "credit-application-generated";
-        var response = await sqs.CreateQueueAsync(new CreateQueueRequest
-        {
-            QueueName = queueName
-        }, cancellationToken);
-
-        return response.QueueUrl;
-    }
-
-    private async Task EnsureBucketExistsAsync(string bucketName, CancellationToken cancellationToken)
+    private async Task ProcessMessageAsync(CreditApplicationQueueMessage message, CancellationToken cancellationToken)
     {
         try
         {
-            await s3.PutBucketAsync(new PutBucketRequest
-            {
-                BucketName = bucketName
-            }, cancellationToken);
+            await objectStorage.SaveAsync(message.Event, cancellationToken);
+            await queueConsumer.DeleteAsync(message, cancellationToken);
+            logger.LogInformation("Credit application {Id} saved to Minio", message.Event.Id);
         }
-        catch (AmazonS3Exception ex) when (ex.ErrorCode is "BucketAlreadyOwnedByYou" or "BucketAlreadyExists")
+        catch (Exception ex)
         {
+            logger.LogError(ex, "Failed to process SQS message {MessageId}", message.RawMessage.MessageId);
         }
     }
 
-    private async Task RetryUntilReadyAsync(Func<Task> action, CancellationToken cancellationToken)
-    {
-        await RetryUntilReadyAsync(async () =>
-        {
-            await action();
-            return true;
-        }, cancellationToken);
-    }
-
-    private async Task<T> RetryUntilReadyAsync<T>(Func<Task<T>> action, CancellationToken cancellationToken)
+    private async Task WaitForInfrastructureAsync(CancellationToken cancellationToken)
     {
         var attempt = 0;
         while (true)
         {
             try
             {
-                return await action();
+                await queueConsumer.EnsureReadyAsync(cancellationToken);
+                await objectStorage.EnsureBucketAsync(cancellationToken);
+                logger.LogInformation("SQS queue and Minio bucket are ready");
+                return;
             }
             catch (Exception ex) when (!cancellationToken.IsCancellationRequested && attempt < 30)
             {
