@@ -1,7 +1,6 @@
 using System.Net;
 using System.Text;
 using System.Text.Json.Nodes;
-using System.Text.Json.Serialization;
 using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.S3.Model;
@@ -102,58 +101,4 @@ public sealed class CourseStorageHandler
 
         return $"course_{id}.json";
     }
-}
-
-/// <summary>
-/// Событие триггера Yandex Message Queue.
-/// </summary>
-public sealed class QueueRequest
-{
-    /// <summary>
-    /// Сообщения, переданные триггером.
-    /// </summary>
-    [JsonPropertyName("messages")]
-    public List<QueueEvent> Messages { get; set; } = [];
-}
-
-/// <summary>
-/// Элемент пакета сообщений Yandex Message Queue.
-/// </summary>
-public sealed class QueueEvent
-{
-    /// <summary>
-    /// Детали события очереди.
-    /// </summary>
-    [JsonPropertyName("details")]
-    public QueueEventDetails? Details { get; set; }
-}
-
-/// <summary>
-/// Детали события очереди.
-/// </summary>
-public sealed class QueueEventDetails
-{
-    /// <summary>
-    /// Сообщение очереди.
-    /// </summary>
-    [JsonPropertyName("message")]
-    public QueueMessage? Message { get; set; }
-}
-
-/// <summary>
-/// Сообщение Yandex Message Queue.
-/// </summary>
-public sealed class QueueMessage
-{
-    /// <summary>
-    /// Идентификатор сообщения.
-    /// </summary>
-    [JsonPropertyName("message_id")]
-    public string MessageId { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Тело сообщения.
-    /// </summary>
-    [JsonPropertyName("body")]
-    public string Body { get; set; } = string.Empty;
 }
