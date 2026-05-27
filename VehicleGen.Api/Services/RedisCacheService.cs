@@ -4,6 +4,9 @@ using VehicleGen.Api.Entities;
 
 namespace VehicleGen.Api.Services;
 
+/// <summary>
+/// Реализация сервиса кэширования транспортных средств с помощью Redis
+/// </summary>
 public class RedisCacheService : ICacheService
 {
     private readonly IDistributedCache _redis;
@@ -24,16 +27,16 @@ public class RedisCacheService : ICacheService
 
             if (string.IsNullOrEmpty(rawData))
             {
-                _logger.LogInformation("Кэш промах: автомобиль {Id} не найден", id);
+                _logger.LogInformation("Cache miss: vehicle {Id} not found", id);
                 return null;
             }
 
-            _logger.LogInformation("Кэш попадание: автомобиль {Id} загружен", id);
+            _logger.LogInformation("Cache hit: vehicle {Id} loaded", id);
             return JsonSerializer.Deserialize<Vehicle>(rawData);
         }
         catch (Exception error)
         {
-            _logger.LogWarning(error, "Ошибка при чтении из Redis для ID {Id}", id);
+            _logger.LogWarning(error, "Error reading from Redis for ID {Id}", id);
             return null;
         }
     }
@@ -51,11 +54,11 @@ public class RedisCacheService : ICacheService
             };
 
             await _redis.SetStringAsync(cacheKey, jsonData, options);
-            _logger.LogInformation("Автомобиль {Id} сохранён в кэш на {Minutes} минут", vehicle.Id, expirationMinutes);
+            _logger.LogInformation("Vehicle {Id} saved to cache for {Minutes} minutes", vehicle.Id, expirationMinutes);
         }
         catch (Exception error)
         {
-            _logger.LogWarning(error, "Ошибка при сохранении в Redis для ID {Id}", vehicle.Id);
+            _logger.LogWarning(error, "Error saving to Redis for ID {Id}", vehicle.Id);
         }
     }
 }

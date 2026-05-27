@@ -2,12 +2,16 @@
 
 var builder = DistributedApplication.CreateBuilder(args);
 
-var redis = builder.AddRedis("redis");
+var cache = builder.AddRedis("cache");
 
-var api = builder.AddProject("vehicle-api", @"..\VehicleGen.Api\VehicleGen.Api.csproj")
-    .WithReference(redis);
+var api = builder.AddProject<Projects.VehicleGen_Api>("vehicle-api")
+    .WithReference(cache)
+    .WaitFor(cache);
 
-builder.AddProject("client-wasm", @"..\Client.Wasm\Client.Wasm.csproj")
-    .WithReference(api);
+builder.AddProject<Projects.Client_Wasm>("client-wasm")
+    .WithReference(api)
+    .WithEndpoint("http", endpoint => { endpoint.Port = 7201; endpoint.IsProxied = false; })
+    .WithEndpoint("https", endpoint => { endpoint.Port = 7202; endpoint.IsProxied = false; })
+    .WaitFor(api);
 
 builder.Build().Run();

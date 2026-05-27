@@ -4,19 +4,19 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSingleton<IVehicleGenerator, VehicleGenerator>();
 builder.Services.AddSingleton<ICacheService, RedisCacheService>();
+builder.Services.AddScoped<IVehicleService, VehicleService>();
 
-builder.Services.AddStackExchangeRedisCache(options =>
-{
-    options.Configuration = builder.Configuration.GetConnectionString("Redis");
-});
+builder.AddRedisDistributedCache("cache");
+
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
 
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
+        policy.WithOrigins(allowedOrigins)
+              .AllowAnyHeader()
+              .WithMethods("GET");
     });
 });
 
@@ -25,20 +25,17 @@ var app = builder.Build();
 app.UseCors();
 app.UseHttpsRedirection();
 
-app.MapGet("/api/vehicle", async (int id, IVehicleGenerator generator, ICacheService cache, IConfiguration config) =>
+app.MapGet("/api/vehicle", async (int id, IVehicleService vehicleService) =>
 {
-    if (id <= 0)
-        return Results.BadRequest("ID должен быть больше нуля");
-
-    var cached = await cache.RetrieveVehicleAsync(id);
-    if (cached is not null)
-        return Results.Ok(cached);
-
-    var newVehicle = generator.CreateVehicle(id);
-    var ttl = config.GetValue<int>("Cache:ExpirationMinutes", 5);
-    await cache.StoreVehicleAsync(newVehicle, ttl);
-
-    return Results.Ok(newVehicle);
+    try
+    {
+        var vehicle = await vehicleService.GetOrCreateVehicleAsync(id);
+        return Results.Ok(vehicle);
+    }
+    catch (ArgumentException ex)
+    {
+        return Results.BadRequest(ex.Message);
+    }
 });
 
 app.Run();
