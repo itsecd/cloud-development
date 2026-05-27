@@ -8,11 +8,16 @@ public class RedisCacheService : ICacheService
 {
     private readonly IDistributedCache _redis;
     private readonly ILogger<RedisCacheService> _logger;
+    private readonly IVehiclePublisherService _vehiclePublisher;
 
-    public RedisCacheService(IDistributedCache redis, ILogger<RedisCacheService> logger)
+    public RedisCacheService(
+        IDistributedCache redis,
+        ILogger<RedisCacheService> logger,
+        IVehiclePublisherService vehiclePublisher)
     {
         _redis = redis;
         _logger = logger;
+        _vehiclePublisher = vehiclePublisher;
     }
 
     public async Task<Vehicle?> RetrieveVehicleAsync(int id)
@@ -52,6 +57,8 @@ public class RedisCacheService : ICacheService
 
             await _redis.SetStringAsync(cacheKey, jsonData, options);
             _logger.LogInformation("Автомобиль {Id} сохранён в кэш на {Minutes} минут", vehicle.Id, expirationMinutes);
+
+            await _vehiclePublisher.SendVehicleToQueueAsync(vehicle);
         }
         catch (Exception error)
         {

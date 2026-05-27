@@ -1,5 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+	<Sdk Name="Aspire.AppHost.Sdk" Version="9.5.2" />
+
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
 		<TargetFramework>net8.0</TargetFramework>
@@ -9,11 +11,13 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Aspire.Hosting.AppHost" Version="8.0.0" />
-		<PackageReference Include="Aspire.Hosting.Redis" Version="8.0.0" />
+		<PackageReference Include="Aspire.Hosting.AppHost" Version="9.5.2" />
+		<PackageReference Include="Aspire.Hosting.Redis" Version="9.5.2" />
+		<PackageReference Include="LocalStack.Aspire.Hosting" Version="9.5.3" />
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\File.Service\File.Service.csproj" />
 		<ProjectReference Include="..\VehicleGen.Api\VehicleGen.Api.csproj" />
 		<ProjectReference Include="..\Client.Wasm\Client.Wasm.csproj" />
 		<ProjectReference Include="..\VehicleGen.Gateway\VehicleGen.Gateway.csproj" />

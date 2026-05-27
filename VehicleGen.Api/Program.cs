@@ -1,4 +1,10 @@
+using Amazon.Runtime;
+using Amazon.SQS;
 using VehicleGen.Api.Services;
+
+Environment.SetEnvironmentVariable("AWS_ACCESS_KEY_ID", "test");
+Environment.SetEnvironmentVariable("AWS_SECRET_ACCESS_KEY", "test");
+Environment.SetEnvironmentVariable("AWS_DEFAULT_REGION", "eu-central-1");
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -6,6 +12,16 @@ builder.Services.AddSingleton<IVehicleGenerator, VehicleGenerator>();
 builder.Services.AddSingleton<ICacheService, RedisCacheService>();
 
 builder.AddRedisDistributedCache("cache");
+
+var sqsConfig = new AmazonSQSConfig
+{
+    ServiceURL = "http://localhost:14566",
+    UseHttp = true,
+    AuthenticationRegion = "eu-central-1"
+};
+var credentials = new BasicAWSCredentials("test", "test");
+builder.Services.AddSingleton<IAmazonSQS>(new AmazonSQSClient(credentials, sqsConfig));
+builder.Services.AddSingleton<IVehiclePublisherService, SqsVehiclePublisherService>();
 
 builder.Services.AddCors(options =>
 {
