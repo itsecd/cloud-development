@@ -2,6 +2,8 @@ using Aspire.Hosting.LocalStack.Configuration;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
+var configuration = builder.Configuration;
+
 var redis = builder.AddRedis("cache")
     .WithRedisCommander();
 
@@ -26,17 +28,27 @@ var apiPorts = new[] { 5500, 5501, 5502 };
 var weights = new[] { 3, 2, 1 };
 var downstreamHosts = new List<string>();
 
+var awsAccessKey = configuration["Aws:AccessKey"] ?? "test";
+var awsSecretKey = configuration["Aws:SecretKey"] ?? "test";
+var awsRegion = configuration["Aws:Region"] ?? "us-east-1";
+var sqsServiceUrl = configuration["Sqs:ServiceUrl"] ?? "http://localhost:4566";
+var sqsQueueName = configuration["Sqs:QueueName"] ?? "credit-application-generated";
+var minioServiceUrl = configuration["Minio:ServiceUrl"] ?? "http://localhost:9000";
+var minioAccessKey = configuration["Minio:AccessKey"] ?? "minioadmin";
+var minioSecretKey = configuration["Minio:SecretKey"] ?? "minioadmin";
+var minioBucketName = configuration["Minio:BucketName"] ?? "credit-applications";
+
 for (var i = 0; i < apiPorts.Length; i++)
 {
     var service = builder.AddProject<Projects.ProjectApp_Api>($"projectapp-api-{i}", launchProfileName: null)
         .WithHttpsEndpoint(apiPorts[i])
         .WithReference(redis)
         .WaitFor(redis)
-        .WithEnvironment("Aws__AccessKey", "test")
-        .WithEnvironment("Aws__SecretKey", "test")
-        .WithEnvironment("Aws__Region", "us-east-1")
-        .WithEnvironment("Sqs__ServiceUrl", "http://localhost:4566")
-        .WithEnvironment("Sqs__QueueName", "credit-application-generated");
+        .WithEnvironment("Aws__AccessKey", awsAccessKey)
+        .WithEnvironment("Aws__SecretKey", awsSecretKey)
+        .WithEnvironment("Aws__Region", awsRegion)
+        .WithEnvironment("Sqs__ServiceUrl", sqsServiceUrl)
+        .WithEnvironment("Sqs__QueueName", sqsQueueName);
 
     if (localStack is not null)
     {
@@ -53,15 +65,15 @@ gateway.WithEnvironment("DOWNSTREAM_HOSTS", string.Join(',', downstreamHosts));
 
 var fileService = builder.AddProject<Projects.ProjectApp_FileService>("projectapp-file-service")
     .WaitFor(minio)
-    .WithEnvironment("Aws__AccessKey", "test")
-    .WithEnvironment("Aws__SecretKey", "test")
-    .WithEnvironment("Aws__Region", "us-east-1")
-    .WithEnvironment("Sqs__ServiceUrl", "http://localhost:4566")
-    .WithEnvironment("Sqs__QueueName", "credit-application-generated")
-    .WithEnvironment("Minio__ServiceUrl", "http://localhost:9000")
-    .WithEnvironment("Minio__AccessKey", "minioadmin")
-    .WithEnvironment("Minio__SecretKey", "minioadmin")
-    .WithEnvironment("Minio__BucketName", "credit-applications");
+    .WithEnvironment("Aws__AccessKey", awsAccessKey)
+    .WithEnvironment("Aws__SecretKey", awsSecretKey)
+    .WithEnvironment("Aws__Region", awsRegion)
+    .WithEnvironment("Sqs__ServiceUrl", sqsServiceUrl)
+    .WithEnvironment("Sqs__QueueName", sqsQueueName)
+    .WithEnvironment("Minio__ServiceUrl", minioServiceUrl)
+    .WithEnvironment("Minio__AccessKey", minioAccessKey)
+    .WithEnvironment("Minio__SecretKey", minioSecretKey)
+    .WithEnvironment("Minio__BucketName", minioBucketName);
 
 if (localStack is not null)
 {

@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProjectApp.Gateway", "Proje
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProjectApp.FileService", "ProjectApp.FileService\ProjectApp.FileService.csproj", "{2D2860E4-57C1-4254-829B-B934062F7026}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client.Wasm", "Client.Wasm\Client.Wasm.csproj", "{AE7EEA74-2FE0-136F-D797-854FD87E022A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,10 @@ Global
 		{2D2860E4-57C1-4254-829B-B934062F7026}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2D2860E4-57C1-4254-829B-B934062F7026}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2D2860E4-57C1-4254-829B-B934062F7026}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AE7EEA74-2FE0-136F-D797-854FD87E022A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AE7EEA74-2FE0-136F-D797-854FD87E022A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AE7EEA74-2FE0-136F-D797-854FD87E022A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AE7EEA74-2FE0-136F-D797-854FD87E022A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

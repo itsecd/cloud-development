@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Caching.Distributed;
+using ProjectApp.Api.Messaging;
 using ProjectApp.Domain.Entities;
 using System.Text.Json;
 
@@ -11,7 +12,8 @@ public class CreditApplicationGeneratorService(
     IDistributedCache cache,
     CreditApplicationGenerator generator,
     IConfiguration configuration,
-    ILogger<CreditApplicationGeneratorService> logger) : ICreditApplicationGeneratorService
+    ILogger<CreditApplicationGeneratorService> logger,
+    CreditApplicationGeneratedEventProducer eventProducer) : ICreditApplicationGeneratorService
 {
     private readonly int _expirationMinutes = configuration.GetValue("CacheSettings:ExpirationMinutes", 10);
 
@@ -36,6 +38,7 @@ public class CreditApplicationGeneratorService(
         application.Id = id;
 
         await SaveToCacheAsync(id, cacheKey, application, cancellationToken);
+        await eventProducer.ProduceAsync(application, cancellationToken);
 
         return application;
     }
