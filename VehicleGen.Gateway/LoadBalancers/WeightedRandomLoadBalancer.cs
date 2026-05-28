@@ -9,26 +9,25 @@ namespace VehicleGen.Gateway.LoadBalancers;
 /// </summary>
 public class WeightedRandomLoadBalancer : ILoadBalancer
 {
-    private readonly Func<Task<List<Service>>> _serviceProvider;
+    private readonly Func<Task<List<Service>>> _serviceFetcher;
     private readonly int[] _weights;
-    private readonly Random _random = new();
 
     public string Type => nameof(WeightedRandomLoadBalancer);
 
     /// <summary>
     /// Создаёт балансировщик с указанными весами
     /// </summary>
-    /// <param name="serviceProvider">Ввозвращает список доступных сервисов</param>
+    /// <param name="serviceFetcher">Ввозвращает список доступных сервисов</param>
     /// <param name="configuration">Конфигурация приложения</param>
-    public WeightedRandomLoadBalancer(Func<Task<List<Service>>> serviceProvider, IConfiguration configuration)
+    public WeightedRandomLoadBalancer(Func<Task<List<Service>>> serviceFetcher, IConfiguration configuration)
     {
-        _serviceProvider = serviceProvider;
+        _serviceFetcher = serviceFetcher;
         _weights = configuration.GetSection("LoadBalancer:Weights").Get<int[]>() ?? [];
     }
 
     public async Task<Response<ServiceHostAndPort>> LeaseAsync(HttpContext context)
     {
-        var services = await _serviceProvider();
+        var services = await _serviceFetcher();
 
         if (services.Count == 0)
             throw new InvalidOperationException("No available services for load balancing");
@@ -43,10 +42,10 @@ public class WeightedRandomLoadBalancer : ILoadBalancer
     private int GetRandomIndexWithWeights(int serviceCount)
     {
         if (_weights.Length == 0 || _weights.Length != serviceCount)
-            return _random.Next(0, serviceCount);
+            return Random.Shared.Next(0, serviceCount);
 
         var totalWeight = _weights.Sum();
-        var randomPoint = _random.NextDouble() * totalWeight;
+        var randomPoint = Random.Shared.NextDouble() * totalWeight;
 
         var current = 0.0;
         for (var i = 0; i < _weights.Length; i++)
