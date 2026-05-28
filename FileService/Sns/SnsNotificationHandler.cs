@@ -9,7 +9,11 @@ namespace File.Service.Sns;
 /// Реализация обработчика SNS-уведомлений: подтверждает подписки и
 /// сохраняет поступающие сообщения о сотрудниках в объектное хранилище.
 /// </summary>
-public sealed class SnsNotificationHandler : ISnsNotificationHandler
+public sealed class SnsNotificationHandler(
+    IEmployeeFileStorage storage,
+    IHttpClientFactory httpClientFactory,
+    IOptions<AwsStorageOptions> options,
+    ILogger<SnsNotificationHandler> logger) : ISnsNotificationHandler
 {
     /// <summary>Имя именованного <see cref="HttpClient"/>, используемого для подтверждения подписки.</summary>
     public const string ConfirmationHttpClientName = "sns-confirmation";
@@ -18,22 +22,7 @@ public sealed class SnsNotificationHandler : ISnsNotificationHandler
     private const string SubscriptionConfirmationType = "SubscriptionConfirmation";
     private const string NotificationType = "Notification";
 
-    private readonly IEmployeeFileStorage _storage;
-    private readonly IHttpClientFactory _httpClientFactory;
-    private readonly ILogger<SnsNotificationHandler> _logger;
-    private readonly AwsStorageOptions _options;
-
-    public SnsNotificationHandler(
-        IEmployeeFileStorage storage,
-        IHttpClientFactory httpClientFactory,
-        IOptions<AwsStorageOptions> options,
-        ILogger<SnsNotificationHandler> logger)
-    {
-        _storage = storage;
-        _httpClientFactory = httpClientFactory;
-        _logger = logger;
-        _options = options.Value;
-    }
+    private readonly AwsStorageOptions _options = options.Value;
 
     public async Task<IResult> HandleAsync(HttpContext context, CancellationToken cancellationToken)
     {
@@ -42,7 +31,7 @@ public sealed class SnsNotificationHandler : ISnsNotificationHandler
 
         if (string.IsNullOrWhiteSpace(body))
         {
-            _logger.LogWarning("Получено пустое SNS-уведомление");
+            logger.LogWarning("Получено пустое SNS-уведомление");
             return Results.BadRequest();
         }
 
@@ -58,7 +47,7 @@ public sealed class SnsNotificationHandler : ISnsNotificationHandler
 
         if (string.IsNullOrWhiteSpace(payloadJson))
         {
-            _logger.LogWarning("Получено SNS-уведомление без полезной нагрузки. Type={Type}", messageType);
+            logger.LogWarning("Получено SNS-уведомление без полезной нагрузки. Type={Type}", messageType);
             return Results.Ok();
         }
 
@@ -75,18 +64,18 @@ public sealed class SnsNotificationHandler : ISnsNotificationHandler
             if (!document.RootElement.TryGetProperty("id", out var idProperty) ||
                 idProperty.ValueKind != JsonValueKind.Number)
             {
-                _logger.LogWarning("SNS-сообщение не содержит идентификатор сотрудника: {Body}", payloadJson);
+                logger.LogWarning("SNS-сообщение не содержит идентификатор сотрудника: {Body}", payloadJson);
                 return;
             }
 
             var employeeId = idProperty.GetInt32();
-            await _storage.SaveEmployeeJsonAsync(employeeId, payloadJson, cancellationToken);
+            await storage.SaveEmployeeJsonAsync(employeeId, payloadJson, cancellationToken);
 
-            _logger.LogInformation("Сотрудник {EmployeeId} экспортирован в объектное хранилище.", employeeId);
+            logger.LogInformation("Сотрудник {EmployeeId} экспортирован в объектное хранилище.", employeeId);
         }
         catch (JsonException ex)
         {
-            _logger.LogWarning(ex, "Не удалось разобрать SNS-сообщение: {Body}", payloadJson);
+            logger.LogWarning(ex, "Не удалось разобрать SNS-сообщение: {Body}", payloadJson);
         }
     }
 
@@ -125,7 +114,7 @@ public sealed class SnsNotificationHandler : ISnsNotificationHandler
             if (!document.RootElement.TryGetProperty("SubscribeURL", out var urlProperty) ||
                 urlProperty.ValueKind != JsonValueKind.String)
             {
-                _logger.LogWarning("SubscriptionConfirmation не содержит SubscribeURL: {Body}", body);
+                logger.LogWarning("SubscriptionConfirmation не содержит SubscribeURL: {Body}", body);
                 return;
             }
 
@@ -137,25 +126,25 @@ public sealed class SnsNotificationHandler : ISnsNotificationHandler
 
             var normalizedUrl = NormalizeSubscribeUrl(subscribeUrl);
 
-            var client = _httpClientFactory.CreateClient(ConfirmationHttpClientName);
+            var client = httpClientFactory.CreateClient(ConfirmationHttpClientName);
             client.Timeout = TimeSpan.FromSeconds(5);
 
             using var response = await client.GetAsync(normalizedUrl, cancellationToken);
 
             if (response.IsSuccessStatusCode)
             {
-                _logger.LogInformation("SNS-подписка подтверждена. SubscribeURL={SubscribeUrl}", normalizedUrl);
+                logger.LogInformation("SNS-подписка подтверждена. SubscribeURL={SubscribeUrl}", normalizedUrl);
             }
             else
             {
-                _logger.LogWarning(
+                logger.LogWarning(
                     "Не удалось подтвердить SNS-подписку (HTTP {Status}). LocalStack обычно подтверждает HTTP-подписки автоматически, поэтому продолжаем работу.",
                     (int)response.StatusCode);
             }
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Не удалось подтвердить SNS-подписку. LocalStack обычно подтверждает HTTP-подписки автоматически, продолжаем работу.");
+            logger.LogWarning(ex, "Не удалось подтвердить SNS-подписку. LocalStack обычно подтверждает HTTP-подписки автоматически, продолжаем работу.");
         }
     }
 

@@ -4,7 +4,7 @@
       "UpstreamPathTemplate": "/employee",
       "UpstreamHttpMethod": [ "GET" ],
       "DownstreamPathTemplate": "/employee",
-      "DownstreamScheme": "https",
+      "DownstreamScheme": "http",
       "LoadBalancerOptions": {
         "Type": "WeightedRoundRobinBalancer"
       },

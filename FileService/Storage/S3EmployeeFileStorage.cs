@@ -9,21 +9,12 @@ namespace File.Service.Storage;
 /// <summary>
 /// Хранилище файлов сотрудников в S3/LocalStack.
 /// </summary>
-public sealed class S3EmployeeFileStorage : IEmployeeFileStorage
+public sealed class S3EmployeeFileStorage(
+    IOptions<AwsStorageOptions> options,
+    IAmazonS3 s3Client,
+    ILogger<S3EmployeeFileStorage> logger) : IEmployeeFileStorage
 {
-    private readonly AwsStorageOptions _options;
-    private readonly ILogger<S3EmployeeFileStorage> _logger;
-    private readonly IAmazonS3 _s3Client;
-
-    public S3EmployeeFileStorage(
-        IOptions<AwsStorageOptions> options,
-        IAmazonS3 s3Client,
-        ILogger<S3EmployeeFileStorage> logger)
-    {
-        _options = options.Value;
-        _logger = logger;
-        _s3Client = s3Client;
-    }
+    private readonly AwsStorageOptions _options = options.Value;
 
     public async Task SaveEmployeeJsonAsync(int employeeId, string json, CancellationToken cancellationToken = default)
     {
@@ -32,7 +23,7 @@ public sealed class S3EmployeeFileStorage : IEmployeeFileStorage
         var key = BuildObjectKey(employeeId);
         using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(json));
 
-        await _s3Client.PutObjectAsync(new PutObjectRequest
+        await s3Client.PutObjectAsync(new PutObjectRequest
         {
             BucketName = _options.BucketName,
             Key = key,
@@ -40,7 +31,7 @@ public sealed class S3EmployeeFileStorage : IEmployeeFileStorage
             ContentType = "application/json"
         }, cancellationToken);
 
-        _logger.LogInformation("Employee file stored in bucket {Bucket} with key {Key}", _options.BucketName, key);
+        logger.LogInformation("Employee file stored in bucket {Bucket} with key {Key}", _options.BucketName, key);
     }
 
     public async Task<string?> TryReadEmployeeJsonAsync(int employeeId, CancellationToken cancellationToken = default)
@@ -49,7 +40,7 @@ public sealed class S3EmployeeFileStorage : IEmployeeFileStorage
 
         try
         {
-            var response = await _s3Client.GetObjectAsync(_options.BucketName, BuildObjectKey(employeeId), cancellationToken);
+            var response = await s3Client.GetObjectAsync(_options.BucketName, BuildObjectKey(employeeId), cancellationToken);
             using var reader = new StreamReader(response.ResponseStream);
             return await reader.ReadToEndAsync();
         }
@@ -61,13 +52,13 @@ public sealed class S3EmployeeFileStorage : IEmployeeFileStorage
 
     private async Task EnsureBucketExistsAsync(CancellationToken cancellationToken)
     {
-        var exists = await AmazonS3Util.DoesS3BucketExistV2Async(_s3Client, _options.BucketName);
+        var exists = await AmazonS3Util.DoesS3BucketExistV2Async(s3Client, _options.BucketName);
         if (exists)
         {
             return;
         }
 
-        await _s3Client.PutBucketAsync(new PutBucketRequest
+        await s3Client.PutBucketAsync(new PutBucketRequest
         {
             BucketName = _options.BucketName
         }, cancellationToken);

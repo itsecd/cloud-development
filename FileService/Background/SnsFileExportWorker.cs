@@ -10,41 +10,29 @@ namespace File.Service.Background;
 /// на SNS-топик через HTTP-эндпойнт. Сами сообщения принимаются по HTTP
 /// в <c>Program.cs</c> и обрабатываются <see cref="IEmployeeFileStorage"/>.
 /// </summary>
-public sealed class SnsFileExportWorker : BackgroundService
+public sealed class SnsFileExportWorker(
+    IOptions<AwsStorageOptions> options,
+    IAmazonSimpleNotificationService snsClient,
+    ILogger<SnsFileExportWorker> logger,
+    FileExportInfrastructureState state) : BackgroundService
 {
     private const string PendingConfirmation = "PendingConfirmation";
 
-    private readonly AwsStorageOptions _options;
-    private readonly ILogger<SnsFileExportWorker> _logger;
-    private readonly IAmazonSimpleNotificationService _snsClient;
-    private readonly FileExportInfrastructureState _state;
-
+    private readonly AwsStorageOptions _options = options.Value;
     private string? _topicArn;
-
-    public SnsFileExportWorker(
-        IOptions<AwsStorageOptions> options,
-        IAmazonSimpleNotificationService snsClient,
-        ILogger<SnsFileExportWorker> logger,
-        FileExportInfrastructureState state)
-    {
-        _options = options.Value;
-        _logger = logger;
-        _state = state;
-        _snsClient = snsClient;
-    }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _state.IsInitialized = false;
+        state.IsInitialized = false;
 
         while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
                 await EnsureSubscriptionAsync(stoppingToken);
-                _state.IsInitialized = true;
+                state.IsInitialized = true;
 
-                _logger.LogInformation(
+                logger.LogInformation(
                     "File export SNS subscription is ready. Topic={TopicArn}, Endpoint={Endpoint}",
                     _topicArn,
                     _options.NotificationEndpoint);
@@ -57,8 +45,8 @@ public sealed class SnsFileExportWorker : BackgroundService
             }
             catch (Exception ex)
             {
-                _state.IsInitialized = false;
-                _logger.LogWarning(ex, "LocalStack SNS is not ready yet. Retrying subscription...");
+                state.IsInitialized = false;
+                logger.LogWarning(ex, "LocalStack SNS is not ready yet. Retrying subscription...");
                 await Task.Delay(TimeSpan.FromSeconds(2), stoppingToken);
             }
         }
@@ -66,7 +54,7 @@ public sealed class SnsFileExportWorker : BackgroundService
 
     private async Task EnsureSubscriptionAsync(CancellationToken cancellationToken)
     {
-        _topicArn = (await _snsClient.CreateTopicAsync(new CreateTopicRequest
+        _topicArn = (await snsClient.CreateTopicAsync(new CreateTopicRequest
         {
             Name = _options.TopicName
         }, cancellationToken)).TopicArn;
@@ -82,7 +70,7 @@ public sealed class SnsFileExportWorker : BackgroundService
 
         if (existing is null)
         {
-            await _snsClient.SubscribeAsync(new SubscribeRequest
+            await snsClient.SubscribeAsync(new SubscribeRequest
             {
                 TopicArn = _topicArn,
                 Protocol = "http",
@@ -93,7 +81,7 @@ public sealed class SnsFileExportWorker : BackgroundService
 
         var confirmedArn = await WaitForConfirmedSubscriptionAsync(endpoint, cancellationToken);
 
-        await _snsClient.SetSubscriptionAttributesAsync(new SetSubscriptionAttributesRequest
+        await snsClient.SetSubscriptionAttributesAsync(new SetSubscriptionAttributesRequest
         {
             SubscriptionArn = confirmedArn,
             AttributeName = "RawMessageDelivery",
@@ -107,7 +95,7 @@ public sealed class SnsFileExportWorker : BackgroundService
 
         do
         {
-            var response = await _snsClient.ListSubscriptionsByTopicAsync(
+            var response = await snsClient.ListSubscriptionsByTopicAsync(
                 new ListSubscriptionsByTopicRequest
                 {
                     TopicArn = _topicArn,

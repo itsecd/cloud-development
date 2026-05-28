@@ -41,10 +41,10 @@ public sealed class EmployeeExportIntegrationTests : IAsyncLifetime
 
         const int employeeId = 501;
 
-        var apiClient = _app!.CreateHttpClient("service-api-0");
+        var gatewayClient = _app!.CreateHttpClient("api-gateway");
         var fileClient = _app.CreateHttpClient("file-service");
 
-        using var response = await apiClient.GetAsync($"/employee?id={employeeId}");
+        using var response = await gatewayClient.GetAsync($"/employee?id={employeeId}");
         response.EnsureSuccessStatusCode();
 
         var generatedJson = await response.Content.ReadAsStringAsync();
@@ -60,11 +60,11 @@ public sealed class EmployeeExportIntegrationTests : IAsyncLifetime
 
         const int employeeId = 777;
 
-        var apiClient = _app!.CreateHttpClient("service-api-0");
+        var gatewayClient = _app!.CreateHttpClient("api-gateway");
         var fileClient = _app.CreateHttpClient("file-service");
 
-        var first = await apiClient.GetStringAsync($"/employee?id={employeeId}");
-        var second = await apiClient.GetStringAsync($"/employee?id={employeeId}");
+        var first = await gatewayClient.GetStringAsync($"/employee?id={employeeId}");
+        var second = await gatewayClient.GetStringAsync($"/employee?id={employeeId}");
 
         Assert.Equal(Normalize(first), Normalize(second));
 

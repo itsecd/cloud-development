@@ -8,6 +8,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
 builder.Services.AddServiceDiscovery();
 builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
+// Env-переменные должны перекрывать значения из ocelot.json (например, порты,
+// которые Aspire выделяет динамически в тест-среде).
+builder.Configuration.AddEnvironmentVariables();
 
 builder.Logging.ClearProviders();
 builder.Logging.AddJsonConsole(options =>

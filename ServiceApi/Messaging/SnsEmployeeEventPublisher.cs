@@ -10,30 +10,20 @@ namespace Service.Api.Messaging;
 /// <summary>
 /// Публикует события генерации сотрудников в SNS.
 /// </summary>
-public sealed class SnsEmployeeEventPublisher : IEmployeeEventPublisher
+public sealed class SnsEmployeeEventPublisher(
+    IOptions<AwsMessagingOptions> options,
+    IAmazonSimpleNotificationService snsClient,
+    IConfiguration configuration,
+    ILogger<SnsEmployeeEventPublisher> logger) : IEmployeeEventPublisher
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
         WriteIndented = false
     };
 
-    private readonly AwsMessagingOptions _options;
-    private readonly ILogger<SnsEmployeeEventPublisher> _logger;
-    private readonly IAmazonSimpleNotificationService _snsClient;
-    private readonly string _replicaId;
+    private readonly AwsMessagingOptions _options = options.Value;
+    private readonly string _replicaId = configuration["ReplicaId"] ?? Environment.MachineName;
     private string? _topicArn;
-
-    public SnsEmployeeEventPublisher(
-        IOptions<AwsMessagingOptions> options,
-        IAmazonSimpleNotificationService snsClient,
-        IConfiguration configuration,
-        ILogger<SnsEmployeeEventPublisher> logger)
-    {
-        _options = options.Value;
-        _logger = logger;
-        _replicaId = configuration["ReplicaId"] ?? Environment.MachineName;
-        _snsClient = snsClient;
-    }
 
     public async Task PublishAsync(Employee employee, CancellationToken cancellationToken = default)
     {
@@ -51,13 +41,13 @@ public sealed class SnsEmployeeEventPublisher : IEmployeeEventPublisher
 
                 var payload = JsonSerializer.Serialize(employee, JsonOptions);
 
-                _logger.LogInformation(
+                logger.LogInformation(
                     "Publishing employee {EmployeeId} to SNS topic {TopicArn}. Attempt {Attempt}",
                     employee.Id,
                     topicArn,
                     attempt);
 
-                await _snsClient.PublishAsync(new PublishRequest
+                await snsClient.PublishAsync(new PublishRequest
                 {
                     TopicArn = topicArn,
                     Subject = $"employee-{employee.Id}",
@@ -88,7 +78,7 @@ public sealed class SnsEmployeeEventPublisher : IEmployeeEventPublisher
                 lastException = ex;
                 _topicArn = null;
 
-                _logger.LogWarning(
+                logger.LogWarning(
                     ex,
                     "Failed to publish employee {EmployeeId} to SNS on attempt {Attempt}. Retrying...",
                     employee.Id,
@@ -115,7 +105,7 @@ public sealed class SnsEmployeeEventPublisher : IEmployeeEventPublisher
             return _topicArn;
         }
 
-        var response = await _snsClient.CreateTopicAsync(new CreateTopicRequest
+        var response = await snsClient.CreateTopicAsync(new CreateTopicRequest
         {
             Name = _options.TopicName
         }, cancellationToken);
