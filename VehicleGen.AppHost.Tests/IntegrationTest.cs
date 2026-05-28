@@ -19,34 +19,6 @@ public class IntegrationTest : IAsyncLifetime
         _app = await builder.BuildAsync();
         await _app.StartAsync();
 
-        await WaitForLocalStackReady();
-    }
-
-    private async Task WaitForLocalStackReady()
-    {
-        using var client = new HttpClient();
-        var localstackPort = "14566";
-        var startTime = DateTime.UtcNow;
-        var timeout = TimeSpan.FromSeconds(60);
-
-        while (DateTime.UtcNow - startTime < timeout)
-        {
-            try
-            {
-                var response = await client.GetAsync($"http://localhost:{localstackPort}/_localstack/health");
-                if (response.IsSuccessStatusCode)
-                {
-                    return;
-                }
-            }
-            catch
-            {
-            }
-
-            await Task.Delay(TimeSpan.FromSeconds(2));
-        }
-
-        throw new TimeoutException("LocalStack did not become available within 60 seconds");
     }
 
     [Fact]

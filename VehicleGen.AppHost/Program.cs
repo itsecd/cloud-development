@@ -1,9 +1,15 @@
+using Amazon;
+
 var builder = DistributedApplication.CreateBuilder(args);
 
 var cache = builder.AddRedis("cache")
     .WithRedisCommander();
 
-var localstack = builder.AddLocalStack("localstack", configureContainer: container =>
+var awsConfig = builder.AddAWSSDKConfig()
+    .WithProfile("default")
+    .WithRegion(RegionEndpoint.EUCentral1);
+
+var localstack = builder.AddLocalStack("localstack", awsConfig: awsConfig, configureContainer: container =>
 {
     container.Lifetime = ContainerLifetime.Session;
     container.Port = 14566;
@@ -20,6 +26,7 @@ for (var i = 0; i < 5; i++)
 {
     var api = builder.AddProject<Projects.VehicleGen_Api>($"vehicle-api-{i}", launchProfileName: null)
         .WithHttpsEndpoint(9000 + i)
+        .WithReference(localstack)
         .WithReference(cache)
         .WaitFor(cache)
         .WaitFor(fileService)

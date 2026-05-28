@@ -11,10 +11,11 @@
     <PackageReference Include="AWSSDK.SQS" Version="4.0.2.32" />
     <PackageReference Include="LocalStack.Client" Version="2.0.0" />
     <PackageReference Include="LocalStack.Client.Extensions" Version="2.0.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.7" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\VehicleGen.Gateway\VehicleGen.Gateway.csproj" />
+    <ProjectReference Include="..\VehicleGen.ServiceDefaults\VehicleGen.ServiceDefaults.csproj" />
   </ItemGroup>
 
 </Project>

@@ -9,23 +9,10 @@ namespace File.Service.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/files")]
-public class VehicleFilesController : ControllerBase
+public class VehicleFilesController(
+    IVehicleStorageService storage,
+    ILogger<VehicleFilesController> logger) : ControllerBase
 {
-    private readonly IVehicleStorageService _storage;
-    private readonly ILogger<VehicleFilesController> _logger;
-
-    /// <summary>
-    /// Конструктор контроллера
-    /// </summary>
-    /// <param name="storage">Сервис хранилища S3</param>
-    /// <param name="logger">Логгер</param>
-    public VehicleFilesController(
-        IVehicleStorageService storage,
-        ILogger<VehicleFilesController> logger)
-    {
-        _storage = storage;
-        _logger = logger;
-    }
 
     /// <summary>
     /// Возвращает список всех файлов в хранилище
@@ -33,7 +20,7 @@ public class VehicleFilesController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<List<string>>> GetAllFiles()
     {
-        var keys = await _storage.GetAllFileKeysAsync();
+        var keys = await storage.GetAllFileKeysAsync();
         return Ok(keys);
     }
 
@@ -45,11 +32,11 @@ public class VehicleFilesController : ControllerBase
     public async Task<ActionResult<JsonDocument>> GetVehicleFile(int id)
     {
         var fileKey = IVehicleStorageService.BuildFileKey(id);
-        var document = await _storage.FetchVehicleFileAsync(fileKey);
+        var document = await storage.FetchVehicleFileAsync(fileKey);
 
         if (document == null)
         {
-            _logger.LogInformation("Vehicle {Id} file not found", id);
+            logger.LogInformation("Vehicle {Id} file not found", id);
             return NotFound($"Vehicle {id} not found in storage");
         }
 

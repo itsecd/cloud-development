@@ -7,40 +7,24 @@ namespace File.Service.Messaging;
 /// <summary>
 /// Фоновый сервис для чтения сообщений из очереди SQS и сохранения данных в S3
 /// </summary>
-public class SqsVehicleConsumerService : BackgroundService
+public class SqsVehicleConsumerService(
+    IAmazonSQS sqsClient,
+    IServiceScopeFactory scopeFactory,
+    IConfiguration configuration,
+    ILogger<SqsVehicleConsumerService> logger) : BackgroundService
 {
-    private readonly IAmazonSQS _sqsClient;
-    private readonly IServiceScopeFactory _scopeFactory;
-    private readonly string _queueName;
-    private readonly ILogger<SqsVehicleConsumerService> _logger;
+    private readonly string _queueName = configuration["AWS:Resources:SQSQueueName"]
+        ?? throw new InvalidOperationException("SQS queue name is not configured");
     private string? _queueUrl;
-
-    /// <summary>
-    /// Конструктор сервиса-потребителя сообщений SQS
-    /// </summary>
-    /// <param name="sqsClient">Клиент SQS</param>
-    /// <param name="scopeFactory">Создаёт временную область для получения сервисов</param>
-    /// <param name="configuration">Конфигурация приложения</param>
-    /// <param name="logger">Логгер</param>
-    public SqsVehicleConsumerService(
-        IAmazonSQS sqsClient,
-        IServiceScopeFactory scopeFactory,
-        IConfiguration configuration,
-        ILogger<SqsVehicleConsumerService> logger)
-    {
-        _sqsClient = sqsClient;
-        _scopeFactory = scopeFactory;
-        _queueName = configuration["AWS:Resources:SQSQueueName"]
-            ?? throw new InvalidOperationException("SQS queue name is not configured");
-        _logger = logger;
-    }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("Starting SQS consumer for queue {QueueName}", _queueName);
+        logger.LogInformation("SQS Consumer STARTED for queue {QueueName}", _queueName);
 
-        var getUrlResponse = await _sqsClient.GetQueueUrlAsync(_queueName, stoppingToken);
+        var getUrlResponse = await sqsClient.GetQueueUrlAsync(_queueName, stoppingToken);
         _queueUrl = getUrlResponse.QueueUrl;
+
+        logger.LogInformation("Queue URL resolved: {QueueUrl}", _queueUrl);
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -54,34 +38,46 @@ public class SqsVehicleConsumerService : BackgroundService
                     VisibilityTimeout = 30
                 };
 
-                var messages = await _sqsClient.ReceiveMessageAsync(receiveRequest, stoppingToken);
+                var messages = await sqsClient.ReceiveMessageAsync(receiveRequest, stoppingToken);
 
                 if (messages.Messages == null || messages.Messages.Count == 0)
+                {
+                    logger.LogInformation("No messages in queue");
                     continue;
+                }
 
-                _logger.LogInformation("Received {Count} messages from queue", messages.Messages.Count);
+                logger.LogInformation("Received {Count} messages", messages.Messages.Count);
 
                 foreach (var message in messages.Messages)
                 {
-                    using var scope = _scopeFactory.CreateScope();
+                    logger.LogInformation("Processing message {MessageId}: {Body}",
+                        message.MessageId,
+                        message.Body);
+
+                    using var scope = scopeFactory.CreateScope();
                     var storage = scope.ServiceProvider.GetRequiredService<IVehicleStorageService>();
 
                     var success = await storage.StoreVehicleDataAsync(message.Body);
 
+                    logger.LogInformation("Store result for {MessageId}: {Result}",
+                        message.MessageId,
+                        success);
+
                     if (success)
                     {
-                        await _sqsClient.DeleteMessageAsync(_queueUrl, message.ReceiptHandle, stoppingToken);
-                        _logger.LogInformation("Message {MessageId} processed and deleted", message.MessageId);
+                        await sqsClient.DeleteMessageAsync(_queueUrl, message.ReceiptHandle, stoppingToken);
+
+                        logger.LogInformation("Deleted message {MessageId}", message.MessageId);
                     }
                     else
                     {
-                        _logger.LogWarning("Failed to process message {MessageId}", message.MessageId);
+                        logger.LogWarning("Message {MessageId} NOT deleted (store failed)", message.MessageId);
                     }
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing SQS messages");
+                logger.LogError(ex, "Error processing SQS messages");
                 await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
             }
         }

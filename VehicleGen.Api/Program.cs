@@ -1,6 +1,6 @@
-using Amazon.Runtime;
 using Amazon.SQS;
 using VehicleGen.Api.Services;
+using LocalStack.Client.Extensions;
 
 Environment.SetEnvironmentVariable("AWS_ACCESS_KEY_ID", "test");
 Environment.SetEnvironmentVariable("AWS_SECRET_ACCESS_KEY", "test");
@@ -14,14 +14,8 @@ builder.Services.AddScoped<IVehicleService, VehicleService>();
 
 builder.AddRedisDistributedCache("cache");
 
-var sqsConfig = new AmazonSQSConfig
-{
-    ServiceURL = "http://localhost:14566",
-    UseHttp = true,
-    AuthenticationRegion = "eu-central-1"
-};
-var credentials = new BasicAWSCredentials("test", "test");
-builder.Services.AddSingleton<IAmazonSQS>(new AmazonSQSClient(credentials, sqsConfig));
+builder.Services.AddLocalStack(builder.Configuration);
+builder.Services.AddAwsService<IAmazonSQS>();
 builder.Services.AddSingleton<IVehiclePublisherService, SqsVehiclePublisherService>();
 
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];

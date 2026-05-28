@@ -13,6 +13,11 @@ public interface IVehicleStorageService
     public Task PrepareBucketAsync();
 
     /// <summary>
+    /// Создаёт очередь SQS, если её не существует
+    /// </summary>
+    public Task PrepareQueueAsync();
+
+    /// <summary>
     /// Сохраняет JSON-данные автомобиля в файл
     /// </summary>
     /// <param name="jsonData">JSON с данными автомобиля</param>
