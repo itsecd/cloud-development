@@ -4,6 +4,9 @@ using Ocelot.Values;
 
 namespace VehicleGen.Gateway.LoadBalancers;
 
+/// <summary>
+/// Балансировщик нагрузки с взвешенным случайным выбором
+/// </summary>
 public class WeightedRandomLoadBalancer : ILoadBalancer
 {
     private readonly Func<Task<List<Service>>> _serviceProvider;
@@ -12,6 +15,11 @@ public class WeightedRandomLoadBalancer : ILoadBalancer
 
     public string Type => nameof(WeightedRandomLoadBalancer);
 
+    /// <summary>
+    /// Создаёт балансировщик с указанными весами
+    /// </summary>
+    /// <param name="serviceProvider">Ввозвращает список доступных сервисов</param>
+    /// <param name="configuration">Конфигурация приложения</param>
     public WeightedRandomLoadBalancer(Func<Task<List<Service>>> serviceProvider, IConfiguration configuration)
     {
         _serviceProvider = serviceProvider;
@@ -23,12 +31,15 @@ public class WeightedRandomLoadBalancer : ILoadBalancer
         var services = await _serviceProvider();
 
         if (services.Count == 0)
-            throw new InvalidOperationException("Нет доступных сервисов для балансировки");
+            throw new InvalidOperationException("No available services for load balancing");
 
         var index = GetRandomIndexWithWeights(services.Count);
         return new OkResponse<ServiceHostAndPort>(services[index].HostAndPort);
     }
 
+    /// <summary>
+    /// Получает случайный индекс с учётом весов
+    /// </summary>
     private int GetRandomIndexWithWeights(int serviceCount)
     {
         if (_weights.Length == 0 || _weights.Length != serviceCount)

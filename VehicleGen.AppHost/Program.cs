@@ -1,5 +1,3 @@
-using Aspire.Hosting.LocalStack;
-
 var builder = DistributedApplication.CreateBuilder(args);
 
 var cache = builder.AddRedis("cache");
@@ -22,18 +20,19 @@ for (var i = 0; i < 5; i++)
     var api = builder.AddProject<Projects.VehicleGen_Api>($"vehicle-api-{i}", launchProfileName: null)
         .WithHttpsEndpoint(9000 + i)
         .WithReference(cache)
+        .WaitFor(cache)
+        .WaitFor(fileService)
         .WithEnvironment("AWS__Resources__SQSQueueName", "vehicle-queue")
         .WithEnvironment("AWS__Resources__S3BucketName", "vehicle-storage-bucket");
-
-    api.WaitFor(fileService);
 
     gateway.WithReference(api);
 }
 
 builder.AddProject<Projects.Client_Wasm>("client-wasm")
-    .WithReference(gateway);
-
-fileService.WaitFor(gateway);
+    .WithReference(gateway)
+    .WithEndpoint("http", endpoint => { endpoint.Port = 7201; endpoint.IsProxied = false; })
+    .WithEndpoint("https", endpoint => { endpoint.Port = 7202; endpoint.IsProxied = false; })
+    .WaitFor(gateway);
 
 builder.UseLocalStack(localstack);
 

@@ -5,6 +5,9 @@ using VehicleGen.Api.Entities;
 
 namespace VehicleGen.Api.Services;
 
+/// <summary>
+/// Сервис отправки транспортных средств в очередь SQS
+/// </summary>
 public class SqsVehiclePublisherService : IVehiclePublisherService
 {
     private readonly IAmazonSQS _sqsClient;
@@ -12,6 +15,12 @@ public class SqsVehiclePublisherService : IVehiclePublisherService
     private readonly ILogger<SqsVehiclePublisherService> _logger;
     private string? _queueUrl;
 
+    /// <summary>
+    /// Конструктор сервиса публикации
+    /// </summary>
+    /// <param name="sqsClient">Клиент SQS</param>
+    /// <param name="configuration">Конфигурация приложения</param>
+    /// <param name="logger">Логгер</param>
     public SqsVehiclePublisherService(
         IAmazonSQS sqsClient,
         IConfiguration configuration,

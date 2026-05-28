@@ -46,7 +46,7 @@ public class IntegrationTest : IAsyncLifetime
             await Task.Delay(TimeSpan.FromSeconds(2));
         }
 
-        throw new TimeoutException("LocalStack не стал доступен за 60 секунд");
+        throw new TimeoutException("LocalStack did not become available within 60 seconds");
     }
 
     [Fact]

@@ -4,6 +4,9 @@ using File.Service.Storage;
 
 namespace File.Service.Messaging;
 
+/// <summary>
+/// Фоновый сервис для чтения сообщений из очереди SQS и сохранения данных в S3
+/// </summary>
 public class SqsVehicleConsumerService : BackgroundService
 {
     private readonly IAmazonSQS _sqsClient;
@@ -12,6 +15,13 @@ public class SqsVehicleConsumerService : BackgroundService
     private readonly ILogger<SqsVehicleConsumerService> _logger;
     private string? _queueUrl;
 
+    /// <summary>
+    /// Конструктор сервиса-потребителя сообщений SQS
+    /// </summary>
+    /// <param name="sqsClient">Клиент SQS</param>
+    /// <param name="scopeFactory">Создаёт временную область для получения сервисов</param>
+    /// <param name="configuration">Конфигурация приложения</param>
+    /// <param name="logger">Логгер</param>
     public SqsVehicleConsumerService(
         IAmazonSQS sqsClient,
         IServiceScopeFactory scopeFactory,
@@ -29,7 +39,6 @@ public class SqsVehicleConsumerService : BackgroundService
     {
         _logger.LogInformation("Starting SQS consumer for queue {QueueName}", _queueName);
 
-        // Получаем URL очереди
         var getUrlResponse = await _sqsClient.GetQueueUrlAsync(_queueName, stoppingToken);
         _queueUrl = getUrlResponse.QueueUrl;
 

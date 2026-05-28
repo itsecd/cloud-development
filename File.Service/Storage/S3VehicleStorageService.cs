@@ -6,12 +6,21 @@ using System.Text.Json;
 
 namespace File.Service.Storage;
 
+/// <summary>
+/// Реализация сервиса для работы с хранилищем S3
+/// </summary>
 public class S3VehicleStorageService : IVehicleStorageService
 {
     private readonly IAmazonS3 _s3Client;
     private readonly string _bucketName;
     private readonly ILogger<S3VehicleStorageService> _logger;
 
+    /// <summary>
+    /// Конструктор сервиса S3
+    /// </summary>
+    /// <param name="s3Client">Клиент S3</param>
+    /// <param name="configuration">Конфигурация приложения</param>
+    /// <param name="logger">Логгер</param>
     public S3VehicleStorageService(
         IAmazonS3 s3Client,
         IConfiguration configuration,
